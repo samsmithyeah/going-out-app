@@ -12,7 +12,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import { useRoute, RouteProp } from '@react-navigation/native';
 import {
   doc,
   getDoc,
@@ -22,6 +22,8 @@ import {
   getDocs,
   onSnapshot,
   addDoc,
+  updateDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
@@ -43,16 +45,23 @@ interface UserProfile {
   name?: string;
 }
 
+interface Status {
+  upForGoingOutTonight: boolean;
+  timestamp: any; // Firestore timestamp
+}
+
 const CrewScreen: React.FC = () => {
   const { user } = useUser();
   const route = useRoute<CrewScreenRouteProp>();
   const { crewId } = route.params;
   const [crew, setCrew] = useState<Crew | null>(null);
   const [members, setMembers] = useState<UserProfile[]>([]);
+  const [statuses, setStatuses] = useState<{ [userId: string]: boolean }>({});
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [inviteeEmail, setInviteeEmail] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Fetch crew data and statuses in real-time
   useEffect(() => {
     if (!crewId) {
       Alert.alert('Error', 'Crew ID is missing');
@@ -61,6 +70,7 @@ const CrewScreen: React.FC = () => {
     }
 
     const crewRef = doc(db, 'crews', crewId);
+    const statusesRef = collection(crewRef, 'statuses');
 
     const unsubscribeCrew = onSnapshot(
       crewRef,
@@ -83,7 +93,26 @@ const CrewScreen: React.FC = () => {
       }
     );
 
-    return () => unsubscribeCrew();
+    const unsubscribeStatuses = onSnapshot(
+      statusesRef,
+      (snapshot) => {
+        const newStatuses: { [userId: string]: boolean } = {};
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data() as Status;
+          newStatuses[doc.id] = data.upForGoingOutTonight || false;
+        });
+        setStatuses(newStatuses);
+      },
+      (error) => {
+        console.error('Error fetching statuses:', error);
+        Alert.alert('Error', 'Could not fetch statuses');
+      }
+    );
+
+    return () => {
+      unsubscribeCrew();
+      unsubscribeStatuses();
+    };
   }, [crewId]);
 
   // Fetch member profiles whenever crew.memberIds changes
@@ -176,6 +205,40 @@ const CrewScreen: React.FC = () => {
     }
   };
 
+  // Function to toggle user's status
+  const toggleStatus = async () => {
+    if (!user?.uid || !crew) {
+      Alert.alert('Error', 'User or Crew data is missing');
+      return;
+    }
+
+    try {
+      const crewRef = doc(db, 'crews', crewId);
+      const statusesRef = collection(crewRef, 'statuses');
+      const userStatusRef = doc(statusesRef, user.uid);
+
+      const userStatusSnap = await getDoc(userStatusRef);
+      if (userStatusSnap.exists()) {
+        const currentStatus = userStatusSnap.data().upForGoingOutTonight || false;
+        await updateDoc(userStatusRef, { upForGoingOutTonight: !currentStatus, timestamp: new Date() });
+      } else {
+        // If no status exists, set it to true
+        await setDoc(userStatusRef, { upForGoingOutTonight: true, timestamp: new Date() });
+      }
+
+      // The onSnapshot listener will update the local state
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      Alert.alert('Error', 'Could not update your status');
+    }
+  };
+
+  // Derive current user's status directly from statuses object
+  const currentUserStatus = user?.uid ? statuses[user.uid] || false : false;
+
+  // Get list of members who are up for going out tonight
+  const membersUpForGoingOut = members.filter((member) => statuses[member.uid]);
+
   if (loading || !crew) {
     return (
       <View style={styles.loaderContainer}>
@@ -200,6 +263,38 @@ const CrewScreen: React.FC = () => {
         )}
         ListEmptyComponent={<Text>No members found</Text>}
       />
+
+      {/* Members Up for Going Out Tonight */}
+      {currentUserStatus && (
+        <>
+          <Text style={styles.sectionTitle}>Members Up for Going Out Tonight:</Text>
+          <FlatList
+            data={membersUpForGoingOut}
+            keyExtractor={(item) => item.uid}
+            renderItem={({ item }) => (
+              <View style={styles.memberItem}>
+                <Text style={styles.memberText}>
+                  {item.name ? `${item.name} (${item.email})` : item.email}
+                </Text>
+              </View>
+            )}
+            ListEmptyComponent={<Text>No members are up for going out tonight.</Text>}
+          />
+        </>
+      )}
+
+      {/* Toggle Status Button */}
+      <TouchableOpacity
+        style={[
+          styles.statusButton,
+          currentUserStatus ? styles.statusButtonActive : styles.statusButtonInactive,
+        ]}
+        onPress={toggleStatus}
+      >
+        <Text style={styles.statusButtonText}>
+          {currentUserStatus ? "I'm not up for going out tonight" : "I'm up for going out tonight"}
+        </Text>
+      </TouchableOpacity>
 
       {/* Invite Member Button (Visible to Owner Only) */}
       {user?.uid === crew.ownerId && (
@@ -276,6 +371,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
+  },
+  statusButton: {
+    padding: 15,
+    borderRadius: 10,
+    marginVertical: 20,
+    alignItems: 'center',
+  },
+  statusButtonActive: {
+    backgroundColor: '#ff6347', // Tomato color when active
+  },
+  statusButtonInactive: {
+    backgroundColor: '#32cd32', // LimeGreen color when inactive
+  },
+  statusButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   modalContainer: {
     flex: 1,
