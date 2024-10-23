@@ -12,14 +12,7 @@ type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
 WebBrowser.maybeCompleteAuthSession();
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { user, setUser, status } = useUser();
-
-  const handleStatusToggle = async () => {
-    if (user) {
-      const userStatusRef = doc(db, 'users', user.uid);
-      await setDoc(userStatusRef, { status: !status }, { merge: true });
-    }
-  };
+  const { user } = useUser();
 
   return (
     <View style={styles.container}>
