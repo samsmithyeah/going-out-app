@@ -1,18 +1,15 @@
-// index.tsx
-import React from 'react';
-import { registerRootComponent } from 'expo';
-import { NavigationContainer } from '@react-navigation/native';
-import AppNavigator from '../navigation/AppNavigator';
 import { UserProvider } from '../context/UserContext';
+import { registerRootComponent } from 'expo';
+import App from './App';
 
-const App: React.FC = () => {
+const Root: React.FC = () => {
   return (
     <UserProvider>
-        <AppNavigator />
+      <App />
     </UserProvider>
   );
 };
 
-export default App;
+export default Root;
 
 registerRootComponent(App);
