@@ -23,5 +23,5 @@ expo-env.d.ts
 # iOS
 ios/
 
-# Android
-android/
+# Firebase
+functions/firebase-debug.log
