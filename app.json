@@ -15,7 +15,13 @@
     "ios": {
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "bundleIdentifier": "com.samlovesit.GoingOutApp"
+      "bundleIdentifier": "com.samlovesit.GoingOutApp",
+      "infoPlist": {
+        "NSUserNotificationUsageDescription": "This app uses push notifications to notify you of updates."
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -30,11 +36,23 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/favicon.png",
+          "color": "#ffffff"
+        }
+      ],
       "expo-router",
       "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f6ea5148-1681-446d-bd20-6b21b88f61b7"
+      }
     }
   }
 }
