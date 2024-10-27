@@ -19,6 +19,7 @@ import {
   collection,
   onSnapshot,
 } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import { Functions, getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
 import { Platform } from 'react-native';
 
@@ -40,6 +41,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const functions = getFunctions(app);
+const storage = getStorage(app);
 
 const addUserToFirestore = async (user: User) => {
   const userDocRef = doc(db, 'users', user.uid);
@@ -91,4 +93,4 @@ const deleteCrew = (crewId: string) => {
   return deleteCrewCallable({ crewId });
 };
 
-export { auth, db, functions, deleteCrew, updateProfile, signInWithCredential, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, doc, getDoc, setDoc, collection, addDoc, onSnapshot, User, addUserToFirestore };
+export { auth, db, functions, storage, deleteCrew, updateProfile, signInWithCredential, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, doc, getDoc, setDoc, collection, addDoc, onSnapshot, User, addUserToFirestore };
