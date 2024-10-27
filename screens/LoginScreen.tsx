@@ -41,7 +41,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      setUser(auth.currentUser);
     } catch (error: any) {
       Alert.alert('Login Error', error.message);
     } finally {
