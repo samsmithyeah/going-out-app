@@ -2,17 +2,20 @@
 
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
-import FriendsListScreen from '../screens/FriendsListScreen';
 import InvitationsScreen from '../screens/InvitationsScreen';
-import CustomDrawerContent from './CustomDrawerContent';
-import CrewsStackNavigator from './CrewsStackNavigator'; // Import the CrewsStackNavigator
+import CrewsStackNavigator from './CrewsStackNavigator';
+import CustomDrawerContent from './CustomDrawerContent'; // Import the updated CustomDrawerContent
+
 
 export type DrawerParamList = {
   Home: undefined;
   CrewsStack: undefined;
+  FriendsList: undefined;
   Invitations: undefined;
 };
+
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
@@ -20,15 +23,39 @@ const DrawerNavigator: React.FC = () => {
   return (
     <Drawer.Navigator
       initialRouteName="Home"
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      drawerContent={(props) => <CustomDrawerContent {...props} />} // Use the updated CustomDrawerContent
     >
-      <Drawer.Screen name="Home" component={HomeScreen} />
+      <Drawer.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          title: 'Home',
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
+          ),
+        }}
+      />
       <Drawer.Screen
         name="CrewsStack"
         component={CrewsStackNavigator}
-        options={{ title: 'Crews' }}
+        options={{
+          title: 'Crews',
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="people-outline" size={size} color={color} />
+          ),
+        }}
       />
-      <Drawer.Screen name="Invitations" component={InvitationsScreen} />
+      <Drawer.Screen
+        name="Invitations"
+        component={InvitationsScreen}
+        options={{
+          title: 'Invitations',
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="mail-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      {/* Add other drawer items here if needed */}
     </Drawer.Navigator>
   );
 };

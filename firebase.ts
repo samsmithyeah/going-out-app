@@ -19,6 +19,8 @@ import {
   collection,
   onSnapshot,
 } from 'firebase/firestore';
+import { Functions, getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
+import { Platform } from 'react-native';
 
 // Your Firebase configuration (from the Firebase console)
 const firebaseConfig = {
@@ -37,26 +39,56 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase services
 const auth = getAuth(app);
 const db = getFirestore(app);
+const functions = getFunctions(app);
 
 const addUserToFirestore = async (user: User) => {
-    const userDocRef = doc(db, 'users', user.uid);
-    try {
-      const userDoc = await getDoc(userDocRef);
-      if (!userDoc.exists()) {
-        console.log(`Adding user to Firestore: ${user.displayName} (${user.email})`);
-        await setDoc(userDocRef, {
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          firstName: user.displayName?.split(' ')[0],
-          lastName: user.displayName?.split(' ')[1],
-        });
-      } else {
-        console.log(`User already exists in Firestore: ${user.displayName} (${user.email})`);
-      }
-    } catch (err: any) {
-      console.error('Error checking/creating user document:', err);
+  const userDocRef = doc(db, 'users', user.uid);
+  try {
+    const userDoc = await getDoc(userDocRef);
+    if (!userDoc.exists()) {
+      console.log(`Adding user to Firestore: ${user.displayName} (${user.email})`);
+      await setDoc(userDocRef, {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        firstName: user.displayName?.split(' ')[0],
+        lastName: user.displayName?.split(' ')[1],
+      });
+    } else {
+      console.log(`User already exists in Firestore: ${user.displayName} (${user.email})`);
     }
+  } catch (err: any) {
+    console.error('Error checking/creating user document:', err);
   }
+}
 
-export { auth, db, updateProfile, signInWithCredential, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, doc, getDoc, setDoc, collection, addDoc, onSnapshot, User, addUserToFirestore };
+const isAndroid = Platform.OS === 'android';
+const isIOS = Platform.OS === 'ios';
+
+let emulatorHost = 'localhost'; // Default for iOS Simulator
+let emulatorPort = 5001; // Default Functions emulator port
+
+if (isAndroid) {
+  emulatorHost = '10.0.2.2'; // Android Emulator
+} else if (isIOS) {
+  emulatorHost = 'localhost'; // iOS Simulator
+} else {
+  // For physical devices, replace with your computer's IP
+  emulatorHost = '192.168.4.160';
+}
+
+// Connect to Functions emulator if in development
+// if (__DEV__) {
+//   console.log('Connecting to Functions emulator:', emulatorHost, emulatorPort);
+//   connectFunctionsEmulator(functions, emulatorHost, emulatorPort);
+// }
+
+const deleteCrew = (crewId: string) => {
+  if (!auth.currentUser) {
+    throw new Error("User is not authenticated");
+  }
+  const deleteCrewCallable = httpsCallable(functions, 'deleteCrew');
+  return deleteCrewCallable({ crewId });
+};
+
+export { auth, db, functions, deleteCrew, updateProfile, signInWithCredential, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, doc, getDoc, setDoc, collection, addDoc, onSnapshot, User, addUserToFirestore };

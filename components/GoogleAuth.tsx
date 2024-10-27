@@ -8,19 +8,7 @@ export default function GoogleAuth() {
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId: '814136772684-024bdeavoudavtj3qosdj9b7o8unsium.apps.googleusercontent.com',
   });
-  const { user, setUser } = useUser();
-
-  // useEffect(async () => {
-  //   if (response?.type === 'success') {
-  //     const { id_token } = response.params;
-  //     const credential = GoogleAuthProvider.credential(id_token);
-  //     try {
-  //       const userCredential = await signInWithCredential(auth, credential)
-  //     } catch (error: any) {
-  //       Alert.alert('Login Error', error.message);
-  //     }
-  //   }
-  // }, [response]);
+  const { user } = useUser();
 
   useEffect(() => {
     const handleSignIn = async () => {
@@ -29,7 +17,6 @@ export default function GoogleAuth() {
         const credential = GoogleAuthProvider.credential(id_token);
         try {
           const userCredential = await signInWithCredential(auth, credential);
-          setUser(userCredential.user);
           await addUserToFirestore(userCredential.user);
         } catch (error: any) {
           Alert.alert('Login Error', error.message);

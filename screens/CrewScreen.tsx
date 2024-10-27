@@ -12,7 +12,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
 import {
   doc,
   getDoc,
@@ -24,10 +24,11 @@ import {
   addDoc,
   updateDoc,
   setDoc,
+  deleteDoc,
 } from 'firebase/firestore';
-import { db } from '../firebase';
-import { useUser } from '../context/UserContext';
-import { MaterialIcons } from '@expo/vector-icons';
+import { db, deleteCrew } from '../firebase';
+import { useUser, FullUser } from '../context/UserContext';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Added Ionicons for delete icon
 import { RootStackParamList } from '../navigation/AppNavigator';
 
 type CrewScreenRouteProp = RouteProp<RootStackParamList, 'Crew'>;
@@ -39,12 +40,6 @@ interface Crew {
   memberIds: string[];
 }
 
-interface UserProfile {
-  uid: string;
-  email: string;
-  name?: string;
-}
-
 interface Status {
   upForGoingOutTonight: boolean;
   timestamp: any; // Firestore timestamp
@@ -54,66 +49,81 @@ const CrewScreen: React.FC = () => {
   const { user } = useUser();
   const route = useRoute<CrewScreenRouteProp>();
   const { crewId } = route.params;
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [crew, setCrew] = useState<Crew | null>(null);
-  const [members, setMembers] = useState<UserProfile[]>([]);
+  const [members, setMembers] = useState<FullUser[]>([]);
   const [statuses, setStatuses] = useState<{ [userId: string]: boolean }>({});
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [inviteeEmail, setInviteeEmail] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false); // State for deletion process
 
   // Fetch crew data and statuses in real-time
-  useEffect(() => {
-    if (!crewId) {
-      Alert.alert('Error', 'Crew ID is missing');
-      setLoading(false);
-      return;
-    }
+useEffect(() => {
+  if (!crewId) {
+    Alert.alert('Error', 'Crew ID is missing');
+    setLoading(false);
+    return;
+  }
 
-    const crewRef = doc(db, 'crews', crewId);
-    const statusesRef = collection(crewRef, 'statuses');
+  const crewRef = doc(db, 'crews', crewId);
+  const statusesRef = collection(crewRef, 'statuses');
 
-    const unsubscribeCrew = onSnapshot(
-      crewRef,
-      (docSnap) => {
-        if (docSnap.exists()) {
-          const crewData: Crew = {
-            id: docSnap.id,
-            ...(docSnap.data() as Omit<Crew, 'id'>),
-          };
-          setCrew(crewData);
-        } else {
-          Alert.alert('Error', 'Crew not found');
+  const unsubscribeCrew = onSnapshot(
+    crewRef,
+    (docSnap) => {
+      // Check if user is still logged in
+      if (!user) return;
+
+      if (docSnap.exists()) {
+        const crewData: Crew = {
+          id: docSnap.id,
+          ...(docSnap.data() as Omit<Crew, 'id'>),
+        };
+        setCrew(crewData);
+        navigation.setOptions({ title: crewData.name });
+      } else {
+        if (!isDeleting) {
+          console.warn('Crew not found');
         }
-        setLoading(false);
-      },
-      (error) => {
+      }
+      setLoading(false);
+    },
+    (error) => {
+      if (user) {
         console.error('Error fetching crew:', error);
         Alert.alert('Error', 'Could not fetch crew data');
-        setLoading(false);
       }
-    );
+      setLoading(false);
+    }
+  );
 
-    const unsubscribeStatuses = onSnapshot(
-      statusesRef,
-      (snapshot) => {
-        const newStatuses: { [userId: string]: boolean } = {};
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data() as Status;
-          newStatuses[doc.id] = data.upForGoingOutTonight || false;
-        });
-        setStatuses(newStatuses);
-      },
-      (error) => {
+  const unsubscribeStatuses = onSnapshot(
+    statusesRef,
+    (snapshot) => {
+      if (!user) return;
+
+      const newStatuses: { [userId: string]: boolean } = {};
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data() as Status;
+        newStatuses[doc.id] = data.upForGoingOutTonight || false;
+      });
+      setStatuses(newStatuses);
+    },
+    (error) => {
+      if (user) { 
         console.error('Error fetching statuses:', error);
         Alert.alert('Error', 'Could not fetch statuses');
       }
-    );
+    }
+  );
 
-    return () => {
-      unsubscribeCrew();
-      unsubscribeStatuses();
-    };
-  }, [crewId]);
+  return () => {
+    unsubscribeCrew();
+    unsubscribeStatuses();
+  };
+}, [crewId, isDeleting, user]); // Add `user` to dependencies to reset on logout
+
 
   // Fetch member profiles whenever crew.memberIds changes
   useEffect(() => {
@@ -126,11 +136,11 @@ const CrewScreen: React.FC = () => {
           );
           const memberDocs = await Promise.all(memberDocsPromises);
 
-          const membersList: UserProfile[] = memberDocs
+          const membersList: FullUser[] = memberDocs
             .filter((docSnap) => docSnap.exists())
             .map((docSnap) => ({
               uid: docSnap.id,
-              ...(docSnap.data() as Omit<UserProfile, 'uid'>),
+              ...(docSnap.data() as Omit<FullUser, 'uid'>),
             }));
 
           setMembers(membersList);
@@ -185,6 +195,21 @@ const CrewScreen: React.FC = () => {
         return;
       }
 
+      // Check if there's already a pending invitation
+      const invitationsRef = collection(db, 'invitations');
+      const existingInvitationQuery = query(
+        invitationsRef,
+        where('crewId', '==', crewId),
+        where('toUserId', '==', inviteeId),
+        where('status', '==', 'pending')
+      );
+      const existingInvitationSnapshot = await getDocs(existingInvitationQuery);
+
+      if (!existingInvitationSnapshot.empty) {
+        Alert.alert('Error', 'A pending invitation already exists for this user');
+        return;
+      }
+
       // Create an invitation
       await addDoc(collection(db, 'invitations'), {
         crewId: crewId,
@@ -233,6 +258,54 @@ const CrewScreen: React.FC = () => {
     }
   };
 
+  // Function to delete the crew
+  const handleDeleteCrew = async () => {
+    Alert.alert(
+      'Confirm Deletion',
+      'Are you sure you want to delete this crew? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (!user?.uid || !crew) {
+              Alert.alert('Error', 'User or Crew data is missing');
+              return;
+            }
+
+            if (user.uid !== crew.ownerId) {
+              Alert.alert('Error', 'Only the crew owner can delete the crew');
+              return;
+            }
+
+            setIsDeleting(true);
+
+            try {
+              // Call the Cloud Function to delete the crew
+              const result = await deleteCrew(crewId);
+              const data = result.data as { success: boolean };
+              if (data.success) {
+                navigation.navigate('CrewsList'); 
+                Alert.alert('Success', 'Crew deleted successfully');
+              } else {
+                throw new Error('Deletion failed');
+              }
+            } catch (error: any) {
+              console.error('Error deleting crew:', error);
+              Alert.alert('Error', error.message || 'Could not delete the crew');
+            } finally {
+              setIsDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // Derive current user's status directly from statuses object
   const currentUserStatus = user?.uid ? statuses[user.uid] || false : false;
 
@@ -249,7 +322,21 @@ const CrewScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.crewName}>{crew.name}</Text>
+      {/* Crew Header */}
+      <View style={styles.headerContainer}>
+        {/* Delete Crew Button (Visible to Owner Only) */}
+        {user?.uid === crew.ownerId && (
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteCrew}>
+            {isDeleting ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Ionicons name="trash-outline" size={24} color="white" />
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Members List */}
       <Text style={styles.sectionTitle}>Members:</Text>
       <FlatList
         data={members}
@@ -257,7 +344,7 @@ const CrewScreen: React.FC = () => {
         renderItem={({ item }) => (
           <View style={styles.memberItem}>
             <Text style={styles.memberText}>
-              {item.name ? `${item.name} (${item.email})` : item.email}
+              {item.displayName}
             </Text>
           </View>
         )}
@@ -274,7 +361,7 @@ const CrewScreen: React.FC = () => {
             renderItem={({ item }) => (
               <View style={styles.memberItem}>
                 <Text style={styles.memberText}>
-                  {item.name ? `${item.name} (${item.email})` : item.email}
+                  {item.displayName}
                 </Text>
               </View>
             )}
@@ -333,6 +420,14 @@ const CrewScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Deletion Indicator */}
+      {isDeleting && (
+        <View style={styles.deletionOverlay}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={styles.deletionText}>Deleting Crew...</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -347,7 +442,16 @@ const styles = StyleSheet.create({
   crewName: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  deleteButton: {
+    backgroundColor: '#ff4d4d', // Red color for delete
+    padding: 10,
+    borderRadius: 5,
   },
   sectionTitle: {
     fontSize: 20,
@@ -440,5 +544,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  deletionOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deletionText: {
+    color: '#fff',
+    marginTop: 10,
+    fontSize: 18,
   },
 });
