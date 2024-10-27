@@ -23,6 +23,9 @@ expo-env.d.ts
 # iOS
 ios/
 
+# Android
+android/
+
 # Firebase
 functions/*.log
 firestore.rules

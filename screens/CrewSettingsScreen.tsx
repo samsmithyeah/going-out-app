@@ -366,8 +366,6 @@ const CrewSettingsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Crew Name Heading */}
-      <Text style={styles.sectionTitle}>{crew.name}</Text>
 
       <View style={styles.groupInfo}>
         <TouchableOpacity onPress={pickImage} style={styles.iconContainer}>
