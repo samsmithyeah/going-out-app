@@ -29,7 +29,7 @@ export default function GoogleAuth() {
         const credential = GoogleAuthProvider.credential(id_token);
         try {
           const userCredential = await signInWithCredential(auth, credential);
-          setUser(userCredential.user);
+          // setUser(userCredential.user);
           await addUserToFirestore(userCredential.user);
         } catch (error: any) {
           Alert.alert('Login Error', error.message);

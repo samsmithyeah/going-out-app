@@ -25,3 +25,6 @@ ios/
 
 # Firebase
 functions/*.log
+firestore.rules
+
+goingoutapp-c90b1-65d96c7159f9.json

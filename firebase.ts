@@ -19,7 +19,8 @@ import {
   collection,
   onSnapshot,
 } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { Functions, getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
+import { Platform } from 'react-native';
 
 // Your Firebase configuration (from the Firebase console)
 const firebaseConfig = {
@@ -61,7 +62,31 @@ const addUserToFirestore = async (user: User) => {
   }
 }
 
+const isAndroid = Platform.OS === 'android';
+const isIOS = Platform.OS === 'ios';
+
+let emulatorHost = 'localhost'; // Default for iOS Simulator
+let emulatorPort = 5001; // Default Functions emulator port
+
+if (isAndroid) {
+  emulatorHost = '10.0.2.2'; // Android Emulator
+} else if (isIOS) {
+  emulatorHost = 'localhost'; // iOS Simulator
+} else {
+  // For physical devices, replace with your computer's IP
+  emulatorHost = '192.168.4.160';
+}
+
+// Connect to Functions emulator if in development
+// if (__DEV__) {
+//   console.log('Connecting to Functions emulator:', emulatorHost, emulatorPort);
+//   connectFunctionsEmulator(functions, emulatorHost, emulatorPort);
+// }
+
 const deleteCrew = (crewId: string) => {
+  if (!auth.currentUser) {
+    throw new Error("User is not authenticated");
+  }
   const deleteCrewCallable = httpsCallable(functions, 'deleteCrew');
   return deleteCrewCallable({ crewId });
 };

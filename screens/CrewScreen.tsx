@@ -27,7 +27,7 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { db, deleteCrew } from '../firebase';
-import { useUser } from '../context/UserContext';
+import { useUser, FullUser } from '../context/UserContext';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Added Ionicons for delete icon
 import { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -38,12 +38,6 @@ interface Crew {
   name: string;
   ownerId: string;
   memberIds: string[];
-}
-
-interface UserProfile {
-  uid: string;
-  email: string;
-  name?: string;
 }
 
 interface Status {
@@ -57,7 +51,7 @@ const CrewScreen: React.FC = () => {
   const { crewId } = route.params;
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [crew, setCrew] = useState<Crew | null>(null);
-  const [members, setMembers] = useState<UserProfile[]>([]);
+  const [members, setMembers] = useState<FullUser[]>([]);
   const [statuses, setStatuses] = useState<{ [userId: string]: boolean }>({});
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [inviteeEmail, setInviteeEmail] = useState('');
@@ -65,58 +59,71 @@ const CrewScreen: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false); // State for deletion process
 
   // Fetch crew data and statuses in real-time
-  useEffect(() => {
-    if (!crewId) {
-      Alert.alert('Error', 'Crew ID is missing');
-      setLoading(false);
-      return;
-    }
+useEffect(() => {
+  if (!crewId) {
+    Alert.alert('Error', 'Crew ID is missing');
+    setLoading(false);
+    return;
+  }
 
-    const crewRef = doc(db, 'crews', crewId);
-    const statusesRef = collection(crewRef, 'statuses');
+  const crewRef = doc(db, 'crews', crewId);
+  const statusesRef = collection(crewRef, 'statuses');
 
-    const unsubscribeCrew = onSnapshot(
-      crewRef,
-      (docSnap) => {
-        if (docSnap.exists()) {
-          const crewData: Crew = {
-            id: docSnap.id,
-            ...(docSnap.data() as Omit<Crew, 'id'>),
-          };
-          setCrew(crewData);
-        } else {
-          Alert.alert('Error', 'Crew not found');
+  const unsubscribeCrew = onSnapshot(
+    crewRef,
+    (docSnap) => {
+      // Check if user is still logged in
+      if (!user) return;
+
+      if (docSnap.exists()) {
+        const crewData: Crew = {
+          id: docSnap.id,
+          ...(docSnap.data() as Omit<Crew, 'id'>),
+        };
+        setCrew(crewData);
+        navigation.setOptions({ title: crewData.name });
+      } else {
+        if (!isDeleting) {
+          console.warn('Crew not found');
         }
-        setLoading(false);
-      },
-      (error) => {
+      }
+      setLoading(false);
+    },
+    (error) => {
+      if (user) {
         console.error('Error fetching crew:', error);
         Alert.alert('Error', 'Could not fetch crew data');
-        setLoading(false);
       }
-    );
+      setLoading(false);
+    }
+  );
 
-    const unsubscribeStatuses = onSnapshot(
-      statusesRef,
-      (snapshot) => {
-        const newStatuses: { [userId: string]: boolean } = {};
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data() as Status;
-          newStatuses[doc.id] = data.upForGoingOutTonight || false;
-        });
-        setStatuses(newStatuses);
-      },
-      (error) => {
+  const unsubscribeStatuses = onSnapshot(
+    statusesRef,
+    (snapshot) => {
+      if (!user) return;
+
+      const newStatuses: { [userId: string]: boolean } = {};
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data() as Status;
+        newStatuses[doc.id] = data.upForGoingOutTonight || false;
+      });
+      setStatuses(newStatuses);
+    },
+    (error) => {
+      if (user) { 
         console.error('Error fetching statuses:', error);
         Alert.alert('Error', 'Could not fetch statuses');
       }
-    );
+    }
+  );
 
-    return () => {
-      unsubscribeCrew();
-      unsubscribeStatuses();
-    };
-  }, [crewId]);
+  return () => {
+    unsubscribeCrew();
+    unsubscribeStatuses();
+  };
+}, [crewId, isDeleting, user]); // Add `user` to dependencies to reset on logout
+
 
   // Fetch member profiles whenever crew.memberIds changes
   useEffect(() => {
@@ -129,11 +136,11 @@ const CrewScreen: React.FC = () => {
           );
           const memberDocs = await Promise.all(memberDocsPromises);
 
-          const membersList: UserProfile[] = memberDocs
+          const membersList: FullUser[] = memberDocs
             .filter((docSnap) => docSnap.exists())
             .map((docSnap) => ({
               uid: docSnap.id,
-              ...(docSnap.data() as Omit<UserProfile, 'uid'>),
+              ...(docSnap.data() as Omit<FullUser, 'uid'>),
             }));
 
           setMembers(membersList);
@@ -282,8 +289,8 @@ const CrewScreen: React.FC = () => {
               const result = await deleteCrew(crewId);
               const data = result.data as { success: boolean };
               if (data.success) {
-                Alert.alert('Success', 'Crew deleted successfully');
                 navigation.navigate('CrewsList'); 
+                Alert.alert('Success', 'Crew deleted successfully');
               } else {
                 throw new Error('Deletion failed');
               }
@@ -317,7 +324,6 @@ const CrewScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Crew Header */}
       <View style={styles.headerContainer}>
-        <Text style={styles.crewName}>{crew.name}</Text>
         {/* Delete Crew Button (Visible to Owner Only) */}
         {user?.uid === crew.ownerId && (
           <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteCrew}>
@@ -338,7 +344,7 @@ const CrewScreen: React.FC = () => {
         renderItem={({ item }) => (
           <View style={styles.memberItem}>
             <Text style={styles.memberText}>
-              {item.name ? `${item.name} (${item.email})` : item.email}
+              {item.displayName}
             </Text>
           </View>
         )}
@@ -355,7 +361,7 @@ const CrewScreen: React.FC = () => {
             renderItem={({ item }) => (
               <View style={styles.memberItem}>
                 <Text style={styles.memberText}>
-                  {item.name ? `${item.name} (${item.email})` : item.email}
+                  {item.displayName}
                 </Text>
               </View>
             )}
