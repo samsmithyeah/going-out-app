@@ -3,11 +3,13 @@ import { notifyCrewMembersOnCrewDeletion } from './notifications/notifyCrewMembe
 import { notifyCrewMembersOnNewJoin } from './notifications/notifyCrewMembersOnNewJoin';
 import { notifyCrewOnStatusChange } from './notifications/notifyCrewOnStatusChange';
 import { notifyUserOnCrewInvitation } from './notifications/notifyUserOnCrewInvitation';
+import { notifyCrewMembersOnMemberLeave } from './notifications/notifyCrewMembersOnMemberLeave';
 import { deleteCrew } from './utils/deleteCrew';
 
 export {
   notifyCrewMembersOnCrewDeletion,
   notifyCrewMembersOnNewJoin,
+  notifyCrewMembersOnMemberLeave,
   notifyCrewOnStatusChange,
   notifyUserOnCrewInvitation,
   deleteCrew,

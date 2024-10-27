@@ -306,6 +306,70 @@ useEffect(() => {
     );
   };
 
+  const handleLeaveCrew = async () => {
+  if (!user?.uid || !crew) {
+    Alert.alert('Error', 'User or Crew data is missing');
+    return;
+  }
+
+  Alert.alert(
+    'Confirm Leaving',
+    'Are you sure you want to leave this crew?',
+    [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Leave',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const crewRef = doc(db, 'crews', crewId);
+
+            // If the user is the owner of the crew
+            if (user.uid === crew.ownerId) {
+              if (crew.memberIds.length === 1) {
+                // If the user is the only member, delete the crew
+                await deleteCrew(crewId);
+                navigation.navigate('CrewsList');
+                Alert.alert('Success', 'You have left and deleted the crew');
+              } else {
+                // Assign a new owner randomly from the remaining members
+                const remainingMembers = crew.memberIds.filter((memberId) => memberId !== user.uid);
+                const newOwnerId = remainingMembers[Math.floor(Math.random() * remainingMembers.length)];
+
+                // Update the crew document with the new owner and remove the current user
+                await updateDoc(crewRef, {
+                  ownerId: newOwnerId,
+                  memberIds: remainingMembers,
+                });
+
+                navigation.navigate('CrewsList');
+                Alert.alert('Success', 'You have left the crew, and ownership was transferred.');
+              }
+            } else {
+              // If the user is not the owner, simply remove them from the crew
+              const updatedMemberIds = crew.memberIds.filter((memberId) => memberId !== user.uid);
+
+              await updateDoc(crewRef, {
+                memberIds: updatedMemberIds,
+              });
+
+              navigation.navigate('CrewsList');
+              Alert.alert('Success', 'You have left the crew');
+            }
+          } catch (error) {
+            console.error('Error leaving crew:', error);
+            Alert.alert('Error', 'Could not leave the crew');
+          }
+        },
+      },
+    ]
+  );
+};
+
+
   // Derive current user's status directly from statuses object
   const currentUserStatus = user?.uid ? statuses[user.uid] || false : false;
 
@@ -334,6 +398,14 @@ useEffect(() => {
             )}
           </TouchableOpacity>
         )}
+        {user?.uid && (
+          <TouchableOpacity
+            style={styles.leaveButton}
+            onPress={handleLeaveCrew}
+          >
+            <Text style={styles.leaveButtonText}>Leave Crew</Text>
+          </TouchableOpacity>
+)}
       </View>
 
       {/* Members List */}
@@ -560,4 +632,16 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 18,
   },
+  leaveButton: {
+  backgroundColor: '#ff6347', // Tomato color for leave button
+  padding: 15,
+  borderRadius: 10,
+  alignItems: 'center',
+  marginTop: 10,
+},
+leaveButtonText: {
+  color: 'white',
+  fontWeight: 'bold',
+  fontSize: 16,
+},
 });
