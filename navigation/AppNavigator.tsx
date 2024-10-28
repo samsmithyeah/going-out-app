@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { useUser } from '../context/UserContext';
 import SignUpScreen from '../screens/SignUpScreen';
 import LoginScreen from '../screens/LoginScreen';
-import DrawerNavigator from './DrawerNavigator'; // Import the DrawerNavigator
+import DrawerNavigator from './DrawerNavigator';
 
 export type RootStackParamList = {
   SignUp: undefined;
@@ -15,6 +15,7 @@ export type RootStackParamList = {
   CrewsList: undefined;
   Crew: { crewId: string };
   CrewSettings: { crewId: string };
+  UserProfile: { userId: string };
   Invitations: undefined;
   Notifications: undefined;
 };
@@ -32,7 +33,7 @@ const AppNavigator: React.FC = () => {
             name="Login"
             component={LoginScreen}
             options={{ headerShown: false }}
-          />
+        />
           <Stack.Screen
             name="SignUp"
             component={SignUpScreen}

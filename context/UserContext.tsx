@@ -1,6 +1,6 @@
 // context/UserContext.tsx
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { User, auth } from '../firebase';
+import { auth } from '../firebase';
 import { Alert } from 'react-native';
 
 type UserContextType = {
@@ -9,16 +9,16 @@ type UserContextType = {
   logout: () => Promise<void>;
 };
 
-export type FullUser = {
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+export interface User {
   uid: string;
   displayName: string;
-  firstName?: string;
-  lastName?: string;
+  firstName: string;
+  lastName: string;
   email: string;
   photoURL?: string;
-};
-
-const UserContext = createContext<UserContextType | undefined>(undefined);
+}
 
 type UserProviderProps = {
   children: ReactNode;
@@ -33,7 +33,19 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
-      setUser(firebaseUser);
+      if (firebaseUser) {
+        const user: User = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          displayName: firebaseUser.displayName || '',
+          firstName: firebaseUser.displayName?.split(' ')[0] || '',
+          lastName: firebaseUser.displayName?.split(' ')[1] || '',
+          photoURL: firebaseUser.photoURL || '',
+        };
+        setUser(user);
+      } else {
+        setUser(null);
+      }
     });
 
     return () => unsubscribe();

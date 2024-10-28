@@ -13,22 +13,15 @@ import {
   TextInput,
   Image,
 } from 'react-native';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Added Ionicons for placeholder
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext'; 
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator'; // Adjust the import path as needed
+import { RootStackParamList } from '../navigation/AppNavigator';
+import { Crew } from './CrewScreen';
 
 type CrewsListScreenProps = NativeStackScreenProps<RootStackParamList, 'CrewsList'>;
-
-interface Crew {
-  id: string;
-  name: string;
-  ownerId: string;
-  memberIds: string[];
-  iconUrl?: string; // Added iconUrl
-}
 
 const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   const { user } = useUser();

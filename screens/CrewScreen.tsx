@@ -4,7 +4,6 @@ import React, { useEffect, useState, useLayoutEffect } from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   Alert,
   StyleSheet,
@@ -24,18 +23,21 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { useUser, FullUser } from '../context/UserContext';
+import { useUser, User } from '../context/UserContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
+import ProfilePicturePicker from '../components/ProfilePicturePicker';
+import MemberList from '../components/MemberList'; // Import the new MemberList component
 
 type CrewScreenRouteProp = RouteProp<RootStackParamList, 'Crew'>;
 
-interface Crew {
+export interface Crew {
   id: string;
   name: string;
   ownerId: string;
   memberIds: string[];
+  iconUrl?: string;
 }
 
 interface Status {
@@ -49,7 +51,7 @@ const CrewScreen: React.FC = () => {
   const { crewId } = route.params;
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [crew, setCrew] = useState<Crew | null>(null);
-  const [members, setMembers] = useState<FullUser[]>([]);
+  const [members, setMembers] = useState<User[]>([]);
   const [statuses, setStatuses] = useState<{ [userId: string]: boolean }>({});
   const [loading, setLoading] = useState(true);
 
@@ -103,7 +105,7 @@ const CrewScreen: React.FC = () => {
         setStatuses(newStatuses);
       },
       (error) => {
-        if (user) { 
+        if (user) {
           console.error('Error fetching statuses:', error);
           Alert.alert('Error', 'Could not fetch statuses');
         }
@@ -114,7 +116,7 @@ const CrewScreen: React.FC = () => {
       unsubscribeCrew();
       unsubscribeStatuses();
     };
-  }, [crewId, user]);
+  }, [crewId, user, navigation]);
 
   // Fetch member profiles
   useEffect(() => {
@@ -126,11 +128,11 @@ const CrewScreen: React.FC = () => {
           );
           const memberDocs = await Promise.all(memberDocsPromises);
 
-          const membersList: FullUser[] = memberDocs
+          const membersList: User[] = memberDocs
             .filter((docSnap) => docSnap.exists())
             .map((docSnap) => ({
               uid: docSnap.id,
-              ...(docSnap.data() as Omit<FullUser, 'uid'>),
+              ...(docSnap.data() as Omit<User, 'uid'>),
             }));
 
           setMembers(membersList);
@@ -206,22 +208,12 @@ const CrewScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Members Up for Going Out Tonight */}
       {currentUserStatus ? (
-        <>
-          <Text style={styles.sectionTitle}>Up for going out tonight:</Text>
-          <FlatList
-            data={membersUpForGoingOut}
-            keyExtractor={(item) => item.uid}
-            renderItem={({ item }) => (
-              <View style={styles.memberItem}>
-                <View style={styles.avatar} />
-                <Text style={styles.memberText}>
-                  {item.displayName} {item.uid === user?.uid && <Text style={styles.youText}>(You)</Text>}
-                </Text>
-              </View>
-            )}
-            ListEmptyComponent={<Text>No members are up for going out tonight.</Text>}
-          />
-        </>
+        <MemberList
+          members={membersUpForGoingOut}
+          currentUserId={user?.uid || null}
+          listTitle="Up for going out tonight:"
+          emptyMessage="No members are up for going out tonight."
+        />
       ) : (
         <View style={styles.skeletonContainer}>
           {/* Render Skeleton User Items */}
@@ -262,32 +254,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    marginVertical: 10,
-  },
-  memberItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#e0e0e0',
-    marginRight: 16,
-  },
-  memberText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  youText: {
-    color: 'gray',
   },
   statusButton: {
     padding: 15,

@@ -7,7 +7,6 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithCredential,
-  User,
   updateProfile
 } from 'firebase/auth';
 import {
@@ -22,6 +21,7 @@ import {
 import { getStorage } from 'firebase/storage';
 import { Functions, getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
 import { Platform } from 'react-native';
+import { User } from './context/UserContext';
 
 // Your Firebase configuration (from the Firebase console)
 const firebaseConfig = {
@@ -48,14 +48,17 @@ const addUserToFirestore = async (user: User) => {
   try {
     const userDoc = await getDoc(userDocRef);
     if (!userDoc.exists()) {
-      console.log(`Adding user to Firestore: ${user.displayName} (${user.email})`);
-      await setDoc(userDocRef, {
+      console.log(`Adding user to Firestore: ${user.displayName} (${user.email}). Photo: ${user.photoURL}`);
+      const userData: User = {
         uid: user.uid,
         email: user.email,
         displayName: user.displayName,
-        firstName: user.displayName?.split(' ')[0],
-        lastName: user.displayName?.split(' ')[1],
-      });
+        firstName: user.displayName.split(' ')[0],
+        lastName: user.displayName.split(' ')[1],
+        photoURL: user.photoURL,
+      };
+
+      await setDoc(userDocRef, userData);
     } else {
       console.log(`User already exists in Firestore: ${user.displayName} (${user.email})`);
     }

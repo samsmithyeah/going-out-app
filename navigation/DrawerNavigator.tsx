@@ -5,8 +5,9 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import InvitationsScreen from '../screens/InvitationsScreen';
+import UserProfileScreen from '../screens/UserProfileScreen';
 import CrewsStackNavigator from './CrewsStackNavigator';
-import CustomDrawerContent from './CustomDrawerContent'; // Import the updated CustomDrawerContent
+import CustomDrawerContent from './CustomDrawerContent'; 
 
 
 export type DrawerParamList = {
@@ -14,6 +15,7 @@ export type DrawerParamList = {
   CrewsStack: undefined;
   FriendsList: undefined;
   Invitations: undefined;
+  UserProfile: undefined;
 };
 
 
@@ -23,7 +25,7 @@ const DrawerNavigator: React.FC = () => {
   return (
     <Drawer.Navigator
       initialRouteName="Home"
-      drawerContent={(props) => <CustomDrawerContent {...props} />} // Use the updated CustomDrawerContent
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
       <Drawer.Screen
         name="Home"
@@ -52,6 +54,16 @@ const DrawerNavigator: React.FC = () => {
           title: 'Invitations',
           drawerIcon: ({ color, size }) => (
             <Ionicons name="mail-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="UserProfile"
+        component={UserProfileScreen}
+        options={{
+          title: 'Profile',
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />
