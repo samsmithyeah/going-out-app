@@ -4,13 +4,11 @@ import React, { useEffect, useState, useLayoutEffect } from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   Alert,
   StyleSheet,
   ActivityIndicator,
   Dimensions,
-  Image, // Import Image component
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
 import {
@@ -26,18 +24,20 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser, User } from '../context/UserContext';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Import Ionicons for placeholders
+import { MaterialIcons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
+import MemberList from '../components/MemberList'; // Import the new MemberList component
 
 type CrewScreenRouteProp = RouteProp<RootStackParamList, 'Crew'>;
 
-interface Crew {
+export interface Crew {
   id: string;
   name: string;
   ownerId: string;
   memberIds: string[];
+  iconUrl?: string;
 }
 
 interface Status {
@@ -208,29 +208,12 @@ const CrewScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Members Up for Going Out Tonight */}
       {currentUserStatus ? (
-        <>
-          <Text style={styles.sectionTitle}>Up for going out tonight:</Text>
-          <FlatList
-            data={membersUpForGoingOut}
-            keyExtractor={(item) => item.uid}
-            renderItem={({ item }) => (
-              <View style={styles.memberItem}>
-                {/* Display Profile Picture */}
-                <ProfilePicturePicker
-                  imageUrl={item.photoURL}
-                  onImageUpdate={() => {}}
-                  editable={false} // Members cannot change each other's profile pictures() => { /* Optional: Implement if users can update their own profile picture from here */ }
-                  storagePath={`users/${item.uid}/profile.jpg`}
-                  size={40}
-                />
-                <Text style={styles.memberText}>
-                  {item.displayName} {item.uid === user?.uid && <Text style={styles.youText}>(You)</Text>}
-                </Text>
-              </View>
-            )}
-            ListEmptyComponent={<Text>No members are up for going out tonight.</Text>}
-          />
-        </>
+        <MemberList
+          members={membersUpForGoingOut}
+          currentUserId={user?.uid || null}
+          listTitle="Up for going out tonight:"
+          emptyMessage="No members are up for going out tonight."
+        />
       ) : (
         <View style={styles.skeletonContainer}>
           {/* Render Skeleton User Items */}
@@ -271,41 +254,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    marginVertical: 10,
-  },
-  memberItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  avatarImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 16,
-  },
-  avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  memberText: {
-    fontSize: 16,
-    color: '#333',
-    paddingLeft: 10,
-  },
-  youText: {
-    color: 'gray',
   },
   statusButton: {
     padding: 15,

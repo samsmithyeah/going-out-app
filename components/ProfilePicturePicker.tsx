@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // You can choose any icon library you prefer
+import { Ionicons } from '@expo/vector-icons'; 
 import * as ImagePicker from 'expo-image-picker';
-import * as ImageManipulator from 'expo-image-manipulator'; // Import ImageManipulator
+import * as ImageManipulator from 'expo-image-manipulator'; 
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from '../firebase';
 
@@ -200,6 +200,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     height: '100%',
-    borderRadius: 999, // Ensure it's circular
+    borderRadius: 999, 
   },
 });

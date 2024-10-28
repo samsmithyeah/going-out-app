@@ -29,16 +29,11 @@ import { useUser, User } from '../context/UserContext';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
+import MemberList from '../components/MemberList';
+import { Crew } from './CrewScreen';
+import { isLoading } from 'expo-font';
 
 type CrewSettingsScreenRouteProp = RouteProp<RootStackParamList, 'CrewSettings'>;
-
-interface Crew {
-  id: string;
-  name: string;
-  ownerId: string;
-  memberIds: string[];
-  iconUrl?: string;
-}
 
 interface Status {
   upForGoingOutTonight: boolean;
@@ -376,55 +371,39 @@ const CrewSettingsScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Delete Crew Button (Visible to Owner Only) */}
-      {user?.uid === crew.ownerId && (
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteCrew} accessibilityLabel="Delete Crew">
-          {isDeleting ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Ionicons name="trash-outline" size={24} color="white" />
-          )}
-        </TouchableOpacity>
-      )}
-
-      {/* Leave Crew Button */}
-      {user?.uid && (
-        <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveCrew} accessibilityLabel="Leave Crew">
-          <Text style={styles.leaveButtonText}>Leave Crew</Text>
-        </TouchableOpacity>
-      )}
-
       {/* Members List */}
-      <Text style={styles.sectionTitle}>{members.length} Members:</Text>
-      <FlatList
-        data={members}
-        keyExtractor={(item) => item.uid}
-        renderItem={({ item }) => (
-          <View style={styles.memberItem}>
-            {/* Display Profile Picture */}
-            <ProfilePicturePicker
-              imageUrl={item.photoURL}
-              onImageUpdate={() => {}}
-              editable={false} // Members cannot change each other's profile pictures() => { /* Optional: Implement if users can update their own profile picture from here */ }
-              storagePath={`users/${item.uid}/profile.jpg`}
-              size={40}
-            />
-            <Text style={styles.memberText}>
-              {item.displayName} {item.uid === user?.uid && <Text style={styles.youText}>(You)</Text>}
-            </Text>
-          </View>
-        )}
-        ListEmptyComponent={<Text>No members found</Text>}
+      <MemberList
+        members={members}
+        currentUserId={user?.uid || null}
+        listTitle={`${members.length} members:`}
+        isLoading={loading} 
+        emptyMessage="No members in this crew."
+        adminIds={[crew.ownerId]}
       />
 
-      {/* Invite Member Button (Visible to Owner Only) */}
-      {user?.uid === crew.ownerId && (
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setIsInviteModalVisible(true)}
           accessibilityLabel="Invite Member"
         >
           <MaterialIcons name="person-add" size={28} color="white" />
+      </TouchableOpacity>
+
+      {/* Leave Crew Button */}
+      {user?.uid && (
+        <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveCrew} accessibilityLabel="Leave Crew">
+          <Text style={styles.leaveButtonText}>Leave crew</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Delete Crew Button (Visible to Owner Only) */}
+      {user?.uid === crew.ownerId && (
+        <TouchableOpacity style={styles.leaveButton} onPress={handleDeleteCrew} accessibilityLabel="Delete Crew">
+          {isDeleting ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.leaveButtonText}>Delete crew</Text>
+          )}
         </TouchableOpacity>
       )}
 
@@ -535,13 +514,6 @@ const styles = StyleSheet.create({
   editButton: {
     marginLeft: 10,
     padding: 5,
-  },
-  deleteButton: {
-    backgroundColor: '#ff4d4d', // Red color for delete
-    padding: 10,
-    borderRadius: 5,
-    alignSelf: 'flex-end',
-    marginTop: 10,
   },
   sectionTitle: {
     fontSize: 20,
@@ -665,7 +637,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   leaveButton: {
-    backgroundColor: '#ff6347', // Tomato color for leave button
+    backgroundColor: '#ff6347',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',

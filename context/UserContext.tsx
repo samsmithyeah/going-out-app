@@ -17,7 +17,7 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  photoURL: string | null;
+  photoURL?: string;
 }
 
 type UserProviderProps = {

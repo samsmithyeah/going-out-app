@@ -55,7 +55,7 @@ const addUserToFirestore = async (user: User) => {
         displayName: user.displayName,
         firstName: user.displayName.split(' ')[0],
         lastName: user.displayName.split(' ')[1],
-        photoURL: user.photoURL || null,
+        photoURL: user.photoURL,
       };
 
       await setDoc(userDocRef, userData);

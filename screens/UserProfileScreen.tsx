@@ -61,11 +61,11 @@ const UserProfileScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ProfilePicturePicker
-        imageUrl={user.photoURL}
+        imageUrl={user.photoURL ?? null}
         onImageUpdate={(newUrl) => {
           setUser({ ...user, photoURL: newUrl });
         }}
-        editable={true} // Users can edit their own profile picture
+        editable={true}
         storagePath={`users/${user.uid}/profile.jpg`}
         size={150}
       />

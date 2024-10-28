@@ -36,13 +36,6 @@ interface Invitation {
   timestamp: any;
 }
 
-interface Crew {
-  id: string;
-  name: string;
-  ownerId: string;
-  memberIds: string[];
-}
-
 const InvitationsScreen: React.FC<InvitationsScreenProps> = ({navigation}) => {
   const { user } = useUser();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
