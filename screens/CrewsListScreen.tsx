@@ -11,8 +11,9 @@ import {
   StyleSheet,
   ActivityIndicator,
   TextInput,
+  Image,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Added Ionicons for placeholder
 import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext'; 
@@ -26,6 +27,7 @@ interface Crew {
   name: string;
   ownerId: string;
   memberIds: string[];
+  iconUrl?: string; // Added iconUrl
 }
 
 const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
@@ -84,6 +86,8 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
         name: newCrewName.trim(),
         ownerId: user.uid,
         memberIds: [user.uid],
+        // Optionally, initialize iconUrl if you have a default image
+        // iconUrl: 'https://example.com/default-icon.png',
       });
 
       // Close modal and clear input
@@ -116,10 +120,19 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
             style={styles.crewItem}
             onPress={() => navigation.navigate('Crew', { crewId: item.id })}
           >
+            {/* Crew Image */}
+            {item.iconUrl ? (
+              <Image source={{ uri: item.iconUrl }} style={styles.crewImage} />
+            ) : (
+              <View style={styles.placeholderImage}>
+                <Ionicons name="people-outline" size={24} color="#888" />
+              </View>
+            )}
+            {/* Crew Name */}
             <Text style={styles.crewText}>{item.name}</Text>
           </TouchableOpacity>
         )}
-        ListEmptyComponent={<Text>No crews found</Text>}
+        ListEmptyComponent={<Text style={styles.emptyText}>No crews found</Text>}
       />
 
       {/* Add Crew Button */}
@@ -167,12 +180,35 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   crewItem: {
+    flexDirection: 'row', // Arrange image and text horizontally
+    alignItems: 'center', // Vertically center items
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
+  crewImage: {
+    width: 50, // Adjust size as needed
+    height: 50,
+    borderRadius: 25,
+    marginRight: 16, // Space between image and text
+  },
+  placeholderImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
   crewText: {
     fontSize: 18,
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#888',
   },
   addButton: {
     backgroundColor: '#1e90ff',
@@ -184,6 +220,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
+    elevation: 5, // Add shadow for Android
+    shadowColor: '#000', // Add shadow for iOS
+    shadowOffset: { width: 0, height: 2 }, // iOS shadow
+    shadowOpacity: 0.3, // iOS shadow
+    shadowRadius: 3, // iOS shadow
   },
   modalContainer: {
     flex: 1,
@@ -204,6 +245,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     marginBottom: 15,
+    textAlign: 'center',
   },
   input: {
     width: '100%',

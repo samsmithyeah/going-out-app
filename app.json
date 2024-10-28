@@ -44,7 +44,13 @@
         }
       ],
       "expo-router",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "This app accesses your photos to let you pick crew and profile pictures."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
