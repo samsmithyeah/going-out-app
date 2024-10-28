@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // You can choose any icon library you prefer
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator'; // Import ImageManipulator
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from '../firebase';
 
@@ -13,8 +14,10 @@ interface ProfilePicturePickerProps {
   editable: boolean;
   storagePath: string;
   size?: number;
-  iconName?: keyof typeof Ionicons.glyphMap; 
-  iconColor?: string; 
+  iconName?: keyof typeof Ionicons.glyphMap;
+  iconColor?: string;
+  iconOffsetX?: number;
+  iconOffsetY?: number;
 }
 
 const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
@@ -24,7 +27,9 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
   storagePath,
   size = 100,
   iconName = 'person',
-  iconColor = '#888', 
+  iconColor = '#888',
+  iconOffsetX = 0.03,
+  iconOffsetY = 0.03,
 }) => {
   const [isUploading, setIsUploading] = useState(false);
 
@@ -96,7 +101,14 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
   const uploadImage = async (uri: string) => {
     setIsUploading(true);
     try {
-      const response = await fetch(uri);
+      // Resize the image using ImageManipulator
+      const resizedImage = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 500 } }], // Resize to a width of 500 pixels
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // Compress the image
+      );
+
+      const response = await fetch(resizedImage.uri);
       const blob = await response.blob();
       const storageRef = ref(storage, storagePath);
       await uploadBytes(storageRef, blob);
@@ -139,8 +151,8 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
               width: size * 0.3,
               height: size * 0.3,
               borderRadius: (size * 0.3) / 2,
-              right: size * 0.03, 
-              bottom: size * 0.03,
+              right: size * iconOffsetX, // Dynamic horizontal offset
+              bottom: size * iconOffsetY, // Dynamic vertical offset
             },
           ]}
           accessibilityLabel="Change Profile Picture"
