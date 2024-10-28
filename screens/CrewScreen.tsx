@@ -29,6 +29,7 @@ import { useUser, User } from '../context/UserContext';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Import Ionicons for placeholders
 import { RootStackParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
+import ProfilePicturePicker from '../components/ProfilePicturePicker';
 
 type CrewScreenRouteProp = RouteProp<RootStackParamList, 'Crew'>;
 
@@ -215,13 +216,13 @@ const CrewScreen: React.FC = () => {
             renderItem={({ item }) => (
               <View style={styles.memberItem}>
                 {/* Display Profile Picture */}
-                {item.profilePictureUrl ? (
-                  <Image source={{ uri: item.profilePictureUrl }} style={styles.avatarImage} />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Ionicons name="person" size={24} color="#888" />
-                  </View>
-                )}
+                <ProfilePicturePicker
+                  imageUrl={item.photoURL}
+                  onImageUpdate={() => {}}
+                  editable={false} // Members cannot change each other's profile pictures() => { /* Optional: Implement if users can update their own profile picture from here */ }
+                  storagePath={`users/${item.uid}/profile.jpg`}
+                  size={40}
+                />
                 <Text style={styles.memberText}>
                   {item.displayName} {item.uid === user?.uid && <Text style={styles.youText}>(You)</Text>}
                 </Text>
@@ -301,6 +302,7 @@ const styles = StyleSheet.create({
   memberText: {
     fontSize: 16,
     color: '#333',
+    paddingLeft: 10,
   },
   youText: {
     color: 'gray',

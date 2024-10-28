@@ -18,7 +18,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const AppContent: React.FC = () => {
+const App: React.FC = () => {
   const { user } = useUser();
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
@@ -114,10 +114,6 @@ const AppContent: React.FC = () => {
   return (
     <AppNavigator />
   );
-};
-
-const App: React.FC = () => {
-  return <AppContent />;
 };
 
 export default App;

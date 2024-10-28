@@ -11,7 +11,6 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
-  Image,
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
 import {
@@ -24,14 +23,12 @@ import {
   onSnapshot,
   addDoc,
   updateDoc,
-  setDoc,
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import * as ImagePicker from 'expo-image-picker';
-import { db, deleteCrew, storage } from '../firebase';
+import { deleteCrew, db } from '../firebase';
 import { useUser, User } from '../context/UserContext';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import ProfilePicturePicker from '../components/ProfilePicturePicker';
 
 type CrewSettingsScreenRouteProp = RouteProp<RootStackParamList, 'CrewSettings'>;
 
@@ -61,7 +58,6 @@ const CrewSettingsScreen: React.FC = () => {
   const [newCrewName, setNewCrewName] = useState('');
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [isUpdatingName, setIsUpdatingName] = useState(false);
 
   // Fetch crew data and listen for real-time updates
@@ -209,48 +205,6 @@ const CrewSettingsScreen: React.FC = () => {
     } catch (error) {
       console.error('Error inviting user:', error);
       Alert.alert('Error', 'Could not send invitation');
-    }
-  };
-
-  // Function to pick and upload a new crew icon
-  const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.5,
-      });
-
-      if (!result.canceled) {
-        if (result.assets && result.assets.length > 0) {
-          uploadImage(result.assets[0].uri);
-        }
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Could not select image');
-    }
-  };
-
-  const uploadImage = async (uri: string) => {
-    setIsUploading(true);
-    try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      const storageRef = ref(storage, `crews/${crewId}/icon.jpg`);
-      await uploadBytes(storageRef, blob);
-
-      const downloadUrl = await getDownloadURL(storageRef);
-      await updateDoc(doc(db, 'crews', crewId), { iconUrl: downloadUrl });
-      setCrew((prev) => (prev ? { ...prev, iconUrl: downloadUrl } : prev));
-
-      Alert.alert('Success', 'Crew icon updated');
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      Alert.alert('Error', 'Could not upload image');
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -405,17 +359,17 @@ const CrewSettingsScreen: React.FC = () => {
     <View style={styles.container}>
 
       <View style={styles.groupInfo}>
-        <TouchableOpacity onPress={pickImage} style={styles.iconContainer}>
-          {crew?.iconUrl ? (
-            <Image source={{ uri: crew.iconUrl }} style={styles.groupIcon} />
-          ) : (
-            <View style={styles.placeholderIcon}>
-              <Ionicons name="camera" size={48} color="#888" />
-            </View>
-          )}
-        </TouchableOpacity>
+        <ProfilePicturePicker
+          imageUrl={crew.iconUrl ?? null}
+          onImageUpdate={(newUrl) => {
+            setCrew((prev) => (prev ? { ...prev, iconUrl: newUrl } : prev));
+          }}
+          editable={user?.uid === crew.ownerId} // Only owner can edit the crew icon
+          storagePath={`crews/${crewId}/icon.jpg`}
+          size={120}
+        />
         <View style={styles.groupNameContainer}>
-          <Text style={styles.groupName}>{crew?.name}</Text>
+          <Text style={styles.groupName}>{crew.name}</Text>
           <TouchableOpacity onPress={() => setIsEditNameModalVisible(true)} style={styles.editButton}>
             <Ionicons name="pencil" size={20} color="#1e90ff" />
           </TouchableOpacity>
@@ -424,7 +378,7 @@ const CrewSettingsScreen: React.FC = () => {
 
       {/* Delete Crew Button (Visible to Owner Only) */}
       {user?.uid === crew.ownerId && (
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteCrew}>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteCrew} accessibilityLabel="Delete Crew">
           {isDeleting ? (
             <ActivityIndicator color="white" />
           ) : (
@@ -435,7 +389,7 @@ const CrewSettingsScreen: React.FC = () => {
 
       {/* Leave Crew Button */}
       {user?.uid && (
-        <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveCrew}>
+        <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveCrew} accessibilityLabel="Leave Crew">
           <Text style={styles.leaveButtonText}>Leave Crew</Text>
         </TouchableOpacity>
       )}
@@ -448,13 +402,13 @@ const CrewSettingsScreen: React.FC = () => {
         renderItem={({ item }) => (
           <View style={styles.memberItem}>
             {/* Display Profile Picture */}
-            {item.profilePictureUrl ? (
-              <Image source={{ uri: item.profilePictureUrl }} style={styles.avatarImage} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Ionicons name="person" size={24} color="#888" />
-              </View>
-            )}
+            <ProfilePicturePicker
+              imageUrl={item.photoURL}
+              onImageUpdate={() => {}}
+              editable={false} // Members cannot change each other's profile pictures() => { /* Optional: Implement if users can update their own profile picture from here */ }
+              storagePath={`users/${item.uid}/profile.jpg`}
+              size={40}
+            />
             <Text style={styles.memberText}>
               {item.displayName} {item.uid === user?.uid && <Text style={styles.youText}>(You)</Text>}
             </Text>
@@ -468,6 +422,7 @@ const CrewSettingsScreen: React.FC = () => {
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setIsInviteModalVisible(true)}
+          accessibilityLabel="Invite Member"
         >
           <MaterialIcons name="person-add" size={28} color="white" />
         </TouchableOpacity>
@@ -487,12 +442,13 @@ const CrewSettingsScreen: React.FC = () => {
               autoCapitalize="none"
             />
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.modalButton} onPress={inviteUserToCrew}>
+              <TouchableOpacity style={styles.modalButton} onPress={inviteUserToCrew} accessibilityLabel="Send Invitation">
                 <Text style={styles.modalButtonText}>Send Invitation</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setIsInviteModalVisible(false)}
+                accessibilityLabel="Cancel Invitation"
               >
                 <Text style={styles.modalButtonText}>Cancel</Text>
               </TouchableOpacity>
@@ -513,7 +469,7 @@ const CrewSettingsScreen: React.FC = () => {
               onChangeText={setNewCrewName}
             />
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.modalButton} onPress={handleUpdateCrewName}>
+              <TouchableOpacity style={styles.modalButton} onPress={handleUpdateCrewName} accessibilityLabel="Update Crew Name">
                 {isUpdatingName ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
@@ -526,6 +482,7 @@ const CrewSettingsScreen: React.FC = () => {
                   setIsEditNameModalVisible(false);
                   setNewCrewName('');
                 }}
+                accessibilityLabel="Cancel Name Update"
               >
                 <Text style={styles.modalButtonText}>Cancel</Text>
               </TouchableOpacity>
@@ -539,14 +496,6 @@ const CrewSettingsScreen: React.FC = () => {
         <View style={styles.deletionOverlay}>
           <ActivityIndicator size="large" color="#fff" />
           <Text style={styles.deletionText}>Deleting Crew...</Text>
-        </View>
-      )}
-
-      {/* Uploading Indicator */}
-      {isUploading && (
-        <View style={styles.uploadingOverlay}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.uploadingText}>Uploading Image...</Text>
         </View>
       )}
 
@@ -574,19 +523,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
-  groupIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  placeholderIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   groupNameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -599,16 +535,6 @@ const styles = StyleSheet.create({
   editButton: {
     marginLeft: 10,
     padding: 5,
-  },
-  iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-    backgroundColor: '#f0f0f0',
-    marginBottom: 10,
   },
   deleteButton: {
     backgroundColor: '#ff4d4d', // Red color for delete
@@ -647,6 +573,7 @@ const styles = StyleSheet.create({
   memberText: {
     fontSize: 16,
     color: '#333',
+    paddingLeft: 10,
   },
   youText: {
     color: 'gray',

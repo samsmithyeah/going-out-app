@@ -52,6 +52,7 @@
         }
       ]
     ],
+    "permissions": ["CAMERA", "MEDIA_LIBRARY", "NOTIFICATIONS"],
     "experiments": {
       "typedRoutes": true
     },
