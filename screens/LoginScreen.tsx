@@ -10,12 +10,9 @@ import {
   ActivityIndicator,
   Button
 } from 'react-native';
-import {
-  auth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from '../firebase';
+import { auth } from '../firebase';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { createUserWithEmailAndPassword,signInWithEmailAndPassword } from 'firebase/auth';
 import * as WebBrowser from 'expo-web-browser';
 import GoogleAuth from '../components/GoogleAuth';
 import { RootStackParamList } from '../navigation/AppNavigator';

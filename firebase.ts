@@ -2,7 +2,6 @@
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
-  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
   GoogleAuthProvider,
@@ -96,4 +95,4 @@ const deleteCrew = (crewId: string) => {
   return deleteCrewCallable({ crewId });
 };
 
-export { auth, db, functions, storage, deleteCrew, updateProfile, signInWithCredential, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, doc, getDoc, setDoc, collection, addDoc, onSnapshot, User, addUserToFirestore };
+export { auth, db, functions, storage, deleteCrew, updateProfile, signInWithCredential, GoogleAuthProvider, signInWithEmailAndPassword, onAuthStateChanged, doc, getDoc, setDoc, collection, addDoc, onSnapshot, User, addUserToFirestore };

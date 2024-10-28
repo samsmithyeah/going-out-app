@@ -1,13 +1,15 @@
 // App.tsx
 import React, { useEffect, useRef } from 'react';
-import AppNavigator from '../navigation/AppNavigator';
 import { Alert, Platform } from 'react-native';
+import AppNavigator from '../navigation/AppNavigator';
 import * as Notifications from 'expo-notifications';
 import { isDevice } from 'expo-device';
 import Constants from 'expo-constants';
 import { useUser } from '../context/UserContext'; // Assuming you have a user context
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase'; // Your Firebase configuration
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { RootStackParamList } from '../navigation/AppNavigator';
+import { db } from '../firebase'; 
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -22,6 +24,7 @@ const App: React.FC = () => {
   const { user } = useUser();
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   useEffect(() => {
     if (!user) return;
@@ -53,10 +56,10 @@ const App: React.FC = () => {
         } catch (error) {
           if (error instanceof Error) {
             Alert.alert('Error getting Expo push token:', error.message);
-            console.error('Error getting Expo push token:', error)
+            console.error('Error getting Expo push token:', error);
           } else {
             Alert.alert('Error getting Expo push token, contact developer for details');
-            console.error('Error getting Expo push token:', error)
+            console.error('Error getting Expo push token:', error);
           }
         }
         console.log('Expo Push Token:', token);
@@ -102,7 +105,9 @@ const App: React.FC = () => {
     // Listen to notification responses (when user taps on a notification)
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('Notification Response:', response);
-      // Handle navigation or other actions based on notification data
+      const { screen } = response.notification.request.content.data;
+      console.log('Navigating to screen:', screen);
+      navigation.navigate(screen);
     });
 
     return () => {
@@ -112,7 +117,7 @@ const App: React.FC = () => {
   }, [user]);
 
   return (
-    <AppNavigator />
+      <AppNavigator />
   );
 };
 
