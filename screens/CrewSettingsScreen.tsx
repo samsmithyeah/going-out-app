@@ -29,7 +29,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
 import { db, deleteCrew, storage } from '../firebase';
-import { useUser, FullUser } from '../context/UserContext';
+import { useUser, User } from '../context/UserContext';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -54,7 +54,7 @@ const CrewSettingsScreen: React.FC = () => {
   const { crewId } = route.params;
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [crew, setCrew] = useState<Crew | null>(null);
-  const [members, setMembers] = useState<FullUser[]>([]);
+  const [members, setMembers] = useState<User[]>([]);
   const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
   const [isEditNameModalVisible, setIsEditNameModalVisible] = useState(false);
   const [inviteeEmail, setInviteeEmail] = useState('');
@@ -86,7 +86,7 @@ const CrewSettingsScreen: React.FC = () => {
           };
           setCrew(crewData);
           setNewCrewName(crewData.name);
-          navigation.setOptions({ title: 'Crew info' });
+          navigation.setOptions({ title: 'Crew Info' });
         } else {
           if (!isDeleting) {
             console.warn('Crew not found');
@@ -106,7 +106,7 @@ const CrewSettingsScreen: React.FC = () => {
     return () => {
       unsubscribeCrew();
     };
-  }, [crewId, isDeleting, user]);
+  }, [crewId, isDeleting, user, navigation]);
 
   // Fetch member profiles
   useEffect(() => {
@@ -118,11 +118,11 @@ const CrewSettingsScreen: React.FC = () => {
           );
           const memberDocs = await Promise.all(memberDocsPromises);
 
-          const membersList: FullUser[] = memberDocs
+          const membersList: User[] = memberDocs
             .filter((docSnap) => docSnap.exists())
             .map((docSnap) => ({
               uid: docSnap.id,
-              ...(docSnap.data() as Omit<FullUser, 'uid'>),
+              ...(docSnap.data() as Omit<User, 'uid'>),
             }));
 
           setMembers(membersList);
@@ -214,17 +214,22 @@ const CrewSettingsScreen: React.FC = () => {
 
   // Function to pick and upload a new crew icon
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+      });
 
-    if (!result.canceled) {
-      if (result.assets && result.assets.length > 0) {
-        uploadImage(result.assets[0].uri);
+      if (!result.canceled) {
+        if (result.assets && result.assets.length > 0) {
+          uploadImage(result.assets[0].uri);
+        }
       }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Could not select image');
     }
   };
 
@@ -404,14 +409,16 @@ const CrewSettingsScreen: React.FC = () => {
           {crew?.iconUrl ? (
             <Image source={{ uri: crew.iconUrl }} style={styles.groupIcon} />
           ) : (
-            <Ionicons name="camera" size={48} color="#888" />
+            <View style={styles.placeholderIcon}>
+              <Ionicons name="camera" size={48} color="#888" />
+            </View>
           )}
         </TouchableOpacity>
         <View style={styles.groupNameContainer}>
           <Text style={styles.groupName}>{crew?.name}</Text>
-            <TouchableOpacity onPress={() => setIsEditNameModalVisible(true)} style={styles.editButton}>
-              <Ionicons name="pencil" size={20} color="#1e90ff" />
-            </TouchableOpacity>
+          <TouchableOpacity onPress={() => setIsEditNameModalVisible(true)} style={styles.editButton}>
+            <Ionicons name="pencil" size={20} color="#1e90ff" />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -434,13 +441,23 @@ const CrewSettingsScreen: React.FC = () => {
       )}
 
       {/* Members List */}
-      <Text style={styles.sectionTitle}>{members.length} members:</Text>
+      <Text style={styles.sectionTitle}>{members.length} Members:</Text>
       <FlatList
         data={members}
         keyExtractor={(item) => item.uid}
         renderItem={({ item }) => (
           <View style={styles.memberItem}>
-            <Text style={styles.memberText}>{item.displayName}</Text>
+            {/* Display Profile Picture */}
+            {item.profilePictureUrl ? (
+              <Image source={{ uri: item.profilePictureUrl }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Ionicons name="person" size={24} color="#888" />
+              </View>
+            )}
+            <Text style={styles.memberText}>
+              {item.displayName} {item.uid === user?.uid && <Text style={styles.youText}>(You)</Text>}
+            </Text>
           </View>
         )}
         ListEmptyComponent={<Text>No members found</Text>}
@@ -562,9 +579,18 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
   },
+  placeholderIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   groupNameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 10,
   },
   groupName: {
     fontSize: 24,
@@ -596,12 +622,34 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   memberItem: {
-    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
+  avatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 16,
+  },
+  avatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
   memberText: {
     fontSize: 16,
+    color: '#333',
+  },
+  youText: {
+    color: 'gray',
   },
   addButton: {
     backgroundColor: '#1e90ff',
@@ -613,6 +661,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
+    elevation: 5, // Add shadow for Android
+    shadowColor: '#000', // Add shadow for iOS
+    shadowOffset: { width: 0, height: 2 }, // iOS shadow
+    shadowOpacity: 0.3, // iOS shadow
+    shadowRadius: 3, // iOS shadow
   },
   modalContainer: {
     flex: 1,

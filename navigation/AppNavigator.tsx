@@ -15,6 +15,7 @@ export type RootStackParamList = {
   CrewsList: undefined;
   Crew: { crewId: string };
   CrewSettings: { crewId: string };
+  UserProfile: { userId: string };
   Invitations: undefined;
   Notifications: undefined;
 };

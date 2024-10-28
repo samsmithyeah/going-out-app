@@ -1,6 +1,6 @@
 // context/UserContext.tsx
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { User, auth } from '../firebase';
+import { User as FirebaseUser, auth } from '../firebase';
 import { Alert } from 'react-native';
 
 type UserContextType = {
@@ -9,16 +9,13 @@ type UserContextType = {
   logout: () => Promise<void>;
 };
 
-export type FullUser = {
-  uid: string;
-  displayName: string;
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+export interface User extends FirebaseUser {
   firstName?: string;
   lastName?: string;
-  email: string;
-  photoURL?: string;
-};
-
-const UserContext = createContext<UserContextType | undefined>(undefined);
+  profilePictureUrl?: string;
+}
 
 type UserProviderProps = {
   children: ReactNode;

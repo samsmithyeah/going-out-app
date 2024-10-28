@@ -10,6 +10,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Dimensions,
+  Image, // Import Image component
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
 import {
@@ -24,8 +25,8 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { useUser, FullUser } from '../context/UserContext';
-import { MaterialIcons } from '@expo/vector-icons';
+import { useUser, User } from '../context/UserContext';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Import Ionicons for placeholders
 import { RootStackParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
 
@@ -49,7 +50,7 @@ const CrewScreen: React.FC = () => {
   const { crewId } = route.params;
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [crew, setCrew] = useState<Crew | null>(null);
-  const [members, setMembers] = useState<FullUser[]>([]);
+  const [members, setMembers] = useState<User[]>([]);
   const [statuses, setStatuses] = useState<{ [userId: string]: boolean }>({});
   const [loading, setLoading] = useState(true);
 
@@ -103,7 +104,7 @@ const CrewScreen: React.FC = () => {
         setStatuses(newStatuses);
       },
       (error) => {
-        if (user) { 
+        if (user) {
           console.error('Error fetching statuses:', error);
           Alert.alert('Error', 'Could not fetch statuses');
         }
@@ -114,7 +115,7 @@ const CrewScreen: React.FC = () => {
       unsubscribeCrew();
       unsubscribeStatuses();
     };
-  }, [crewId, user]);
+  }, [crewId, user, navigation]);
 
   // Fetch member profiles
   useEffect(() => {
@@ -126,11 +127,11 @@ const CrewScreen: React.FC = () => {
           );
           const memberDocs = await Promise.all(memberDocsPromises);
 
-          const membersList: FullUser[] = memberDocs
+          const membersList: User[] = memberDocs
             .filter((docSnap) => docSnap.exists())
             .map((docSnap) => ({
               uid: docSnap.id,
-              ...(docSnap.data() as Omit<FullUser, 'uid'>),
+              ...(docSnap.data() as Omit<User, 'uid'>),
             }));
 
           setMembers(membersList);
@@ -213,7 +214,14 @@ const CrewScreen: React.FC = () => {
             keyExtractor={(item) => item.uid}
             renderItem={({ item }) => (
               <View style={styles.memberItem}>
-                <View style={styles.avatar} />
+                {/* Display Profile Picture */}
+                {item.profilePictureUrl ? (
+                  <Image source={{ uri: item.profilePictureUrl }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Ionicons name="person" size={24} color="#888" />
+                  </View>
+                )}
                 <Text style={styles.memberText}>
                   {item.displayName} {item.uid === user?.uid && <Text style={styles.youText}>(You)</Text>}
                 </Text>
@@ -275,11 +283,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
-  avatar: {
+  avatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 16,
+  },
+  avatarPlaceholder: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: '#e0e0e0',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 16,
   },
   memberText: {
