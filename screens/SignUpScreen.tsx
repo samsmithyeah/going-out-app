@@ -3,8 +3,8 @@ import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { createUserWithEmailAndPassword, User as FirebaseUser } from 'firebase/auth';
-import { auth, updateProfile, doc, db, getDoc, setDoc, addUserToFirestore } from '../firebase';
-import { useUser, User } from '@/context/UserContext';
+import { auth, updateProfile, addUserToFirestore } from '../firebase';
+import { useUser } from '@/context/UserContext';
 
 type RootStackParamList = {
   SignUp: undefined;

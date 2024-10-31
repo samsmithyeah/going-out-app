@@ -18,8 +18,8 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { Functions, getFunctions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
-import { Platform } from 'react-native';
+import {  getFunctions, httpsCallable } from 'firebase/functions';
+// import { Platform } from 'react-native';
 import { User } from './context/UserContext';
 
 // Your Firebase configuration (from the Firebase console)
@@ -66,20 +66,20 @@ const addUserToFirestore = async (user: User) => {
   }
 }
 
-const isAndroid = Platform.OS === 'android';
-const isIOS = Platform.OS === 'ios';
+// const isAndroid = Platform.OS === 'android';
+// const isIOS = Platform.OS === 'ios';
 
-let emulatorHost = 'localhost'; // Default for iOS Simulator
-let emulatorPort = 5001; // Default Functions emulator port
+// let emulatorHost = 'localhost'; // Default for iOS Simulator
+// let emulatorPort = 5001; // Default Functions emulator port
 
-if (isAndroid) {
-  emulatorHost = '10.0.2.2'; // Android Emulator
-} else if (isIOS) {
-  emulatorHost = 'localhost'; // iOS Simulator
-} else {
-  // For physical devices, replace with your computer's IP
-  emulatorHost = '192.168.4.160';
-}
+// if (isAndroid) {
+//   emulatorHost = '10.0.2.2'; // Android Emulator
+// } else if (isIOS) {
+//   emulatorHost = 'localhost'; // iOS Simulator
+// } else {
+//   // For physical devices, replace with your computer's IP
+//   emulatorHost = '192.168.4.160';
+// }
 
 // Connect to Functions emulator if in development
 // if (__DEV__) {

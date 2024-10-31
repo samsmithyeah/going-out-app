@@ -17,7 +17,16 @@ export default function GoogleAuth() {
         const credential = GoogleAuthProvider.credential(id_token);
         try {
           const userCredential = await signInWithCredential(auth, credential);
-          await addUserToFirestore(userCredential.user);
+          const firestoreUser =
+          {
+            uid: userCredential.user.uid,
+            email: userCredential.user.email || '',
+            displayName: userCredential.user.displayName || '',
+            photoURL: userCredential.user.photoURL || undefined,
+            firstName: userCredential.user.displayName?.split(' ')[0],
+            lastName: userCredential.user.displayName?.split(' ')[1],
+          }
+          await addUserToFirestore(firestoreUser);
         } catch (error: any) {
           Alert.alert('Login Error', error.message);
         }

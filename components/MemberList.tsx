@@ -2,7 +2,6 @@
 
 import React, { useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import ProfilePicturePicker from './ProfilePicturePicker';
 import SkeletonUserItem from './SkeletonUserItem'; // Ensure this component exists
 import { User } from '../context/UserContext';

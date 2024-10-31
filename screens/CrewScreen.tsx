@@ -15,9 +15,6 @@ import {
   doc,
   getDoc,
   collection,
-  query,
-  where,
-  getDocs,
   onSnapshot,
   updateDoc,
   setDoc,
@@ -27,7 +24,6 @@ import { useUser, User } from '../context/UserContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
-import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList'; // Import the new MemberList component
 
 type CrewScreenRouteProp = RouteProp<RootStackParamList, 'Crew'>;

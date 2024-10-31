@@ -8,15 +8,13 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser, User } from '../context/UserContext';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 
 const UserProfileScreen: React.FC = () => {
   const { user, setUser } = useUser();
-  const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
