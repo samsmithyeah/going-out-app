@@ -74,6 +74,7 @@ export const notifyUserOnCrewInvitation = onDocumentCreated(
     }
     const crewName = crewData.name;
 
+    // Fetch the inviter's data to get their display name
     const inviterUserRef = admin.firestore().collection('users').doc(fromUserId);
     const inviterUserDoc = await inviterUserRef.get();
 
@@ -92,7 +93,12 @@ export const notifyUserOnCrewInvitation = onDocumentCreated(
       sound: 'default',
       title: `Invitation to join ${crewName}`,
       body: messageBody,
-      data: { crewId, fromUserId, toUserId },
+      data: {
+        crewId,
+        fromUserId,
+        toUserId,
+        screen: 'Invitations',
+      },
     }));
 
     // Send the notifications

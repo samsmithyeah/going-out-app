@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { auth, createUserWithEmailAndPassword, updateProfile, User, doc, db, getDoc, setDoc, addUserToFirestore } from '../firebase';
-import { useUser } from '@/context/UserContext';
+import { createUserWithEmailAndPassword, User as FirebaseUser } from 'firebase/auth';
+import { auth, updateProfile, doc, db, getDoc, setDoc, addUserToFirestore } from '../firebase';
+import { useUser, User } from '@/context/UserContext';
 
 type RootStackParamList = {
   SignUp: undefined;
@@ -24,18 +25,29 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const { setUser } = useUser();
+  const { user, setUser } = useUser();
 
   const handleSignUp = async () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-      const thisUser: User = userCredential.user;
+      const thisUser: FirebaseUser = userCredential.user;
       await updateProfile(thisUser, {
         displayName: `${firstName} ${lastName}`,
       });
       console.log('User signed up:', thisUser);
-      setUser(thisUser);
-      await addUserToFirestore(thisUser);
+      setUser({
+        uid: thisUser.uid,
+        email: thisUser.email || '',
+        displayName: thisUser.displayName || '',
+        firstName: thisUser.displayName?.split(' ')[0] || '',
+        lastName: thisUser.displayName?.split(' ')[1] || '',
+        photoURL: thisUser.photoURL || '',
+      });
+      if (user) {
+        await addUserToFirestore(user);
+      } else {
+        throw new Error('User is null');
+      }
       navigation.navigate('Home');
     } catch (err: any) {
       setError(err.message);

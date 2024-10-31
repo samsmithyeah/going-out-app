@@ -63,9 +63,11 @@ const MemberList: React.FC<MemberListProps> = ({
           {item.displayName || 'Unnamed Member'} {item.uid === currentUserId && <Text style={styles.youText}>(You)</Text>}
         </Text>
         {adminIds.includes(item.uid) && (
-          <View style={styles.adminIndicator}>
-            <Text style={styles.adminText}>Admin</Text>
-          </View>
+          <>
+            <View style={styles.adminIndicator}>
+              <Text style={styles.adminText}>Admin</Text>
+            </View>
+          </>
         )}
       </View>
     </TouchableOpacity>

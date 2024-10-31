@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   Alert,
   Modal,
@@ -31,14 +30,8 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList';
 import { Crew } from './CrewScreen';
-import { isLoading } from 'expo-font';
 
 type CrewSettingsScreenRouteProp = RouteProp<RootStackParamList, 'CrewSettings'>;
-
-interface Status {
-  upForGoingOutTonight: boolean;
-  timestamp: any;
-}
 
 const CrewSettingsScreen: React.FC = () => {
   const { user } = useUser();
