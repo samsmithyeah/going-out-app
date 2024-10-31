@@ -14,14 +14,23 @@ import {
   Image,
 } from 'react-native';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { collection, query, where, onSnapshot, addDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  addDoc,
+} from 'firebase/firestore';
 import { db } from '../firebase';
-import { useUser } from '../context/UserContext'; 
+import { useUser } from '../context/UserContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { Crew } from './CrewScreen';
 
-type CrewsListScreenProps = NativeStackScreenProps<RootStackParamList, 'CrewsList'>;
+type CrewsListScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'CrewsList'
+>;
 
 const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   const { user } = useUser();
@@ -56,7 +65,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
       (error) => {
         console.error('Error fetching crews:', error);
         setLoading(false);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -125,7 +134,9 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
             <Text style={styles.crewText}>{item.name}</Text>
           </TouchableOpacity>
         )}
-        ListEmptyComponent={<Text style={styles.emptyText}>No crews found</Text>}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No crews found</Text>
+        }
       />
 
       {/* Add Crew Button */}

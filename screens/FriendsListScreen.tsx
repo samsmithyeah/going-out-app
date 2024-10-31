@@ -11,9 +11,16 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { collection, addDoc, onSnapshot, query, where, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  where,
+  getDocs,
+} from 'firebase/firestore';
 import { db } from '../firebase';
-import { useUser } from '../context/UserContext'; 
+import { useUser } from '../context/UserContext';
 
 interface Friend {
   id: string;
@@ -53,60 +60,66 @@ const FriendsListScreen: React.FC = () => {
   }, [user?.uid]);
 
   const addFriend = async () => {
-  if (!newFriendEmail.trim()) {
-    Alert.alert('Error', 'Email address is required');
-    return;
-  }
-
-  try {
-    if (!user?.uid) {
-      Alert.alert('Error', 'User is not authenticated');
+    if (!newFriendEmail.trim()) {
+      Alert.alert('Error', 'Email address is required');
       return;
     }
 
-    // Check if the user with the provided email exists
-    const usersCollectionRef = collection(db, 'users');
-    const q = query(usersCollectionRef, where('email', '==', newFriendEmail.trim()));
+    try {
+      if (!user?.uid) {
+        Alert.alert('Error', 'User is not authenticated');
+        return;
+      }
 
-    const querySnapshot = await getDocs(q);
+      // Check if the user with the provided email exists
+      const usersCollectionRef = collection(db, 'users');
+      const q = query(
+        usersCollectionRef,
+        where('email', '==', newFriendEmail.trim()),
+      );
 
-    if (querySnapshot.empty) {
-      // No user found with the provided email
-      Alert.alert('Error', 'No user found with the provided email');
-      return;
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        // No user found with the provided email
+        Alert.alert('Error', 'No user found with the provided email');
+        return;
+      }
+
+      // User exists, proceed to add as friend
+      const friendDoc = querySnapshot.docs[0];
+      const friendData = friendDoc.data();
+
+      // Optional: You can store the friend's UID instead of email
+      const friendUid = friendData.uid;
+
+      // Check if the friend is already in the friend list
+      const friendsCollectionRef = collection(db, 'users', user.uid, 'friends');
+      const friendQuery = query(
+        friendsCollectionRef,
+        where('email', '==', newFriendEmail.trim()),
+      );
+      const friendSnapshot = await getDocs(friendQuery);
+
+      if (!friendSnapshot.empty) {
+        Alert.alert('Error', 'This user is already your friend');
+        return;
+      }
+
+      // Add the friend to the user's friends collection
+      await addDoc(friendsCollectionRef, {
+        email: newFriendEmail.trim(),
+        uid: friendUid, // Store the friend's UID
+      });
+
+      // Close modal and clear input
+      setIsModalVisible(false);
+      setNewFriendEmail('');
+    } catch (error) {
+      console.error('Error adding friend: ', error);
+      Alert.alert('Error', 'Could not add friend');
     }
-
-    // User exists, proceed to add as friend
-    const friendDoc = querySnapshot.docs[0];
-    const friendData = friendDoc.data();
-
-    // Optional: You can store the friend's UID instead of email
-    const friendUid = friendData.uid;
-
-    // Check if the friend is already in the friend list
-    const friendsCollectionRef = collection(db, 'users', user.uid, 'friends');
-    const friendQuery = query(friendsCollectionRef, where('email', '==', newFriendEmail.trim()));
-    const friendSnapshot = await getDocs(friendQuery);
-
-    if (!friendSnapshot.empty) {
-      Alert.alert('Error', 'This user is already your friend');
-      return;
-    }
-
-    // Add the friend to the user's friends collection
-    await addDoc(friendsCollectionRef, {
-      email: newFriendEmail.trim(),
-      uid: friendUid, // Store the friend's UID
-    });
-
-    // Close modal and clear input
-    setIsModalVisible(false);
-    setNewFriendEmail('');
-  } catch (error) {
-    console.error('Error adding friend: ', error);
-    Alert.alert('Error', 'Could not add friend');
-  }
-};
+  };
 
   if (loading) {
     return (

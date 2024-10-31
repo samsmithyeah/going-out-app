@@ -1,8 +1,13 @@
 // components/MemberList.tsx
 
 import React, { useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import ProfilePicturePicker from './ProfilePicturePicker';
 import SkeletonUserItem from './SkeletonUserItem'; // Ensure this component exists
 import { User } from '../context/UserContext';
@@ -60,7 +65,10 @@ const MemberList: React.FC<MemberListProps> = ({
       />
       <View style={styles.memberInfo}>
         <Text style={styles.memberText}>
-          {item.displayName || 'Unnamed Member'} {item.uid === currentUserId && <Text style={styles.youText}>(You)</Text>}
+          {item.displayName || 'Unnamed Member'}{' '}
+          {item.uid === currentUserId && (
+            <Text style={styles.youText}>(You)</Text>
+          )}
         </Text>
         {adminIds.includes(item.uid) && (
           <>
@@ -92,7 +100,9 @@ const MemberList: React.FC<MemberListProps> = ({
         data={sortedMembers}
         keyExtractor={(item) => item.uid}
         renderItem={renderItem}
-        ListEmptyComponent={<Text style={styles.emptyText}>{emptyMessage}</Text>}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>{emptyMessage}</Text>
+        }
       />
     </View>
   );

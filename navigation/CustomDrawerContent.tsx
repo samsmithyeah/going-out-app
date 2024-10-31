@@ -4,13 +4,11 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import {
   DrawerContentScrollView,
-  DrawerItemList,
   DrawerItem,
   DrawerContentComponentProps,
 } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { CommonActions } from '@react-navigation/native';
-import { auth } from '../firebase'; // Import Firebase auth
 import { useUser } from '../context/UserContext'; // Assuming you have UserContext
 
 const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
@@ -26,7 +24,7 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         CommonActions.reset({
           index: 0,
           routes: [{ name: 'Login' }], // Ensure 'Login' is defined in your RootStackParamList
-        })
+        }),
       );
     } catch (error) {
       console.error('Error logging out: ', error);
@@ -40,7 +38,7 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
       CommonActions.reset({
         index: 0,
         routes: [{ name: 'CrewsStack' }],
-      })
+      }),
     );
   };
 

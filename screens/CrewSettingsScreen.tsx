@@ -11,7 +11,12 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { useRoute, RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
+import {
+  useRoute,
+  RouteProp,
+  useNavigation,
+  NavigationProp,
+} from '@react-navigation/native';
 import {
   doc,
   getDoc,
@@ -31,7 +36,10 @@ import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList';
 import { Crew } from './CrewScreen';
 
-type CrewSettingsScreenRouteProp = RouteProp<RootStackParamList, 'CrewSettings'>;
+type CrewSettingsScreenRouteProp = RouteProp<
+  RootStackParamList,
+  'CrewSettings'
+>;
 
 const CrewSettingsScreen: React.FC = () => {
   const { user } = useUser();
@@ -84,7 +92,7 @@ const CrewSettingsScreen: React.FC = () => {
           Alert.alert('Error', 'Could not fetch crew data');
         }
         setLoading(false);
-      }
+      },
     );
 
     return () => {
@@ -98,7 +106,7 @@ const CrewSettingsScreen: React.FC = () => {
       if (crew && crew.memberIds.length > 0) {
         try {
           const memberDocsPromises = crew.memberIds.map((memberId) =>
-            getDoc(doc(db, 'users', memberId))
+            getDoc(doc(db, 'users', memberId)),
           );
           const memberDocs = await Promise.all(memberDocsPromises);
 
@@ -167,12 +175,15 @@ const CrewSettingsScreen: React.FC = () => {
         invitationsRef,
         where('crewId', '==', crewId),
         where('toUserId', '==', inviteeId),
-        where('status', '==', 'pending')
+        where('status', '==', 'pending'),
       );
       const existingInvitationSnapshot = await getDocs(existingInvitationQuery);
 
       if (!existingInvitationSnapshot.empty) {
-        Alert.alert('Error', 'A pending invitation already exists for this user');
+        Alert.alert(
+          'Error',
+          'A pending invitation already exists for this user',
+        );
         return;
       }
 
@@ -234,13 +245,16 @@ const CrewSettingsScreen: React.FC = () => {
               }
             } catch (error: any) {
               console.error('Error deleting crew:', error);
-              Alert.alert('Error', error.message || 'Could not delete the crew');
+              Alert.alert(
+                'Error',
+                error.message || 'Could not delete the crew',
+              );
             } finally {
               setIsDeleting(false);
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -275,8 +289,13 @@ const CrewSettingsScreen: React.FC = () => {
                   Alert.alert('Success', 'You have left and deleted the crew');
                 } else {
                   // Assign a new owner randomly from the remaining members
-                  const remainingMembers = crew.memberIds.filter((memberId) => memberId !== user.uid);
-                  const newOwnerId = remainingMembers[Math.floor(Math.random() * remainingMembers.length)];
+                  const remainingMembers = crew.memberIds.filter(
+                    (memberId) => memberId !== user.uid,
+                  );
+                  const newOwnerId =
+                    remainingMembers[
+                      Math.floor(Math.random() * remainingMembers.length)
+                    ];
 
                   // Update the crew document with the new owner and remove the current user
                   await updateDoc(crewRef, {
@@ -285,11 +304,16 @@ const CrewSettingsScreen: React.FC = () => {
                   });
 
                   navigation.navigate('CrewsList');
-                  Alert.alert('Success', 'You have left the crew, and ownership was transferred.');
+                  Alert.alert(
+                    'Success',
+                    'You have left the crew, and ownership was transferred.',
+                  );
                 }
               } else {
                 // If the user is not the owner, simply remove them from the crew
-                const updatedMemberIds = crew.memberIds.filter((memberId) => memberId !== user.uid);
+                const updatedMemberIds = crew.memberIds.filter(
+                  (memberId) => memberId !== user.uid,
+                );
 
                 await updateDoc(crewRef, {
                   memberIds: updatedMemberIds,
@@ -304,7 +328,7 @@ const CrewSettingsScreen: React.FC = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -345,7 +369,6 @@ const CrewSettingsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-
       <View style={styles.groupInfo}>
         <ProfilePicturePicker
           imageUrl={crew.iconUrl ?? null}
@@ -358,7 +381,10 @@ const CrewSettingsScreen: React.FC = () => {
         />
         <View style={styles.groupNameContainer}>
           <Text style={styles.groupName}>{crew.name}</Text>
-          <TouchableOpacity onPress={() => setIsEditNameModalVisible(true)} style={styles.editButton}>
+          <TouchableOpacity
+            onPress={() => setIsEditNameModalVisible(true)}
+            style={styles.editButton}
+          >
             <Ionicons name="pencil" size={20} color="#1e90ff" />
           </TouchableOpacity>
         </View>
@@ -369,29 +395,37 @@ const CrewSettingsScreen: React.FC = () => {
         members={members}
         currentUserId={user?.uid || null}
         listTitle={`${members.length} members:`}
-        isLoading={loading} 
+        isLoading={loading}
         emptyMessage="No members in this crew."
         adminIds={[crew.ownerId]}
       />
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setIsInviteModalVisible(true)}
-          accessibilityLabel="Invite Member"
-        >
-          <MaterialIcons name="person-add" size={28} color="white" />
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setIsInviteModalVisible(true)}
+        accessibilityLabel="Invite Member"
+      >
+        <MaterialIcons name="person-add" size={28} color="white" />
       </TouchableOpacity>
 
       {/* Leave Crew Button */}
       {user?.uid && (
-        <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveCrew} accessibilityLabel="Leave Crew">
+        <TouchableOpacity
+          style={styles.leaveButton}
+          onPress={handleLeaveCrew}
+          accessibilityLabel="Leave Crew"
+        >
           <Text style={styles.leaveButtonText}>Leave crew</Text>
         </TouchableOpacity>
       )}
 
       {/* Delete Crew Button (Visible to Owner Only) */}
       {user?.uid === crew.ownerId && (
-        <TouchableOpacity style={styles.leaveButton} onPress={handleDeleteCrew} accessibilityLabel="Delete Crew">
+        <TouchableOpacity
+          style={styles.leaveButton}
+          onPress={handleDeleteCrew}
+          accessibilityLabel="Delete Crew"
+        >
           {isDeleting ? (
             <ActivityIndicator color="white" />
           ) : (
@@ -414,7 +448,11 @@ const CrewSettingsScreen: React.FC = () => {
               autoCapitalize="none"
             />
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.modalButton} onPress={inviteUserToCrew} accessibilityLabel="Send Invitation">
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={inviteUserToCrew}
+                accessibilityLabel="Send Invitation"
+              >
                 <Text style={styles.modalButtonText}>Send Invitation</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -441,7 +479,11 @@ const CrewSettingsScreen: React.FC = () => {
               onChangeText={setNewCrewName}
             />
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.modalButton} onPress={handleUpdateCrewName} accessibilityLabel="Update Crew Name">
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={handleUpdateCrewName}
+                accessibilityLabel="Update Crew Name"
+              >
                 {isUpdatingName ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
