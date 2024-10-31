@@ -5,7 +5,36 @@ import * as admin from 'firebase-admin';
 import { Expo, ExpoPushMessage } from 'expo-server-sdk';
 import { sendExpoNotifications } from '../utils/sendExpoNotifications';
 
-// Notify crew members when a user's status changes
+const getDateDescription = (dateStr: string): string => {
+  const today = new Date();
+  const targetDate = new Date(`${dateStr}T00:00:00Z`); // Treat as UTC date
+
+  // Get today's date in UTC
+  const currentUTC = new Date(
+    Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+  );
+
+  // Calculate difference in days
+  const diffTime = targetDate.getTime() - currentUTC.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    return 'tonight';
+  } else if (diffDays === 1) {
+    return 'tomorrow night';
+  } else if (diffDays >= 2 && diffDays <= 6) {
+    // Get the day of the week, e.g., "Friday"
+    const options: Intl.DateTimeFormatOptions = { weekday: 'long' };
+    const dayOfWeek = targetDate.toLocaleDateString('en-US', options);
+    return `on ${dayOfWeek}`;
+  } else {
+    return `on ${dateStr}`;
+  }
+};
+
+/**
+ * Cloud Function to notify crew members when a user's status changes.
+ */
 export const notifyCrewOnStatusChange = onDocumentWritten(
   'crews/{crewId}/statuses/{date}/userStatuses/{userId}',
   async (event) => {
@@ -29,7 +58,7 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
       return null;
     }
 
-    // Fetch the crew document to get memberIds and crew.Name
+    // Fetch the crew document to get memberIds and crew.name
     const crewRef = admin.firestore().collection('crews').doc(crewId);
     const crewDoc = await crewRef.get();
 
@@ -63,13 +92,19 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
     const userData = userDoc.data() as { displayName: string };
     const userName = userData.displayName;
 
+    // Determine date description
+    const dateDescription = getDateDescription(date);
+    console.log(`Date Description: ${dateDescription}`);
+
     // Determine notification message based on status change
     let messageBody = '';
     if (statusChangedToUp) {
-      messageBody = `${userName} is up for going out on ${date}!`;
+      messageBody = `${userName} is up for going out ${dateDescription}!`;
     } else if (statusChangedToDown) {
-      messageBody = `${userName} is no longer up for going out on ${date}.`;
+      messageBody = `${userName} is no longer up for going out ${dateDescription}.`;
     }
+
+    console.log(`Notification Message: ${messageBody}`);
 
     // Collect Expo push tokens of members to notify
     const expoPushTokens: string[] = [];
@@ -108,17 +143,21 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
       return null;
     }
 
-    // Prepare the notification message
+    // Prepare the notification messages
     const messages: ExpoPushMessage[] = expoPushTokens.map((pushToken) => ({
       to: pushToken,
       sound: 'default',
       title: crewName,
       body: messageBody,
-      data: { crewId, userId, date, statusChangedToUp, statusChangedToDown },
+      data: { crewId, userId, date, statusChangedToUp, statusChangedToDown, screen: 'Crew' },
     }));
+
+    console.log(`Prepared Messages: ${JSON.stringify(messages)}`);
 
     // Send the notifications
     await sendExpoNotifications(messages);
+
+    console.log('Notifications sent successfully.');
 
     return null;
   }
