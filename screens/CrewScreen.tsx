@@ -207,9 +207,7 @@ const CrewScreen: React.FC = () => {
           upForGoingOutTonight: !currentStatus,
           timestamp: Timestamp.fromDate(new Date()),
         });
-        console.log(
-          `Updated Status for User ${user.uid}: ${!currentStatus}`,
-        );
+        console.log(`Updated Status for User ${user.uid}: ${!currentStatus}`);
       } else {
         // If no status exists for today, create it with true
         await setDoc(userStatusRef, {
@@ -231,9 +229,7 @@ const CrewScreen: React.FC = () => {
   const currentUserStatus = user?.uid ? statuses[user.uid] || false : false;
 
   // Get list of members who are up for going out tonight
-  const membersUpForGoingOut = members.filter(
-    (member) => statuses[member.uid],
-  );
+  const membersUpForGoingOut = members.filter((member) => statuses[member.uid]);
 
   // Debugging: Log the current status and members up for going out
   useEffect(() => {
