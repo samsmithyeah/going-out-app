@@ -112,8 +112,9 @@ const App: React.FC = () => {
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log('Notification Response:', response);
         const { screen } = response.notification.request.content.data;
-        console.log('Navigating to screen:', screen);
-        navigation.navigate(screen);
+        if (screen === 'Invitations') {
+          navigation.navigate('Invitations');
+        }
       });
 
     return () => {
