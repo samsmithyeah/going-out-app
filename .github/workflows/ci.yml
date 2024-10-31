@@ -61,13 +61,19 @@ jobs:
           name: coverage-report
           path: coverage/
 
-      # 9. Lint functions folder
+      # 9. Install functions dependencies
+      - name: Install Functions Dependencies
+        run: |
+          cd functions
+          npm ci
+
+      # 10. Lint functions folder
       - name: Lint Functions Folder
         run: |
           cd functions
           npm run lint
 
-      # 10. Build functions
+      # 11. Build functions
       - name: Build Functions
         run: |
           cd functions
