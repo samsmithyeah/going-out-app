@@ -1,0 +1,123 @@
+# .github/workflows/ci.yml
+
+name: CI Pipeline
+
+# Trigger the workflow on push or pull request events to the master branch
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      # 1. Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Set up Node.js environment
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm" # Enables caching for npm
+
+      # 3. Install dependencies
+      - name: Install Dependencies
+        run: |
+          npm ci
+
+      # 4. Run TypeScript type checking
+      - name: TypeScript Type Check
+        run: |
+          npx tsc --noEmit
+        # Ensure your project has a "tsconfig.json"
+
+      # 5. Run Linting (Optional but recommended)
+      - name: Lint Code
+        run: |
+          npx eslint 'src/**/*.{js,ts,tsx}'
+        # Ensure you have ESLint configured and a lint script in package.json
+        # Example: "lint": "eslint 'src/**/*.{js,ts,tsx}'"
+
+      # 6. Run Tests
+      - name: Run Tests
+        run: |
+          npm test -- --coverage
+        # Ensure you have a "test" script in your package.json
+        # Example: "test": "jest"
+
+      # 7. Upload Test Coverage Report (Optional)
+      - name: Upload Coverage Report
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+        # Ensure your test script generates coverage reports in the coverage/ directory
+
+  build-application:
+    name: Build iOS Application
+    runs-on: macos-latest
+    needs: build-and-test
+    strategy:
+      matrix:
+        node-version: [16.x]
+
+    steps:
+      # 1. Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Set up Node.js environment
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm" # Enables caching for npm
+
+      # 3. Install dependencies
+      - name: Install Dependencies
+        run: |
+          npm ci
+
+      # 4. Install Expo CLI
+      # - name: Install Expo CLI
+      #   run: |
+      #     npm install -g expo-cli
+      # 5. Authenticate with Expo
+      # - name: Authenticate with Expo
+      #   env:
+      #     EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      #   run: |
+      #     echo $EXPO_TOKEN | expo login --non-interactive --token
+      # 6. Build the iOS application
+      - name: Build iOS with Expo
+        run: |
+          npx expo build:ios --non-interactive
+        # The --no-wait flag allows the build to start without waiting for it to finish.
+        # Remove --no-wait if you want the workflow to wait for the build to complete.
+
+      # 7. (Optional) Download the Build Artifact
+      # - name: Download Build Artifact
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: ios-build
+      #     path: ./build/
+      # Adjust based on where Expo outputs the build. Expo typically provides a URL instead.
+
+      # 8. (Optional) Upload Build Artifact as GitHub Artifact
+      # - name: Upload Build Artifact
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: ios-build
+      #     path: ./build/
+      # Adjust the path based on where Expo outputs the build.
+      # Note: Expo's classic build service typically provides a build URL instead of downloading the binary directly.
