@@ -60,3 +60,15 @@ jobs:
         with:
           name: coverage-report
           path: coverage/
+
+      # 9. Lint functions folder
+      - name: Lint Functions Folder
+        run: |
+          cd functions
+          npm run lint
+
+      # 10. Build functions
+      - name: Build Functions
+        run: |
+          cd functions
+          npm run build
