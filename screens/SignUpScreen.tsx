@@ -7,7 +7,7 @@ import {
   User as FirebaseUser,
 } from 'firebase/auth';
 import { auth, updateProfile, addUserToFirestore } from '../firebase';
-import { useUser } from '@/context/UserContext';
+import { useUser } from '../context/UserContext';
 
 type RootStackParamList = {
   SignUp: undefined;
