@@ -36,8 +36,7 @@ jobs:
 
       # 4. Run TypeScript type checking
       - name: TypeScript Type Check
-        run: |
-          npx tsc --noEmit
+        run: npx tsc --noEmit
         # Ensure your project has a "tsconfig.json"
 
       # 5. Run Linting
@@ -50,8 +49,7 @@ jobs:
 
       # 7. Run Tests
       - name: Run Tests
-        run: |
-          npm test:ci
+        run: npm run test:ci
         # Ensure you have a "test" script in your package.json
         # Example: "test": "jest"
 
