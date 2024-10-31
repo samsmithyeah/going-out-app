@@ -1,3 +1,5 @@
+// functions/src/index.ts
+
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 import { Expo, ExpoPushMessage } from 'expo-server-sdk';
@@ -5,9 +7,9 @@ import { sendExpoNotifications } from '../utils/sendExpoNotifications';
 
 // Notify crew members when a user's status changes
 export const notifyCrewOnStatusChange = onDocumentWritten(
-  'crews/{crewId}/statuses/{userId}',
+  'crews/{crewId}/statuses/{date}/userStatuses/{userId}',
   async (event) => {
-    const { crewId, userId } = event.params;
+    const { crewId, date, userId } = event.params;
 
     const beforeData = event.data?.before.exists ?
       event.data.before.data() :
@@ -64,15 +66,14 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
     // Determine notification message based on status change
     let messageBody = '';
     if (statusChangedToUp) {
-      messageBody = `${userName} is up for going out tonight!`;
+      messageBody = `${userName} is up for going out on ${date}!`;
     } else if (statusChangedToDown) {
-      messageBody = `${userName} is no longer up for going out tonight.`;
+      messageBody = `${userName} is no longer up for going out on ${date}.`;
     }
 
     // Collect Expo push tokens of members to notify
     const expoPushTokens: string[] = [];
 
-    // Fetch all user documents in a single query if possible
     // Firestore 'in' queries support up to 10 elements
     const batchSize = 10;
     for (let i = 0; i < memberIds.length; i += batchSize) {
@@ -113,7 +114,7 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
       sound: 'default',
       title: crewName,
       body: messageBody,
-      data: { crewId, userId, statusChangedToUp, statusChangedToDown },
+      data: { crewId, userId, date, statusChangedToUp, statusChangedToDown },
     }));
 
     // Send the notifications

@@ -30,6 +30,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
 import MemberList from '../components/MemberList'; // Import the new MemberList component
+import { Timestamp } from 'firebase/firestore'; // Import Timestamp correctly
 
 type CrewScreenRouteProp = RouteProp<RootStackParamList, 'Crew'>;
 
@@ -42,8 +43,9 @@ export interface Crew {
 }
 
 interface Status {
+  date: string; // Format: 'YYYY-MM-DD'
   upForGoingOutTonight: boolean;
-  timestamp: any;
+  timestamp: Timestamp;
 }
 
 const CrewScreen: React.FC = () => {
@@ -56,7 +58,16 @@ const CrewScreen: React.FC = () => {
   const [statuses, setStatuses] = useState<{ [userId: string]: boolean }>({});
   const [loading, setLoading] = useState(true);
 
-  // Fetch crew data and statuses in real-time
+  // Utility function to get today's date in 'YYYY-MM-DD' format
+  const getTodayDateString = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Fetch crew data
   useEffect(() => {
     if (!crewId) {
       Alert.alert('Error', 'Crew ID is missing');
@@ -65,8 +76,8 @@ const CrewScreen: React.FC = () => {
     }
 
     const crewRef = doc(db, 'crews', crewId);
-    const statusesRef = collection(crewRef, 'statuses');
 
+    // Listener for the crew document
     const unsubscribeCrew = onSnapshot(
       crewRef,
       (docSnap) => {
@@ -79,6 +90,7 @@ const CrewScreen: React.FC = () => {
           };
           setCrew(crewData);
           navigation.setOptions({ title: crewData.name });
+          console.log('Crew Data:', crewData);
         } else {
           console.warn('Crew not found');
         }
@@ -93,29 +105,8 @@ const CrewScreen: React.FC = () => {
       },
     );
 
-    const unsubscribeStatuses = onSnapshot(
-      statusesRef,
-      (snapshot) => {
-        if (!user) return;
-
-        const newStatuses: { [userId: string]: boolean } = {};
-        snapshot.docs.forEach((doc) => {
-          const data = doc.data() as Status;
-          newStatuses[doc.id] = data.upForGoingOutTonight || false;
-        });
-        setStatuses(newStatuses);
-      },
-      (error) => {
-        if (user) {
-          console.error('Error fetching statuses:', error);
-          Alert.alert('Error', 'Could not fetch statuses');
-        }
-      },
-    );
-
     return () => {
       unsubscribeCrew();
-      unsubscribeStatuses();
     };
   }, [crewId, user, navigation]);
 
@@ -136,6 +127,7 @@ const CrewScreen: React.FC = () => {
               ...(docSnap.data() as Omit<User, 'uid'>),
             }));
 
+          console.log('Fetched Members:', membersList);
           setMembers(membersList);
         } catch (error) {
           console.error('Error fetching members:', error);
@@ -149,35 +141,86 @@ const CrewScreen: React.FC = () => {
     fetchMembers();
   }, [crew]);
 
-  // Function to toggle user's status
+  // Listener for the userStatuses subcollection
+  useEffect(() => {
+    if (!crewId || !user) return;
+
+    const todayDate = getTodayDateString();
+    const userStatusesRef = collection(
+      db,
+      'crews',
+      crewId,
+      'statuses',
+      todayDate,
+      'userStatuses',
+    );
+
+    const unsubscribeUserStatuses = onSnapshot(
+      userStatusesRef,
+      (snapshot) => {
+        const newStatuses: { [userId: string]: boolean } = {};
+        snapshot.forEach((docSnap) => {
+          const statusData = docSnap.data() as Status;
+          const userId = docSnap.id; // Derive userId from document ID
+          newStatuses[userId] = statusData.upForGoingOutTonight || false;
+          console.log(`User ID: ${userId}, Status: ${newStatuses[userId]}`);
+        });
+        console.log('All Statuses:', newStatuses);
+        setStatuses(newStatuses);
+      },
+      (error) => {
+        if (user) {
+          console.error('Error fetching userStatuses:', error);
+          Alert.alert('Error', 'Could not fetch user statuses');
+        }
+      },
+    );
+
+    return () => {
+      unsubscribeUserStatuses();
+    };
+  }, [crewId, user]);
+
+  // Function to toggle user's status for today
   const toggleStatus = async () => {
     if (!user?.uid || !crew) {
       Alert.alert('Error', 'User or Crew data is missing');
       return;
     }
 
-    try {
-      const crewRef = doc(db, 'crews', crewId);
-      const statusesRef = collection(crewRef, 'statuses');
-      const userStatusRef = doc(statusesRef, user.uid);
+    const todayDate = getTodayDateString();
+    const userStatusRef = doc(
+      db,
+      'crews',
+      crewId,
+      'statuses',
+      todayDate,
+      'userStatuses',
+      user.uid,
+    );
 
-      const userStatusSnap = await getDoc(userStatusRef);
-      if (userStatusSnap.exists()) {
-        const currentStatus =
-          userStatusSnap.data().upForGoingOutTonight || false;
+    try {
+      const statusSnap = await getDoc(userStatusRef);
+      if (statusSnap.exists()) {
+        const currentStatus = statusSnap.data().upForGoingOutTonight || false;
         await updateDoc(userStatusRef, {
           upForGoingOutTonight: !currentStatus,
-          timestamp: new Date(),
+          timestamp: Timestamp.fromDate(new Date()),
         });
+        console.log(
+          `Updated Status for User ${user.uid}: ${!currentStatus}`,
+        );
       } else {
-        // If no status exists, set it to true
+        // If no status exists for today, create it with true
         await setDoc(userStatusRef, {
+          date: todayDate,
           upForGoingOutTonight: true,
-          timestamp: new Date(),
+          timestamp: Timestamp.fromDate(new Date()),
         });
+        console.log(`Created Status for User ${user.uid}: true`);
       }
 
-      // The onSnapshot listener will update the local state
+      // The onSnapshot listener will automatically update the local state
     } catch (error) {
       console.error('Error toggling status:', error);
       Alert.alert('Error', 'Could not update your status');
@@ -188,7 +231,15 @@ const CrewScreen: React.FC = () => {
   const currentUserStatus = user?.uid ? statuses[user.uid] || false : false;
 
   // Get list of members who are up for going out tonight
-  const membersUpForGoingOut = members.filter((member) => statuses[member.uid]);
+  const membersUpForGoingOut = members.filter(
+    (member) => statuses[member.uid],
+  );
+
+  // Debugging: Log the current status and members up for going out
+  useEffect(() => {
+    console.log('Current User Status:', currentUserStatus);
+    console.log('Members Up For Going Out:', membersUpForGoingOut);
+  }, [membersUpForGoingOut, currentUserStatus]);
 
   // Add a cog icon in the header to navigate to CrewSettingsScreen
   useLayoutEffect(() => {
@@ -229,7 +280,7 @@ const CrewScreen: React.FC = () => {
             <SkeletonUserItem key={index} />
           ))}
 
-          {/* Overlayed Message */}
+          {/* Overlaid Message */}
           <View style={styles.overlay}>
             <Text style={styles.overlayText}>
               Crew members who are up for going out tonight are only visible if
