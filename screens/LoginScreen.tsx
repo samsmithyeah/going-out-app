@@ -8,7 +8,7 @@ import {
   Text,
   Alert,
   ActivityIndicator,
-  Button
+  Button,
 } from 'react-native';
 import { auth } from '../firebase';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -22,7 +22,7 @@ type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 WebBrowser.maybeCompleteAuthSession();
 
-const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -66,18 +66,25 @@ const LoginScreen: React.FC<LoginScreenProps> = ({navigation}) => {
         autoComplete="password"
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleEmailLogin} disabled={loading}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleEmailLogin}
+        disabled={loading}
+      >
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
       <GoogleAuth />
-      
-      <Button
-        title="Sign Up"
-        onPress={() => navigation.navigate('SignUp')}
-      />
 
-      {loading && <ActivityIndicator size="large" color="#0000ff" style={styles.loading} />}
+      <Button title="Sign Up" onPress={() => navigation.navigate('SignUp')} />
+
+      {loading && (
+        <ActivityIndicator
+          size="large"
+          color="#0000ff"
+          style={styles.loading}
+        />
+      )}
     </View>
   );
 };

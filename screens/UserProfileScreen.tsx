@@ -1,13 +1,7 @@
 // screens/UserProfileScreen.tsx
 
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser, User } from '../context/UserContext';
@@ -67,7 +61,9 @@ const UserProfileScreen: React.FC = () => {
         storagePath={`users/${user.uid}/profile.jpg`}
         size={150}
       />
-      <Text style={styles.displayName}>{user.displayName || 'No Display Name'}</Text>
+      <Text style={styles.displayName}>
+        {user.displayName || 'No Display Name'}
+      </Text>
       {/* Add other user profile details here */}
     </View>
   );

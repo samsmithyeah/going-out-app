@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { createUserWithEmailAndPassword, User as FirebaseUser } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  User as FirebaseUser,
+} from 'firebase/auth';
 import { auth, updateProfile, addUserToFirestore } from '../firebase';
 import { useUser } from '@/context/UserContext';
 
@@ -11,7 +14,10 @@ type RootStackParamList = {
   Home: undefined;
 };
 
-type SignUpScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SignUp'>;
+type SignUpScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'SignUp'
+>;
 type SignUpScreenRouteProp = RouteProp<RootStackParamList, 'SignUp'>;
 
 type Props = {
@@ -29,7 +35,11 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleSignUp = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password,
+      );
       const thisUser: FirebaseUser = userCredential.user;
       await updateProfile(thisUser, {
         displayName: `${firstName} ${lastName}`,

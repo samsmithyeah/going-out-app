@@ -10,7 +10,12 @@ import {
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
-import { useRoute, RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
+import {
+  useRoute,
+  RouteProp,
+  useNavigation,
+  NavigationProp,
+} from '@react-navigation/native';
 import {
   doc,
   getDoc,
@@ -85,7 +90,7 @@ const CrewScreen: React.FC = () => {
           Alert.alert('Error', 'Could not fetch crew data');
         }
         setLoading(false);
-      }
+      },
     );
 
     const unsubscribeStatuses = onSnapshot(
@@ -105,7 +110,7 @@ const CrewScreen: React.FC = () => {
           console.error('Error fetching statuses:', error);
           Alert.alert('Error', 'Could not fetch statuses');
         }
-      }
+      },
     );
 
     return () => {
@@ -120,7 +125,7 @@ const CrewScreen: React.FC = () => {
       if (crew && crew.memberIds.length > 0) {
         try {
           const memberDocsPromises = crew.memberIds.map((memberId) =>
-            getDoc(doc(db, 'users', memberId))
+            getDoc(doc(db, 'users', memberId)),
           );
           const memberDocs = await Promise.all(memberDocsPromises);
 
@@ -158,11 +163,18 @@ const CrewScreen: React.FC = () => {
 
       const userStatusSnap = await getDoc(userStatusRef);
       if (userStatusSnap.exists()) {
-        const currentStatus = userStatusSnap.data().upForGoingOutTonight || false;
-        await updateDoc(userStatusRef, { upForGoingOutTonight: !currentStatus, timestamp: new Date() });
+        const currentStatus =
+          userStatusSnap.data().upForGoingOutTonight || false;
+        await updateDoc(userStatusRef, {
+          upForGoingOutTonight: !currentStatus,
+          timestamp: new Date(),
+        });
       } else {
         // If no status exists, set it to true
-        await setDoc(userStatusRef, { upForGoingOutTonight: true, timestamp: new Date() });
+        await setDoc(userStatusRef, {
+          upForGoingOutTonight: true,
+          timestamp: new Date(),
+        });
       }
 
       // The onSnapshot listener will update the local state
@@ -220,7 +232,8 @@ const CrewScreen: React.FC = () => {
           {/* Overlayed Message */}
           <View style={styles.overlay}>
             <Text style={styles.overlayText}>
-              Crew members who are up for going out tonight are only visible if you're up for it too!
+              Crew members who are up for going out tonight are only visible if
+              you're up for it too!
             </Text>
           </View>
         </View>
@@ -230,12 +243,16 @@ const CrewScreen: React.FC = () => {
       <TouchableOpacity
         style={[
           styles.statusButton,
-          currentUserStatus ? styles.statusButtonActive : styles.statusButtonInactive,
+          currentUserStatus
+            ? styles.statusButtonActive
+            : styles.statusButtonInactive,
         ]}
         onPress={toggleStatus}
       >
         <Text style={styles.statusButtonText}>
-          {currentUserStatus ? "I'm not up for going out tonight" : "I'm up for going out tonight"}
+          {currentUserStatus
+            ? "I'm not up for going out tonight"
+            : "I'm up for going out tonight"}
         </Text>
       </TouchableOpacity>
     </View>

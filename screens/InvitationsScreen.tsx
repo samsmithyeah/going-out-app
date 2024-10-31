@@ -25,7 +25,10 @@ import { useUser } from '../context/UserContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
-type InvitationsScreenProps = NativeStackScreenProps<RootStackParamList, 'Invitations'>;
+type InvitationsScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  'Invitations'
+>;
 
 interface Invitation {
   id: string;
@@ -36,7 +39,9 @@ interface Invitation {
   timestamp: any;
 }
 
-const InvitationsScreen: React.FC<InvitationsScreenProps> = ({navigation}) => {
+const InvitationsScreen: React.FC<InvitationsScreenProps> = ({
+  navigation,
+}) => {
   const { user } = useUser();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +59,7 @@ const InvitationsScreen: React.FC<InvitationsScreenProps> = ({navigation}) => {
     const q = query(
       invitationsRef,
       where('toUserId', '==', user.uid),
-      where('status', '==', 'pending')
+      where('status', '==', 'pending'),
     );
 
     // Real-time listener
@@ -71,7 +76,7 @@ const InvitationsScreen: React.FC<InvitationsScreenProps> = ({navigation}) => {
       (error) => {
         console.error('Error fetching invitations:', error);
         setLoading(false);
-      }
+      },
     );
 
     return () => unsubscribe();

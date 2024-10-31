@@ -24,7 +24,7 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         CommonActions.reset({
           index: 0,
           routes: [{ name: 'Login' }], // Ensure 'Login' is defined in your RootStackParamList
-        })
+        }),
       );
     } catch (error) {
       console.error('Error logging out: ', error);
@@ -38,7 +38,7 @@ const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
       CommonActions.reset({
         index: 0,
         routes: [{ name: 'CrewsStack' }],
-      })
+      }),
     );
   };
 

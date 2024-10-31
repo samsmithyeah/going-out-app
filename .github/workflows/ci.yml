@@ -27,12 +27,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm" # Enables caching for npm
+          cache: 'npm' # Enables caching for npm
 
       # 3. Install dependencies
       - name: Install Dependencies
         run: |
-          npx expo install
+          npm ci
 
       # 4. Run TypeScript type checking
       - name: TypeScript Type Check
@@ -44,14 +44,18 @@ jobs:
       - name: Lint Code
         run: npm run lint
 
-      # 6. Run Tests
+      # 6. Run format check
+      - name: Check Code Formatting
+        run: npm run format:check
+
+      # 7. Run Tests
       - name: Run Tests
         run: |
           npm test:ci
         # Ensure you have a "test" script in your package.json
         # Example: "test": "jest"
 
-      # 7. Upload Test Coverage Report (Optional)
+      # 8. Upload Test Coverage Report (Optional)
       - name: Upload Coverage Report
         if: success()
         uses: actions/upload-artifact@v3
@@ -59,7 +63,7 @@ jobs:
           name: coverage-report
           path: coverage/
 
-      # 8. Build the iOS application
+      # 9. Build the iOS application
       - name: Build iOS app with Expo
         run: |
           npx expo build:ios --non-interactive

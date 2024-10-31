@@ -1,11 +1,23 @@
 // components/ProfilePicturePicker.tsx
 
 import React, { useState } from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; 
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import * as ImageManipulator from 'expo-image-manipulator'; 
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import * as ImageManipulator from 'expo-image-manipulator';
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from 'firebase/storage';
 import { storage } from '../firebase';
 
 interface ProfilePicturePickerProps {
@@ -37,7 +49,10 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
   const requestPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Permission to access media library is required!');
+      Alert.alert(
+        'Permission Denied',
+        'Permission to access media library is required!',
+      );
       return false;
     }
     return true;
@@ -93,7 +108,7 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -105,7 +120,7 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
       const resizedImage = await ImageManipulator.manipulateAsync(
         uri,
         [{ resize: { width: 500 } }], // Resize to a width of 500 pixels
-        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG } // Compress the image
+        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }, // Compress the image
       );
 
       const response = await fetch(resizedImage.uri);
@@ -126,11 +141,19 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
-      <View style={[styles.profilePictureContainer, { width: size, height: size, borderRadius: size / 2 }]}>
+      <View
+        style={[
+          styles.profilePictureContainer,
+          { width: size, height: size, borderRadius: size / 2 },
+        ]}
+      >
         {imageUrl ? (
           <Image
             source={{ uri: imageUrl }}
-            style={[styles.image, { width: size, height: size, borderRadius: size / 2 }]}
+            style={[
+              styles.image,
+              { width: size, height: size, borderRadius: size / 2 },
+            ]}
           />
         ) : (
           <Ionicons name={iconName} size={size * 0.5} color={iconColor} />
@@ -200,6 +223,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     height: '100%',
-    borderRadius: 999, 
+    borderRadius: 999,
   },
 });

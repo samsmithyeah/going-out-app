@@ -7,8 +7,7 @@ import HomeScreen from '../screens/HomeScreen';
 import InvitationsScreen from '../screens/InvitationsScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
 import CrewsStackNavigator from './CrewsStackNavigator';
-import CustomDrawerContent from './CustomDrawerContent'; 
-
+import CustomDrawerContent from './CustomDrawerContent';
 
 export type DrawerParamList = {
   Home: undefined;
@@ -17,7 +16,6 @@ export type DrawerParamList = {
   Invitations: undefined;
   UserProfile: undefined;
 };
-
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 

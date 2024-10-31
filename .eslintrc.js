@@ -1,7 +1,7 @@
 // https://docs.expo.dev/guides/using-eslint/
 module.exports = {
-  extends: "expo",
+  extends: 'expo',
   rules: {
-    "react-hooks/exhaustive-deps": "off",
+    'react-hooks/exhaustive-deps': 'off',
   },
 };
