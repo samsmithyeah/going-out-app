@@ -42,7 +42,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
 
   // User cache: { [uid: string]: User }
   const [usersCache, setUsersCache] = useState<{ [key: string]: User }>({});
-  
+
   // Track loading state for user data
   const [usersLoading, setUsersLoading] = useState<boolean>(false);
 
@@ -59,7 +59,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     const q = query(
       crewsRef,
       where('memberIds', 'array-contains', user.uid),
-      orderBy('name', 'asc')
+      orderBy('name', 'asc'),
     );
 
     // Real-time listener
@@ -76,13 +76,13 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
         // Collect all unique memberIds from the crews
         const allMemberIds = crewsList.reduce<string[]>(
           (acc, crew) => acc.concat(crew.memberIds),
-          []
+          [],
         );
         const uniqueMemberIds = Array.from(new Set(allMemberIds));
 
         // Determine which memberIds are not in the cache
         const memberIdsToFetch = uniqueMemberIds.filter(
-          (uid) => !usersCache[uid]
+          (uid) => !usersCache[uid],
         );
 
         if (memberIdsToFetch.length > 0) {
@@ -101,7 +101,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
                     email: '',
                   } as User;
                 }
-              })
+              }),
             );
 
             const usersData = await Promise.all(userPromises);
@@ -179,15 +179,18 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
         data={crews}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
-            const memberNames = item.memberIds
-            .map((uid) => usersCache[uid]?.firstName || usersCache[uid]?.displayName)
+          const memberNames = item.memberIds
+            .map(
+              (uid) =>
+                usersCache[uid]?.firstName || usersCache[uid]?.displayName,
+            )
             .reduce((acc, name, index, array) => {
               if (index === 0) {
-              return name;
+                return name;
               } else if (index === array.length - 1) {
-              return `${acc} and ${name}`;
+                return `${acc} and ${name}`;
               } else {
-              return `${acc}, ${name}`;
+                return `${acc}, ${name}`;
               }
             }, '');
 
@@ -198,7 +201,10 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
             >
               {/* Crew Image */}
               {item.iconUrl ? (
-                <Image source={{ uri: item.iconUrl }} style={styles.crewImage} />
+                <Image
+                  source={{ uri: item.iconUrl }}
+                  style={styles.crewImage}
+                />
               ) : (
                 <View style={styles.placeholderImage}>
                   <Ionicons name="people-outline" size={24} color="#888" />
