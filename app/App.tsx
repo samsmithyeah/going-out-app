@@ -69,7 +69,7 @@ const App: React.FC = () => {
         }
         console.log('Expo Push Token:', token);
       } else {
-        Alert.alert('Must use physical device for Push Notifications');
+        console.warn('Must use physical device for Push Notifications');
       }
 
       if (token) {
