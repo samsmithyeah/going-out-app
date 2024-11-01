@@ -19,7 +19,6 @@ import { db } from '../firebase';
 import { useUser, User } from '../context/UserContext';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { CommonActions } from '@react-navigation/native';
 import { TabsParamList } from '../navigation/TabNavigator';
 
 type UserProfileScreenProps = BottomTabScreenProps<

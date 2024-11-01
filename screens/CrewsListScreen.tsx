@@ -27,10 +27,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator';
 import { Crew } from './CrewScreen';
 
-type CrewsListScreenProps = NativeStackScreenProps<
-  NavParamList,
-  'CrewsList'
->;
+type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
 const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   const { user } = useUser();

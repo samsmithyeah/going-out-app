@@ -14,10 +14,7 @@ type NavParamList = {
   Home: undefined;
 };
 
-type SignUpScreenNavigationProp = StackNavigationProp<
-  NavParamList,
-  'SignUp'
->;
+type SignUpScreenNavigationProp = StackNavigationProp<NavParamList, 'SignUp'>;
 type SignUpScreenRouteProp = RouteProp<NavParamList, 'SignUp'>;
 
 type Props = {

@@ -36,10 +36,7 @@ import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList';
 import { Crew } from './CrewScreen';
 
-type CrewSettingsScreenRouteProp = RouteProp<
-  NavParamList,
-  'CrewSettings'
->;
+type CrewSettingsScreenRouteProp = RouteProp<NavParamList, 'CrewSettings'>;
 
 const CrewSettingsScreen: React.FC = () => {
   const { user } = useUser();
