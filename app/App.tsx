@@ -114,12 +114,13 @@ const App: React.FC = () => {
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log('Notification Response:', response);
         const { screen, crewId } = response.notification.request.content.data;
-        if (screen === 'Invitations') {
-          navigation.navigate('Invitations');
-        } else if (screen === 'Crew' && crewId) {
+        if (screen === 'Crew' && crewId) {
           navigation.navigate('CrewsStack', { screen, params: { crewId } });
-        } else {
-          console.log('Unknown screen:', screen);
+        } else if (screen) {
+          navigation.navigate(screen);
+        }
+        else {
+          console.log('No screen to navigate to');
         }
       });
 

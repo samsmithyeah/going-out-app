@@ -100,7 +100,7 @@ export const notifyCrewMembersOnNewJoin = onDocumentUpdated(
           sound: 'default',
           title: crewName,
           body: `${displayName} has joined the crew!`,
-          data: { crewId, newMemberId: userId },
+          data: { crewId, newMemberId: userId, screen: 'Crew' },
         });
       });
     });
