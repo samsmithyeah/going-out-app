@@ -30,7 +30,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     if (user) {
-      navigation.replace('Home');
+      console.log('User logged in, redirecting to MainTabs');
+      navigation.replace('MainTabs');
     }
   }, [user]);
 

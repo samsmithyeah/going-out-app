@@ -39,13 +39,6 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   const handleLogout = async () => {
     try {
       await logout(); // Call the logout function from UserContext
-      // Reset the navigation stack to 'Login' to prevent back navigation
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Login' }],
-        }),
-      );
     } catch (error) {
       console.error('Error logging out: ', error);
       Alert.alert('Logout Error', 'An error occurred while logging out.');
