@@ -1,12 +1,12 @@
 // screens/HomeScreen.tsx
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { TabsParamList } from '../navigation/TabNavigator';
 import * as WebBrowser from 'expo-web-browser';
 import { useUser } from '../context/UserContext';
 
-type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
+type HomeScreenProps = BottomTabScreenProps<TabsParamList, 'Home'>;
 
 WebBrowser.maybeCompleteAuthSession();
 

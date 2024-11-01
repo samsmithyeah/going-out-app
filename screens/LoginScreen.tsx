@@ -15,10 +15,10 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import * as WebBrowser from 'expo-web-browser';
 import GoogleAuth from '../components/GoogleAuth';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { NavParamList } from '../navigation/AppNavigator';
 import { useUser } from '../context/UserContext';
 
-type LoginScreenProps = NativeStackScreenProps<RootStackParamList, 'Login'>;
+type LoginScreenProps = NativeStackScreenProps<NavParamList, 'Login'>;
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -30,7 +30,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     if (user) {
-      navigation.replace('Home');
+      console.log('User logged in, redirecting to MainTabs');
+      navigation.replace('MainTabs');
     }
   }, [user]);
 

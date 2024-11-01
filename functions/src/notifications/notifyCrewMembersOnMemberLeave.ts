@@ -99,7 +99,7 @@ export const notifyCrewMembersOnMemberLeave = onDocumentUpdated(
           sound: 'default',
           title: crewName,
           body: `${displayName} has left the crew.`,
-          data: { crewId, removedMemberId: userId },
+          data: { crewId, removedMemberId: userId, screen: 'Crew' },
         });
       });
     });

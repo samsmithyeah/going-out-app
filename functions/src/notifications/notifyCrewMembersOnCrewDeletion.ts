@@ -84,7 +84,7 @@ export const notifyCrewMembersOnCrewDeletion = onDocumentDeleted(
       sound: 'default',
       title: crewName,
       body: `${deleterUserName} has deleted the crew.`,
-      data: { crewId },
+      data: { crewId, screen: 'Home' },
     }));
 
     // Send the notifications

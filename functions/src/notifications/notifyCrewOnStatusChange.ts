@@ -1,4 +1,4 @@
-// functions/src/index.ts
+// functions/src/notifyCrewOnStatusChange.ts
 
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
@@ -55,6 +55,7 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
 
     if (!statusChangedToUp && !statusChangedToDown) {
       // Status did not change in a way that requires notification
+      console.log('Status change does not require notification.');
       return null;
     }
 
@@ -72,6 +73,7 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
       console.log(`Crew ${crewId} is missing required data.`);
       return null;
     }
+
     const crewName = crewData.name;
     const memberIds = crewData.memberIds.filter((id: string) => id !== userId);
 
@@ -106,13 +108,46 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
 
     console.log(`Notification Message: ${messageBody}`);
 
-    // Collect Expo push tokens of members to notify
-    const expoPushTokens: string[] = [];
+    // Fetch userStatuses to identify members who are also up for going out on the same date
+    const userStatusesRef = admin
+      .firestore()
+      .collection('crews')
+      .doc(crewId)
+      .collection('statuses')
+      .doc(date)
+      .collection('userStatuses');
 
-    // Firestore 'in' queries support up to 10 elements
+    // Firestore 'in' queries support up to 10 elements per query
     const batchSize = 10;
+    const eligibleMemberIds: string[] = [];
+
     for (let i = 0; i < memberIds.length; i += batchSize) {
       const batch = memberIds.slice(i, i + batchSize);
+
+      // Query for userStatuses where documentId (userId) is in the current batch and upForGoingOutTonight is true
+      const statusesSnapshot = await userStatusesRef
+        .where(admin.firestore.FieldPath.documentId(), 'in', batch)
+        .where('upForGoingOutTonight', '==', true)
+        .get();
+
+      statusesSnapshot.forEach((doc) => {
+        eligibleMemberIds.push(doc.id);
+      });
+    }
+
+    if (eligibleMemberIds.length === 0) {
+      console.log('No eligible members to notify.');
+      return null;
+    }
+
+    console.log(`Eligible Members to Notify: ${eligibleMemberIds}`);
+
+    // Now, fetch the push tokens for eligible members
+    const expoPushTokens: string[] = [];
+
+    for (let i = 0; i < eligibleMemberIds.length; i += batchSize) {
+      const batch = eligibleMemberIds.slice(i, i + batchSize);
+
       const usersSnapshot = await admin
         .firestore()
         .collection('users')
@@ -139,9 +174,11 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
     }
 
     if (expoPushTokens.length === 0) {
-      console.log('No valid Expo push tokens found for members.');
+      console.log('No valid Expo push tokens found for eligible members.');
       return null;
     }
+
+    console.log(`Expo Push Tokens: ${expoPushTokens}`);
 
     // Prepare the notification messages
     const messages: ExpoPushMessage[] = expoPushTokens.map((pushToken) => ({
@@ -149,7 +186,14 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
       sound: 'default',
       title: crewName,
       body: messageBody,
-      data: { crewId, userId, date, statusChangedToUp, statusChangedToDown, screen: 'Crew' },
+      data: {
+        crewId,
+        userId,
+        date,
+        statusChangedToUp,
+        statusChangedToDown,
+        screen: 'Crew',
+      },
     }));
 
     console.log(`Prepared Messages: ${JSON.stringify(messages)}`);

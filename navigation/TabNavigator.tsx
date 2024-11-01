@@ -1,73 +1,72 @@
 // navigation/DrawerNavigator.tsx
 
 import React from 'react';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import InvitationsScreen from '../screens/InvitationsScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
 import CrewsStackNavigator from './CrewsStackNavigator';
-import CustomDrawerContent from './CustomDrawerContent';
 
-export type DrawerParamList = {
+export type TabsParamList = {
   Home: undefined;
-  CrewsStack: undefined;
-  FriendsList: undefined;
+  CrewsStack: { screen: string; params: { crewId: string } };
   Invitations: undefined;
   UserProfile: undefined;
 };
 
-const Drawer = createDrawerNavigator<DrawerParamList>();
+const Tab = createBottomTabNavigator<TabsParamList>();
 
-const DrawerNavigator: React.FC = () => {
+const TabNavigator: React.FC = () => {
   return (
-    <Drawer.Navigator
-      initialRouteName="Home"
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
-    >
-      <Drawer.Screen
+    <Tab.Navigator initialRouteName="Home">
+      <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{
           title: 'Home',
-          drawerIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
+          headerShown: false,
         }}
       />
-      <Drawer.Screen
+      <Tab.Screen
         name="CrewsStack"
         component={CrewsStackNavigator}
         options={{
           title: 'Crews',
-          drawerIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }) => (
             <Ionicons name="people-outline" size={size} color={color} />
           ),
+          unmountOnBlur: true,
+          headerShown: false,
         }}
       />
-      <Drawer.Screen
+      <Tab.Screen
         name="Invitations"
         component={InvitationsScreen}
         options={{
           title: 'Invitations',
-          drawerIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size }) => (
             <Ionicons name="mail-outline" size={size} color={color} />
           ),
+          headerStatusBarHeight: 0,
         }}
       />
-      <Drawer.Screen
+      <Tab.Screen
         name="UserProfile"
         component={UserProfileScreen}
         options={{
-          title: 'Profile',
-          drawerIcon: ({ color, size }) => (
+          title: 'Your profile',
+          tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
+          headerStatusBarHeight: 0,
         }}
       />
-      {/* Add other drawer items here if needed */}
-    </Drawer.Navigator>
+    </Tab.Navigator>
   );
 };
 
-export default DrawerNavigator;
+export default TabNavigator;

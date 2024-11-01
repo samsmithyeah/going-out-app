@@ -5,9 +5,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 import CrewsListScreen from '../screens/CrewsListScreen';
 import CrewScreen from '../screens/CrewScreen';
 import CrewSettingsScreen from '../screens/CrewSettingsScreen';
-import { RootStackParamList } from './AppNavigator';
+import { NavParamList } from './AppNavigator';
 
-const Stack = createStackNavigator<RootStackParamList>();
+const Stack = createStackNavigator<NavParamList>();
 
 const CrewsStackNavigator: React.FC = () => {
   return (
@@ -15,17 +15,17 @@ const CrewsStackNavigator: React.FC = () => {
       <Stack.Screen
         name="CrewsList"
         component={CrewsListScreen}
-        options={{ title: 'Your Crews', headerShown: false }}
+        options={{ title: 'Your Crews', headerStatusBarHeight: 0 }}
       />
       <Stack.Screen
         name="Crew"
         component={CrewScreen}
-        options={{ headerBackTitleVisible: false }}
+        options={{ headerBackTitleVisible: false, headerStatusBarHeight: 0 }}
       />
       <Stack.Screen
         name="CrewSettings"
         component={CrewSettingsScreen}
-        options={{ headerBackTitleVisible: false }}
+        options={{ headerBackTitleVisible: false, headerStatusBarHeight: 0 }}
       />
     </Stack.Navigator>
   );

@@ -27,12 +27,12 @@ import {
 import { db } from '../firebase';
 import { useUser, User } from '../context/UserContext';
 import { MaterialIcons } from '@expo/vector-icons';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { NavParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
 import MemberList from '../components/MemberList'; // Import the new MemberList component
 import { Timestamp } from 'firebase/firestore'; // Import Timestamp correctly
 
-type CrewScreenRouteProp = RouteProp<RootStackParamList, 'Crew'>;
+type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
 
 export interface Crew {
   id: string;
@@ -52,7 +52,7 @@ const CrewScreen: React.FC = () => {
   const { user } = useUser();
   const route = useRoute<CrewScreenRouteProp>();
   const { crewId } = route.params;
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NavigationProp<NavParamList>>();
   const [crew, setCrew] = useState<Crew | null>(null);
   const [members, setMembers] = useState<User[]>([]);
   const [statuses, setStatuses] = useState<{ [userId: string]: boolean }>({});

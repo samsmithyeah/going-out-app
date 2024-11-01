@@ -24,13 +24,10 @@ import {
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { NavParamList } from '../navigation/AppNavigator';
 import { Crew } from './CrewScreen';
 
-type CrewsListScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'CrewsList'
->;
+type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
 const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   const { user } = useUser();
