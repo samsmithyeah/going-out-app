@@ -24,7 +24,7 @@ import { useUser } from '../context/UserContext';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabsParamList } from '../navigation/TabNavigator';
 import { Ionicons } from '@expo/vector-icons';
-import { User } from '../context/UserContext';
+import { User } from '../types/User';
 import { Crew } from '../screens/CrewScreen';
 import InvitationCard from '../components/InvitationCard';
 
