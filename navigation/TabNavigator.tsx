@@ -1,9 +1,7 @@
 // navigation/DrawerNavigator.tsx
 
 import React from 'react';
-import {
-  createBottomTabNavigator,
-} from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import InvitationsScreen from '../screens/InvitationsScreen';
@@ -21,9 +19,7 @@ const Tab = createBottomTabNavigator<TabsParamList>();
 
 const TabNavigator: React.FC = () => {
   return (
-    <Tab.Navigator
-      initialRouteName="Home"
-    >
+    <Tab.Navigator initialRouteName="Home">
       <Tab.Screen
         name="Home"
         component={HomeScreen}

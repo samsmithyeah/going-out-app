@@ -106,7 +106,10 @@ const InvitationsScreen: React.FC<InvitationsScreenProps> = ({
 
       Alert.alert('Success', 'You have joined the crew');
 
-      navigation.navigate('CrewsStack', { screen: 'Crew', params: { crewId: invitation.crewId } });
+      navigation.navigate('CrewsStack', {
+        screen: 'Crew',
+        params: { crewId: invitation.crewId },
+      });
     } catch (error) {
       console.error('Error accepting invitation:', error);
       Alert.alert('Error', 'Could not accept invitation');

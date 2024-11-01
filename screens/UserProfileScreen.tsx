@@ -27,7 +27,9 @@ type UserProfileScreenProps = BottomTabScreenProps<
   'UserProfile'
 >;
 
-const UserProfileScreen: React.FC<UserProfileScreenProps> = ({ navigation }) => {
+const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
+  navigation,
+}) => {
   const { user, setUser, logout } = useUser();
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);

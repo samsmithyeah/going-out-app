@@ -37,7 +37,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator: React.FC = () => {
   const { user } = useUser();
- 
+
   return (
     <Stack.Navigator>
       {!user ? (

@@ -21,7 +21,6 @@ Notifications.setNotificationHandler({
   }),
 });
 
-
 const App: React.FC = () => {
   const { user } = useUser();
   const notificationListener = useRef<any>();
@@ -118,8 +117,7 @@ const App: React.FC = () => {
           navigation.navigate('CrewsStack', { screen, params: { crewId } });
         } else if (screen) {
           navigation.navigate(screen);
-        }
-        else {
+        } else {
           console.log('No screen to navigate to');
         }
       });
