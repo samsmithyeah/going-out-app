@@ -369,21 +369,40 @@ const CrewSettingsScreen: React.FC = () => {
       <View style={styles.groupInfo}>
         <ProfilePicturePicker
           imageUrl={crew.iconUrl ?? null}
-          onImageUpdate={(newUrl) => {
+          onImageUpdate={async (newUrl) => {
+            // Update local state
             setCrew((prev) => (prev ? { ...prev, iconUrl: newUrl } : prev));
+
+            // Update Firestore
+            if (crewId) {
+              try {
+                const crewRef = doc(db, 'crews', crewId);
+                await updateDoc(crewRef, { iconUrl: newUrl });
+                console.log(
+                  'iconUrl successfully updated in Firestore:',
+                  newUrl,
+                );
+              } catch (error) {
+                console.error('Error updating iconUrl in Firestore:', error);
+                Alert.alert('Error', 'Could not update crew profile picture');
+              }
+            }
           }}
-          editable={user?.uid === crew.ownerId} // Only owner can edit the crew icon
+          editable={user?.uid === crew.ownerId}
           storagePath={`crews/${crewId}/icon.jpg`}
           size={120}
         />
         <View style={styles.groupNameContainer}>
           <Text style={styles.groupName}>{crew.name}</Text>
-          <TouchableOpacity
-            onPress={() => setIsEditNameModalVisible(true)}
-            style={styles.editButton}
-          >
-            <Ionicons name="pencil" size={20} color="#1e90ff" />
-          </TouchableOpacity>
+          {user?.uid === crew.ownerId && (
+            <TouchableOpacity
+              onPress={() => setIsEditNameModalVisible(true)}
+              style={styles.editButton}
+              accessibilityLabel="Edit Crew Name"
+            >
+              <Ionicons name="pencil" size={20} color="#1e90ff" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
