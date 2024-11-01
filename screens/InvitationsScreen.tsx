@@ -1,4 +1,4 @@
-// InvitationsScreen.tsx
+// screens/InvitationsScreen.tsx
 
 import React, { useEffect, useState } from 'react';
 import {
@@ -22,11 +22,11 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { TabsParamList } from '../navigation/TabNavigator';
 
-type InvitationsScreenProps = NativeStackScreenProps<
-  RootStackParamList,
+type InvitationsScreenProps = BottomTabScreenProps<
+  TabsParamList,
   'Invitations'
 >;
 
@@ -106,8 +106,7 @@ const InvitationsScreen: React.FC<InvitationsScreenProps> = ({
 
       Alert.alert('Success', 'You have joined the crew');
 
-      // Optionally navigate to the CrewScreen
-      navigation.navigate('Crew', { crewId: invitation.crewId });
+      navigation.navigate('CrewsStack', { screen: 'Crew', params: { crewId: invitation.crewId } });
     } catch (error) {
       console.error('Error accepting invitation:', error);
       Alert.alert('Error', 'Could not accept invitation');

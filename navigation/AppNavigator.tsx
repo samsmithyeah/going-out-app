@@ -5,9 +5,22 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { useUser } from '../context/UserContext';
 import SignUpScreen from '../screens/SignUpScreen';
 import LoginScreen from '../screens/LoginScreen';
-import DrawerNavigator from './DrawerNavigator';
+import TabNavigator from './TabNavigator';
 
 export type RootStackParamList = {
+  SignUp: undefined;
+  Login: undefined;
+  Home: undefined;
+  CrewsStack: { screen: string; params: { crewId: string } } | undefined;
+  CrewsList: undefined;
+  Crew: { crewId: string };
+  CrewSettings: { crewId: string };
+  UserProfile: { userId: string };
+  Invitations: undefined;
+  Notifications: undefined;
+};
+
+export type TabNavParamList = {
   SignUp: undefined;
   Login: undefined;
   Home: undefined;
@@ -43,7 +56,7 @@ const AppNavigator: React.FC = () => {
       ) : (
         <Stack.Screen
           name="Home"
-          component={DrawerNavigator}
+          component={TabNavigator}
           options={{ headerShown: false }}
         />
       )}
