@@ -49,7 +49,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const [lastName, setLastName] = useState<string>('');
   const [formError, setFormError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const { user, setUser } = useUser();
+  const { setUser } = useUser();
 
   const handleSignUp = async () => {
     // Reset form error
@@ -98,12 +98,10 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
         photoURL: thisUser.photoURL || '',
       };
 
-      setUser(updatedUser);
-
       await addUserToFirestore(updatedUser);
 
-      // Optionally, you can show a success message here
-      // Alert.alert('Success', 'Account created successfully!');
+      setUser(updatedUser);
+
       navigation.navigate('Home');
     } catch (err: any) {
       console.error('Sign Up Error:', err);

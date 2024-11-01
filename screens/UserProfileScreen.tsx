@@ -48,7 +48,7 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (!user?.uid) {
-        console.warn('User not logged in');
+        console.log('User not logged in');
         setLoading(false);
         return;
       }
