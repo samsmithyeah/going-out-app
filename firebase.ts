@@ -40,7 +40,7 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services
 const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage)
+  persistence: getReactNativePersistence(AsyncStorage),
 });
 const db = getFirestore(app);
 const functions = getFunctions(app);
