@@ -7,6 +7,7 @@ import React, {
   useEffect,
 } from 'react';
 import { auth } from '../firebase';
+import { User } from '../types/User';
 import { Alert } from 'react-native';
 
 type UserContextType = {
@@ -16,15 +17,6 @@ type UserContextType = {
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
-
-export interface User {
-  uid: string;
-  displayName: string;
-  firstName?: string;
-  lastName?: string;
-  email: string;
-  photoURL?: string;
-}
 
 type UserProviderProps = {
   children: ReactNode;

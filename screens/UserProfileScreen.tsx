@@ -16,7 +16,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { useUser, User } from '../context/UserContext';
+import { useUser } from '../context/UserContext';
+import { User } from '../types/User';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabsParamList } from '../navigation/TabNavigator';

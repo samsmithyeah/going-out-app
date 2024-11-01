@@ -1,13 +1,18 @@
 // firebase.ts
 import { initializeApp } from 'firebase/app';
 import {
-  getAuth,
   signInWithEmailAndPassword,
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithCredential,
   updateProfile,
+  getReactNativePersistence,
+  initializeAuth,
+  createUserWithEmailAndPassword,
+  User as FirebaseUser,
+  getAuth,
 } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getFirestore,
   doc,
@@ -19,8 +24,7 @@ import {
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-// import { Platform } from 'react-native';
-import { User } from './context/UserContext';
+import { User } from './types/User';
 
 // Your Firebase configuration (from the Firebase console)
 const firebaseConfig = {
@@ -37,7 +41,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services
-const auth = getAuth(app);
+let auth: ReturnType<typeof initializeAuth> | ReturnType<typeof getAuth>;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch (e: any) {
+  if (e.code === 'app/duplicate-app' || e.code === 'auth/already-initialized') {
+    auth = getAuth(app);
+  } else {
+    throw e;
+  }
+}
 const db = getFirestore(app);
 const functions = getFunctions(app);
 const storage = getStorage(app);
@@ -109,6 +124,7 @@ export {
   signInWithCredential,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
   doc,
   getDoc,
@@ -116,6 +132,6 @@ export {
   collection,
   addDoc,
   onSnapshot,
-  User,
   addUserToFirestore,
+  FirebaseUser,
 };

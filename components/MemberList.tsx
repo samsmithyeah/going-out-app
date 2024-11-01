@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import ProfilePicturePicker from './ProfilePicturePicker';
 import SkeletonUserItem from './SkeletonUserItem'; // Ensure this component exists
-import { User } from '../context/UserContext';
+import { User } from '../types/User';
 
 interface MemberListProps {
   members: User[];

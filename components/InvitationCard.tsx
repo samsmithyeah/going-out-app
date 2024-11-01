@@ -3,19 +3,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Crew } from '../screens/CrewScreen'; // Adjust the path as needed
-import { User } from '../context/UserContext'; // Adjust the path as needed
-
-interface InvitationWithDetails {
-  id: string;
-  crewId: string;
-  fromUserId: string;
-  toUserId: string;
-  status: string;
-  timestamp: any;
-  crew?: Crew;
-  inviter?: User;
-}
+import { InvitationWithDetails } from '../screens/InvitationsScreen';
 
 interface InvitationCardProps {
   invitation: InvitationWithDetails;

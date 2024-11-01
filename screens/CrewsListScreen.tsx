@@ -20,12 +20,16 @@ import {
   where,
   onSnapshot,
   addDoc,
+  orderBy,
+  doc,
+  getDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator';
 import { Crew } from './CrewScreen';
+import { User } from '../types/User'; // Import User interface
 
 type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
@@ -36,6 +40,12 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   const [newCrewName, setNewCrewName] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // User cache: { [uid: string]: User }
+  const [usersCache, setUsersCache] = useState<{ [key: string]: User }>({});
+
+  // Track loading state for user data
+  const [usersLoading, setUsersLoading] = useState<boolean>(false);
+
   useEffect(() => {
     if (!user?.uid) {
       setLoading(false);
@@ -45,19 +55,72 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     // Reference to the crews collection
     const crewsRef = collection(db, 'crews');
 
-    // Query to get crews where the user is a member
-    const q = query(crewsRef, where('memberIds', 'array-contains', user.uid));
+    // Query to get crews where the user is a member, ordered by name ascending
+    const q = query(
+      crewsRef,
+      where('memberIds', 'array-contains', user.uid),
+      orderBy('name', 'asc'),
+    );
 
     // Real-time listener
     const unsubscribe = onSnapshot(
       q,
-      (snapshot) => {
+      async (snapshot) => {
         const crewsList = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...(doc.data() as Omit<Crew, 'id'>),
         }));
         setCrews(crewsList);
         setLoading(false);
+
+        // Collect all unique memberIds from the crews
+        const allMemberIds = crewsList.reduce<string[]>(
+          (acc, crew) => acc.concat(crew.memberIds),
+          [],
+        );
+        const uniqueMemberIds = Array.from(new Set(allMemberIds));
+
+        // Determine which memberIds are not in the cache
+        const memberIdsToFetch = uniqueMemberIds.filter(
+          (uid) => !usersCache[uid],
+        );
+
+        if (memberIdsToFetch.length > 0) {
+          setUsersLoading(true);
+          try {
+            // Fetch user data for memberIdsToFetch
+            const userPromises = memberIdsToFetch.map((uid) =>
+              getDoc(doc(db, 'users', uid)).then((userDoc) => {
+                if (userDoc.exists()) {
+                  return { ...userDoc.data(), uid: userDoc.id } as User;
+                } else {
+                  // Handle case where user document doesn't exist
+                  return {
+                    uid,
+                    displayName: 'Unknown User',
+                    email: '',
+                  } as User;
+                }
+              }),
+            );
+
+            const usersData = await Promise.all(userPromises);
+
+            // Update the users cache
+            setUsersCache((prevCache) => {
+              const newCache = { ...prevCache };
+              usersData.forEach((userData) => {
+                newCache[userData.uid] = userData;
+              });
+              return newCache;
+            });
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+            Alert.alert('Error', 'Could not fetch crew members data');
+          } finally {
+            setUsersLoading(false);
+          }
+        }
       },
       (error) => {
         console.error('Error fetching crews:', error);
@@ -66,7 +129,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     );
 
     return () => unsubscribe();
-  }, [user?.uid]);
+  }, [user?.uid, usersCache]);
 
   const createCrew = async () => {
     if (!newCrewName.trim()) {
@@ -101,10 +164,11 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     }
   };
 
-  if (loading) {
+  if (loading || usersLoading) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator size="large" color="#1e90ff" />
+        {usersLoading && <Text>Loading crew members...</Text>}
       </View>
     );
   }
@@ -114,23 +178,48 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
       <FlatList
         data={crews}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.crewItem}
-            onPress={() => navigation.navigate('Crew', { crewId: item.id })}
-          >
-            {/* Crew Image */}
-            {item.iconUrl ? (
-              <Image source={{ uri: item.iconUrl }} style={styles.crewImage} />
-            ) : (
-              <View style={styles.placeholderImage}>
-                <Ionicons name="people-outline" size={24} color="#888" />
+        renderItem={({ item }) => {
+          const memberNames = item.memberIds
+            .map(
+              (uid) =>
+                usersCache[uid]?.firstName || usersCache[uid]?.displayName,
+            )
+            .reduce((acc, name, index, array) => {
+              if (index === 0) {
+                return name;
+              } else if (index === array.length - 1) {
+                return `${acc} and ${name}`;
+              } else {
+                return `${acc}, ${name}`;
+              }
+            }, '');
+
+          return (
+            <TouchableOpacity
+              style={styles.crewItem}
+              onPress={() => navigation.navigate('Crew', { crewId: item.id })}
+            >
+              {/* Crew Image */}
+              {item.iconUrl ? (
+                <Image
+                  source={{ uri: item.iconUrl }}
+                  style={styles.crewImage}
+                />
+              ) : (
+                <View style={styles.placeholderImage}>
+                  <Ionicons name="people-outline" size={24} color="#888" />
+                </View>
+              )}
+              {/* Crew Details */}
+              <View style={styles.crewDetails}>
+                {/* Crew Name */}
+                <Text style={styles.crewText}>{item.name}</Text>
+                {/* Member Names */}
+                <Text style={styles.memberText}>{memberNames}</Text>
               </View>
-            )}
-            {/* Crew Name */}
-            <Text style={styles.crewText}>{item.name}</Text>
-          </TouchableOpacity>
-        )}
+            </TouchableOpacity>
+          );
+        }}
         ListEmptyComponent={
           <Text style={styles.emptyText}>No crews found</Text>
         }
@@ -183,7 +272,7 @@ const styles = StyleSheet.create({
   crewItem: {
     flexDirection: 'row', // Arrange image and text horizontally
     alignItems: 'center', // Vertically center items
-    padding: 16,
+    padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
@@ -202,8 +291,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
+  crewDetails: {
+    flex: 1, // Take up remaining space
+  },
   crewText: {
     fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  memberText: {
+    fontSize: 14,
+    color: '#666',
   },
   emptyText: {
     textAlign: 'center',

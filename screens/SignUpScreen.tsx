@@ -3,10 +3,12 @@ import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import {
+  auth,
+  updateProfile,
+  addUserToFirestore,
+  FirebaseUser,
   createUserWithEmailAndPassword,
-  User as FirebaseUser,
-} from 'firebase/auth';
-import { auth, updateProfile, addUserToFirestore } from '../firebase';
+} from '../firebase';
 import { useUser } from '../context/UserContext';
 
 type NavParamList = {

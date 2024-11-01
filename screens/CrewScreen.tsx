@@ -25,7 +25,8 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { useUser, User } from '../context/UserContext';
+import { useUser } from '../context/UserContext';
+import { User } from '../types/User';
 import { MaterialIcons } from '@expo/vector-icons';
 import { NavParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
