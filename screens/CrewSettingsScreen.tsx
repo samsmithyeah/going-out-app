@@ -29,7 +29,8 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { deleteCrew, db } from '../firebase';
-import { useUser, User } from '../context/UserContext';
+import { useUser } from '../context/UserContext';
+import { User } from '../types/User';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { NavParamList } from '../navigation/AppNavigator';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
