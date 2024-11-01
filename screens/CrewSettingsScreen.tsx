@@ -31,13 +31,13 @@ import {
 import { deleteCrew, db } from '../firebase';
 import { useUser, User } from '../context/UserContext';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { NavParamList } from '../navigation/AppNavigator';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList';
 import { Crew } from './CrewScreen';
 
 type CrewSettingsScreenRouteProp = RouteProp<
-  RootStackParamList,
+  NavParamList,
   'CrewSettings'
 >;
 
@@ -45,7 +45,7 @@ const CrewSettingsScreen: React.FC = () => {
   const { user } = useUser();
   const route = useRoute<CrewSettingsScreenRouteProp>();
   const { crewId } = route.params;
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NavigationProp<NavParamList>>();
   const [crew, setCrew] = useState<Crew | null>(null);
   const [members, setMembers] = useState<User[]>([]);
   const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);

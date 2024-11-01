@@ -7,7 +7,7 @@ import SignUpScreen from '../screens/SignUpScreen';
 import LoginScreen from '../screens/LoginScreen';
 import TabNavigator from './TabNavigator';
 
-export type TabNavParamList = {
+export type NavParamList = {
   SignUp: undefined;
   Login: undefined;
   MainTabs: undefined;
@@ -19,7 +19,7 @@ export type TabNavParamList = {
   Invitations: undefined;
 };
 
-const Stack = createStackNavigator<TabNavParamList>();
+const Stack = createStackNavigator<NavParamList>();
 
 const AppNavigator: React.FC = () => {
   const { user } = useUser();

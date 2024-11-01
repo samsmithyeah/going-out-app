@@ -5,9 +5,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 import CrewsListScreen from '../screens/CrewsListScreen';
 import CrewScreen from '../screens/CrewScreen';
 import CrewSettingsScreen from '../screens/CrewSettingsScreen';
-import { TabNavParamList } from './AppNavigator';
+import { NavParamList } from './AppNavigator';
 
-const Stack = createStackNavigator<TabNavParamList>();
+const Stack = createStackNavigator<NavParamList>();
 
 const CrewsStackNavigator: React.FC = () => {
   return (

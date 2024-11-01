@@ -9,16 +9,16 @@ import {
 import { auth, updateProfile, addUserToFirestore } from '../firebase';
 import { useUser } from '../context/UserContext';
 
-type RootStackParamList = {
+type NavParamList = {
   SignUp: undefined;
   Home: undefined;
 };
 
 type SignUpScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
+  NavParamList,
   'SignUp'
 >;
-type SignUpScreenRouteProp = RouteProp<RootStackParamList, 'SignUp'>;
+type SignUpScreenRouteProp = RouteProp<NavParamList, 'SignUp'>;
 
 type Props = {
   navigation: SignUpScreenNavigationProp;

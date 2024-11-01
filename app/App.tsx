@@ -10,7 +10,7 @@ import { Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { NavParamList } from '../navigation/AppNavigator';
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -25,7 +25,7 @@ const App: React.FC = () => {
   const { user } = useUser();
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<StackNavigationProp<NavParamList>>();
 
   useEffect(() => {
     if (!user) return;
