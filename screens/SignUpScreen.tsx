@@ -1,5 +1,20 @@
+// SignUpScreen.tsx
+
 import React, { useState } from 'react';
-import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  Alert,
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import {
@@ -10,29 +25,46 @@ import {
   createUserWithEmailAndPassword,
 } from '../firebase';
 import { useUser } from '../context/UserContext';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Animatable from 'react-native-animatable';
+import { NavParamList } from '../navigation/AppNavigator';
 
-type NavParamList = {
-  SignUp: undefined;
-  Home: undefined;
+type SignUpScreenProps = {
+  navigation: StackNavigationProp<NavParamList, 'SignUp'>;
+  route: RouteProp<NavParamList, 'SignUp'>;
 };
 
-type SignUpScreenNavigationProp = StackNavigationProp<NavParamList, 'SignUp'>;
-type SignUpScreenRouteProp = RouteProp<NavParamList, 'SignUp'>;
-
-type Props = {
-  navigation: SignUpScreenNavigationProp;
-  route: SignUpScreenRouteProp;
-};
-
-const SignUpScreen: React.FC<Props> = ({ navigation }) => {
+const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
   const { user, setUser } = useUser();
 
   const handleSignUp = async () => {
+    // Basic validation
+    if (!email.trim() || !password || !firstName.trim() || !lastName.trim()) {
+      Alert.alert('Validation Error', 'Please fill in all fields.');
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email.trim())) {
+      Alert.alert('Validation Error', 'Please enter a valid email address.');
+      return;
+    }
+
+    // Password strength validation (minimum 6 characters)
+    if (password.length < 6) {
+      Alert.alert('Validation Error', 'Password must be at least 6 characters long.');
+      return;
+    }
+
+    setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -40,68 +72,255 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
         password,
       );
       const thisUser: FirebaseUser = userCredential.user;
+
       await updateProfile(thisUser, {
-        displayName: `${firstName} ${lastName}`,
+        displayName: `${firstName.trim()} ${lastName.trim()}`,
       });
+
       console.log('User signed up:', thisUser);
-      setUser({
+
+      const updatedUser = {
         uid: thisUser.uid,
         email: thisUser.email || '',
         displayName: thisUser.displayName || '',
-        firstName: thisUser.displayName?.split(' ')[0] || '',
-        lastName: thisUser.displayName?.split(' ')[1] || '',
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         photoURL: thisUser.photoURL || '',
-      });
-      if (user) {
-        await addUserToFirestore(user);
-      } else {
-        throw new Error('User is null');
-      }
-      navigation.navigate('Home');
+      };
+
+      setUser(updatedUser);
+
+      await addUserToFirestore(updatedUser);
+
+      Alert.alert('Success', 'Account created successfully!');
+      navigation.navigate('MainTabs');
     } catch (err: any) {
+      console.error('Sign Up Error:', err);
+      Alert.alert('Sign Up Error', err.message);
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        placeholder="Email"
-        onChangeText={(text) => setEmail(text)}
-        value={email}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="First Name"
-        onChangeText={(text) => setFirstName(text)}
-        value={firstName}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Last Name"
-        onChangeText={(text) => setLastName(text)}
-        value={lastName}
-        style={styles.input}
-      />
-      <TextInput
-        placeholder="Password"
-        secureTextEntry
-        onChangeText={(text) => setPassword(text)}
-        value={password}
-        style={styles.input}
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button title="Sign Up" onPress={handleSignUp} />
-    </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <LinearGradient
+        colors={['#ffecd2', '#fcb69f']}
+        style={styles.gradient}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.container}
+        >
+          <Animatable.View
+            animation="fadeInDown"
+            duration={1500}
+            style={styles.logoContainer}
+          >
+            <Image
+              source={require('../assets/images/icon.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>Create Account</Text>
+          </Animatable.View>
+
+          <Animatable.View
+            animation="fadeInUp"
+            duration={1500}
+            style={styles.formContainer}
+          >
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={24} color="#333" style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="#666"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                textContentType="emailAddress"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="person-outline" size={24} color="#333" style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                placeholder="First Name"
+                placeholderTextColor="#666"
+                value={firstName}
+                onChangeText={setFirstName}
+                autoCapitalize="words"
+                autoComplete="name-given"
+                textContentType="givenName"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="person-outline" size={24} color="#333" style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Last Name"
+                placeholderTextColor="#666"
+                value={lastName}
+                onChangeText={setLastName}
+                autoCapitalize="words"
+                autoComplete="name-family"
+                textContentType="familyName"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={24} color="#333" style={styles.icon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor="#666"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                autoComplete="password"
+                textContentType="password"
+              />
+            </View>
+
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleSignUp}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Sign Up</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.separatorContainer}>
+              <View style={styles.separatorLine} />
+              <Text style={styles.separatorText}>OR</Text>
+              <View style={styles.separatorLine} />
+            </View>
+
+            {/* If you have a GoogleAuth component for sign-up as well */}
+            {/* <GoogleAuth /> */}
+
+            <TouchableOpacity
+              style={styles.loginContainer}
+              onPress={() => navigation.navigate('Login')} // Assuming you have a Login screen
+            >
+              <Text style={styles.loginText}>Already have an account? </Text>
+              <Text style={styles.loginLink}>Login</Text>
+            </TouchableOpacity>
+          </Animatable.View>
+        </KeyboardAvoidingView>
+      </LinearGradient>
+    </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 16 },
-  input: { marginBottom: 12, borderWidth: 1, padding: 8, borderRadius: 4 },
-  error: { color: 'red', marginBottom: 12 },
+  gradient: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 28,
+    color: '#333',
+    fontWeight: '700',
+  },
+  formContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 15,
+    padding: 20,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  icon: {
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    color: '#333',
+  },
+  button: {
+    backgroundColor: '#ff6b6b',
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+    shadowColor: '#000', // For iOS shadow
+    shadowOffset: { width: 0, height: 2 }, // For iOS shadow
+    shadowOpacity: 0.3, // For iOS shadow
+    shadowRadius: 4, // For iOS shadow
+    elevation: 5, // For Android shadow
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  separatorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#333',
+  },
+  separatorText: {
+    marginHorizontal: 10,
+    color: '#333',
+    fontSize: 16,
+  },
+  loginContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  loginText: {
+    color: '#333',
+    fontSize: 16,
+  },
+  loginLink: {
+    color: '#ff6b6b',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  error: {
+    color: '#ff6b6b',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
 });
 
 export default SignUpScreen;
