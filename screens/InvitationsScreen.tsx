@@ -24,8 +24,6 @@ import { useUser } from '../context/UserContext';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabsParamList } from '../navigation/TabNavigator';
 import { Ionicons } from '@expo/vector-icons';
-
-// Import the existing interfaces
 import { User } from '../context/UserContext';
 import { Crew } from '../screens/CrewScreen';
 import InvitationCard from '../components/InvitationCard';
@@ -44,7 +42,7 @@ interface Invitation {
   timestamp: any;
 }
 
-interface InvitationWithDetails extends Invitation {
+export interface InvitationWithDetails extends Invitation {
   crew?: Crew;
   inviter?: User;
 }
