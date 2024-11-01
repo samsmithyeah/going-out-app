@@ -113,10 +113,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <LinearGradient
-        colors={['#ffecd2', '#fcb69f']}
-        style={styles.gradient}
-      >
+      <LinearGradient colors={['#ffecd2', '#fcb69f']} style={styles.gradient}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.container}
@@ -142,7 +139,12 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
             {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
             <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={24} color="#333" style={styles.icon} />
+              <Ionicons
+                name="mail-outline"
+                size={24}
+                color="#333"
+                style={styles.icon}
+              />
               <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -160,7 +162,12 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="person-outline" size={24} color="#333" style={styles.icon} />
+              <Ionicons
+                name="person-outline"
+                size={24}
+                color="#333"
+                style={styles.icon}
+              />
               <TextInput
                 style={styles.input}
                 placeholder="First Name"
@@ -177,7 +184,12 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="person-outline" size={24} color="#333" style={styles.icon} />
+              <Ionicons
+                name="person-outline"
+                size={24}
+                color="#333"
+                style={styles.icon}
+              />
               <TextInput
                 style={styles.input}
                 placeholder="Last Name"
@@ -194,7 +206,12 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={24} color="#333" style={styles.icon} />
+              <Ionicons
+                name="lock-closed-outline"
+                size={24}
+                color="#333"
+                style={styles.icon}
+              />
               <TextInput
                 style={styles.input}
                 placeholder="Password"

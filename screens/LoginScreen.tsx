@@ -73,94 +73,101 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <LinearGradient
-        colors={['#6a11cb', '#2575fc']}
-        style={styles.gradient}
-      >
-          <Animatable.View
-            animation="fadeInDown"
-            duration={1500}
-            style={styles.logoContainer}
-          >
-            <Image
-              source={require('../assets/images/icon.png')} // Replace with your logo
-              style={styles.logo}
-              resizeMode="contain"
+      <LinearGradient colors={['#6a11cb', '#2575fc']} style={styles.gradient}>
+        <Animatable.View
+          animation="fadeInDown"
+          duration={1500}
+          style={styles.logoContainer}
+        >
+          <Image
+            source={require('../assets/images/icon.png')} // Replace with your logo
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Welcome Back!</Text>
+        </Animatable.View>
+
+        <Animatable.View
+          animation="fadeInUp"
+          duration={1500}
+          style={styles.formContainer}
+        >
+          {formError ? <Text style={styles.error}>{formError}</Text> : null}
+
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="mail-outline"
+              size={24}
+              color="#333"
+              style={styles.icon}
             />
-            <Text style={styles.title}>Welcome Back!</Text>
-          </Animatable.View>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#666"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (formError) setFormError('');
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              textContentType="emailAddress"
+            />
+          </View>
 
-          <Animatable.View
-            animation="fadeInUp"
-            duration={1500}
-            style={styles.formContainer}
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={24}
+              color="#333"
+              style={styles.icon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#666"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (formError) setFormError('');
+              }}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password"
+              textContentType="password"
+            />
+          </View>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleEmailLogin}
+            disabled={loading}
           >
-            {formError ? <Text style={styles.error}>{formError}</Text> : null}
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Login</Text>
+            )}
+          </TouchableOpacity>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={24} color="#333" style={styles.icon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#666"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  if (formError) setFormError('');
-                }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                textContentType="emailAddress"
-              />
-            </View>
+          <View style={styles.separatorContainer}>
+            <View style={styles.separatorLine} />
+            <Text style={styles.separatorText}>OR</Text>
+            <View style={styles.separatorLine} />
+          </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={24} color="#333" style={styles.icon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor="#666"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (formError) setFormError('');
-                }}
-                secureTextEntry
-                autoCapitalize="none"
-                autoComplete="password"
-                textContentType="password"
-              />
-            </View>
+          <GoogleAuth />
 
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleEmailLogin}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Login</Text>
-              )}
-            </TouchableOpacity>
-
-            <View style={styles.separatorContainer}>
-              <View style={styles.separatorLine} />
-              <Text style={styles.separatorText}>OR</Text>
-              <View style={styles.separatorLine} />
-            </View>
-
-            <GoogleAuth />
-
-            <TouchableOpacity
-              style={styles.signupContainer}
-              onPress={() => navigation.navigate('SignUp')}
-            >
-              <Text style={styles.signupText}>Don't have an account? </Text>
-              <Text style={styles.signupLink}>Sign Up</Text>
-            </TouchableOpacity>
-          </Animatable.View>
+          <TouchableOpacity
+            style={styles.signupContainer}
+            onPress={() => navigation.navigate('SignUp')}
+          >
+            <Text style={styles.signupText}>Don't have an account? </Text>
+            <Text style={styles.signupLink}>Sign Up</Text>
+          </TouchableOpacity>
+        </Animatable.View>
       </LinearGradient>
     </TouchableWithoutFeedback>
   );

@@ -68,7 +68,7 @@ const addUserToFirestore = async (user: User) => {
       email: user.email,
       displayName: user.displayName,
       firstName: user.firstName, // Assuming firstName is directly available
-      lastName: user.lastName,   // Same for lastName
+      lastName: user.lastName, // Same for lastName
       photoURL: user.photoURL,
       // Add other user fields as needed
     };
