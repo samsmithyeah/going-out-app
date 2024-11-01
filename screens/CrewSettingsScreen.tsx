@@ -378,7 +378,10 @@ const CrewSettingsScreen: React.FC = () => {
               try {
                 const crewRef = doc(db, 'crews', crewId);
                 await updateDoc(crewRef, { iconUrl: newUrl });
-                console.log('iconUrl successfully updated in Firestore:', newUrl);
+                console.log(
+                  'iconUrl successfully updated in Firestore:',
+                  newUrl,
+                );
               } catch (error) {
                 console.error('Error updating iconUrl in Firestore:', error);
                 Alert.alert('Error', 'Could not update crew profile picture');

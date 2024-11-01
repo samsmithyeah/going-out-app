@@ -26,7 +26,7 @@ import { TabsParamList } from '../navigation/TabNavigator';
 import { Ionicons } from '@expo/vector-icons';
 
 // Import the existing interfaces
-import { User } from '../context/UserContext'; 
+import { User } from '../context/UserContext';
 import { Crew } from '../screens/CrewScreen';
 import InvitationCard from '../components/InvitationCard';
 
@@ -49,7 +49,9 @@ interface InvitationWithDetails extends Invitation {
   inviter?: User;
 }
 
-const InvitationsScreen: React.FC<InvitationsScreenProps> = ({ navigation }) => {
+const InvitationsScreen: React.FC<InvitationsScreenProps> = ({
+  navigation,
+}) => {
   const { user } = useUser();
   const [invitations, setInvitations] = useState<InvitationWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,13 +151,12 @@ const InvitationsScreen: React.FC<InvitationsScreenProps> = ({ navigation }) => 
         setUsersCache(newUsersCache);
 
         // Combine invitation with crew and inviter details
-        const invitationsWithDetails: InvitationWithDetails[] = invitationsList.map(
-          (inv) => ({
+        const invitationsWithDetails: InvitationWithDetails[] =
+          invitationsList.map((inv) => ({
             ...inv,
             crew: newCrewsCache[inv.crewId],
             inviter: newUsersCache[inv.fromUserId],
-          }),
-        );
+          }));
 
         setInvitations(invitationsWithDetails);
         setLoading(false);
