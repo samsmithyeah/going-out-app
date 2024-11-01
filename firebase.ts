@@ -24,7 +24,6 @@ import {
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-// import { Platform } from 'react-native';
 import { User } from './types/User';
 
 // Your Firebase configuration (from the Firebase console)
@@ -48,7 +47,7 @@ try {
     persistence: getReactNativePersistence(AsyncStorage),
   });
 } catch (e: any) {
-  if (e.code === 'app/duplicate-app') {
+  if (e.code === 'app/duplicate-app' || e.code === 'auth/already-initialized') {
     auth = getAuth(app);
   } else {
     throw e;
