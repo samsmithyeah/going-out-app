@@ -5,7 +5,7 @@ import AppNavigator from '../navigation/AppNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { isDevice } from 'expo-device';
 import Constants from 'expo-constants';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { db } from '../firebase';
@@ -77,9 +77,14 @@ const App: React.FC = () => {
           const userRef = doc(db, 'users', user.uid);
           // If storing a single token
           console.log('Updating user with token:', token);
-          await updateDoc(userRef, {
-            expoPushToken: token,
-          });
+          await setDoc(
+            userRef,
+            {
+              expoPushToken: token,
+            },
+            { merge: true },
+          );
+          console.log('Expo push token saved successfully.');
 
           // If supporting multiple tokens per user (e.g., multiple devices)
           // await updateDoc(userRef, {

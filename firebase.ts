@@ -60,28 +60,23 @@ const storage = getStorage(app);
 const addUserToFirestore = async (user: User) => {
   const userDocRef = doc(db, 'users', user.uid);
   try {
-    const userDoc = await getDoc(userDocRef);
-    if (!userDoc.exists()) {
-      console.log(
-        `Adding user to Firestore: ${user.displayName} (${user.email}). Photo: ${user.photoURL}`,
-      );
-      const userData: User = {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        firstName: user.displayName.split(' ')[0],
-        lastName: user.displayName.split(' ')[1],
-        photoURL: user.photoURL,
-      };
+    console.log(
+      `Adding/updating user in Firestore: ${user.displayName} (${user.email}). Photo: ${user.photoURL}`,
+    );
+    const userData: User = {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      firstName: user.firstName, // Assuming firstName is directly available
+      lastName: user.lastName, // Same for lastName
+      photoURL: user.photoURL,
+      // Add other user fields as needed
+    };
 
-      await setDoc(userDocRef, userData);
-    } else {
-      console.log(
-        `User already exists in Firestore: ${user.displayName} (${user.email})`,
-      );
-    }
+    await setDoc(userDocRef, userData, { merge: true });
+    console.log('User document added/updated in Firestore.');
   } catch (err: any) {
-    console.error('Error checking/creating user document:', err);
+    console.error('Error adding/updating user document:', err);
   }
 };
 
