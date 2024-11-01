@@ -1,13 +1,15 @@
 // firebase.ts
 import { initializeApp } from 'firebase/app';
 import {
-  getAuth,
   signInWithEmailAndPassword,
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithCredential,
   updateProfile,
+  getReactNativePersistence,
+  initializeAuth,
 } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getFirestore,
   doc,
@@ -20,7 +22,7 @@ import {
 import { getStorage } from 'firebase/storage';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 // import { Platform } from 'react-native';
-import { User } from './context/UserContext';
+import { User } from './types/User';
 
 // Your Firebase configuration (from the Firebase console)
 const firebaseConfig = {
@@ -37,7 +39,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services
-const auth = getAuth(app);
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(AsyncStorage)
+});
 const db = getFirestore(app);
 const functions = getFunctions(app);
 const storage = getStorage(app);
