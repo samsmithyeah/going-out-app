@@ -2,11 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import {
-  createUserWithEmailAndPassword,
-  User as FirebaseUser,
-} from 'firebase/auth';
-import { auth, updateProfile, addUserToFirestore } from '../firebase';
+import { auth, updateProfile, addUserToFirestore, FirebaseUser, createUserWithEmailAndPassword } from '../firebase';
 import { useUser } from '../context/UserContext';
 
 type NavParamList = {

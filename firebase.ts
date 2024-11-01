@@ -8,6 +8,9 @@ import {
   updateProfile,
   getReactNativePersistence,
   initializeAuth,
+  createUserWithEmailAndPassword,
+  User as FirebaseUser,
+  getAuth,
 } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -39,9 +42,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase services
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage),
-});
+let auth: ReturnType<typeof initializeAuth> | ReturnType<typeof getAuth>;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch (e: any) {
+  if (e.code === 'app/duplicate-app') {
+    auth = getAuth(app);
+  } else {
+    throw e;
+  }
+}
 const db = getFirestore(app);
 const functions = getFunctions(app);
 const storage = getStorage(app);
@@ -113,6 +125,7 @@ export {
   signInWithCredential,
   GoogleAuthProvider,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
   doc,
   getDoc,
@@ -120,6 +133,6 @@ export {
   collection,
   addDoc,
   onSnapshot,
-  User,
   addUserToFirestore,
+  FirebaseUser,
 };

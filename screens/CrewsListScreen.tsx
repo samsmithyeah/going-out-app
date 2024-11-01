@@ -20,6 +20,7 @@ import {
   where,
   onSnapshot,
   addDoc,
+  orderBy, 
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
@@ -45,8 +46,12 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     // Reference to the crews collection
     const crewsRef = collection(db, 'crews');
 
-    // Query to get crews where the user is a member
-    const q = query(crewsRef, where('memberIds', 'array-contains', user.uid));
+    // Query to get crews where the user is a member, ordered by name ascending
+    const q = query(
+      crewsRef,
+      where('memberIds', 'array-contains', user.uid),
+      orderBy('name', 'asc')
+    );
 
     // Real-time listener
     const unsubscribe = onSnapshot(
