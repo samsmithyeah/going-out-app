@@ -28,6 +28,7 @@ const TabNavigator: React.FC = () => {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -39,6 +40,7 @@ const TabNavigator: React.FC = () => {
             <Ionicons name="people-outline" size={size} color={color} />
           ),
           unmountOnBlur: true,
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -49,16 +51,18 @@ const TabNavigator: React.FC = () => {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="mail-outline" size={size} color={color} />
           ),
+          headerStatusBarHeight: 0,
         }}
       />
       <Tab.Screen
         name="UserProfile"
         component={UserProfileScreen}
         options={{
-          title: 'Profile',
+          title: 'Your profile',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
+          headerStatusBarHeight: 0,
         }}
       />
     </Tab.Navigator>

@@ -7,33 +7,19 @@ import SignUpScreen from '../screens/SignUpScreen';
 import LoginScreen from '../screens/LoginScreen';
 import TabNavigator from './TabNavigator';
 
-export type RootStackParamList = {
-  SignUp: undefined;
-  Login: undefined;
-  Home: undefined;
-  CrewsStack: { screen: string; params: { crewId: string } } | undefined;
-  CrewsList: undefined;
-  Crew: { crewId: string };
-  CrewSettings: { crewId: string };
-  UserProfile: { userId: string };
-  Invitations: undefined;
-  Notifications: undefined;
-};
-
 export type TabNavParamList = {
   SignUp: undefined;
   Login: undefined;
-  Home: undefined;
+  MainTabs: undefined;
   CrewsStack: { screen: string; params: { crewId: string } } | undefined;
   CrewsList: undefined;
   Crew: { crewId: string };
   CrewSettings: { crewId: string };
   UserProfile: { userId: string };
   Invitations: undefined;
-  Notifications: undefined;
 };
 
-const Stack = createStackNavigator<RootStackParamList>();
+const Stack = createStackNavigator<TabNavParamList>();
 
 const AppNavigator: React.FC = () => {
   const { user } = useUser();
@@ -55,7 +41,7 @@ const AppNavigator: React.FC = () => {
         </>
       ) : (
         <Stack.Screen
-          name="Home"
+          name="MainTabs"
           component={TabNavigator}
           options={{ headerShown: false }}
         />
