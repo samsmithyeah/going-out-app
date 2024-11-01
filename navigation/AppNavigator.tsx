@@ -11,7 +11,7 @@ export type RootStackParamList = {
   SignUp: undefined;
   Login: undefined;
   Home: undefined;
-  CrewsStack: undefined;
+  CrewsStack: { screen: string; params: { crewId: string } } | undefined;
   CrewsList: undefined;
   Crew: { crewId: string };
   CrewSettings: { crewId: string };
@@ -24,7 +24,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator: React.FC = () => {
   const { user } = useUser();
-
+ 
   return (
     <Stack.Navigator>
       {!user ? (

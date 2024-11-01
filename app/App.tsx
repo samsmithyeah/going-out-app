@@ -1,15 +1,16 @@
 // App.tsx
 import React, { useEffect, useRef } from 'react';
-import { Alert, Platform } from 'react-native';
-import AppNavigator from '../navigation/AppNavigator';
 import * as Notifications from 'expo-notifications';
+import AppNavigator from '../navigation/AppNavigator';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { isDevice } from 'expo-device';
 import Constants from 'expo-constants';
-import { useUser } from '../context/UserContext'; // Assuming you have a user context
 import { doc, updateDoc } from 'firebase/firestore';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { Alert, Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { db } from '../firebase';
+import { useUser } from '../context/UserContext';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -20,11 +21,12 @@ Notifications.setNotificationHandler({
   }),
 });
 
+
 const App: React.FC = () => {
   const { user } = useUser();
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   useEffect(() => {
     if (!user) return;
@@ -111,9 +113,13 @@ const App: React.FC = () => {
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log('Notification Response:', response);
-        const { screen } = response.notification.request.content.data;
+        const { screen, crewId } = response.notification.request.content.data;
         if (screen === 'Invitations') {
           navigation.navigate('Invitations');
+        } else if (screen === 'Crew' && crewId) {
+          navigation.navigate('CrewsStack', { screen, params: { crewId } });
+        } else {
+          console.log('Unknown screen:', screen);
         }
       });
 
