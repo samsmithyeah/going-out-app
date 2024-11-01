@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   Text,
-  Alert,
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
@@ -28,39 +27,50 @@ import { useUser } from '../context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
-import { NavParamList } from '../navigation/AppNavigator';
 
-type SignUpScreenProps = {
-  navigation: StackNavigationProp<NavParamList, 'SignUp'>;
-  route: RouteProp<NavParamList, 'SignUp'>;
+type NavParamList = {
+  SignUp: undefined;
+  Login: undefined;
+  Home: undefined;
 };
 
-const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
+type SignUpScreenNavigationProp = StackNavigationProp<NavParamList, 'SignUp'>;
+type SignUpScreenRouteProp = RouteProp<NavParamList, 'SignUp'>;
+
+type Props = {
+  navigation: SignUpScreenNavigationProp;
+  route: SignUpScreenRouteProp;
+};
+
+const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
-  const [error, setError] = useState<string>('');
+  const [formError, setFormError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const { user, setUser } = useUser();
 
   const handleSignUp = async () => {
+    // Reset form error
+    setFormError('');
+
     // Basic validation
     if (!email.trim() || !password || !firstName.trim() || !lastName.trim()) {
-      Alert.alert('Validation Error', 'Please fill in all fields.');
+      setFormError('Please fill in all fields.');
       return;
     }
 
     // Email format validation
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email.trim())) {
-      Alert.alert('Validation Error', 'Please enter a valid email address.');
+      setFormError('Please enter a valid email address.');
       return;
     }
 
     // Password strength validation (minimum 6 characters)
     if (password.length < 6) {
-      Alert.alert('Validation Error', 'Password must be at least 6 characters long.');
+      setFormError('Password must be at least 6 characters long.');
       return;
     }
 
@@ -92,12 +102,12 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
 
       await addUserToFirestore(updatedUser);
 
-      Alert.alert('Success', 'Account created successfully!');
-      navigation.navigate('MainTabs');
+      // Optionally, you can show a success message here
+      // Alert.alert('Success', 'Account created successfully!');
+      navigation.navigate('Home');
     } catch (err: any) {
       console.error('Sign Up Error:', err);
-      Alert.alert('Sign Up Error', err.message);
-      setError(err.message);
+      setFormError(err.message);
     } finally {
       setLoading(false);
     }
@@ -119,7 +129,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
             style={styles.logoContainer}
           >
             <Image
-              source={require('../assets/images/icon.png')}
+              source={require('../assets/images/icon.png')} // Replace with your logo
               style={styles.logo}
               resizeMode="contain"
             />
@@ -131,6 +141,8 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
             duration={1500}
             style={styles.formContainer}
           >
+            {formError ? <Text style={styles.error}>{formError}</Text> : null}
+
             <View style={styles.inputContainer}>
               <Ionicons name="mail-outline" size={24} color="#333" style={styles.icon} />
               <TextInput
@@ -138,7 +150,10 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
                 placeholder="Email"
                 placeholderTextColor="#666"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (formError) setFormError('');
+                }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -153,7 +168,10 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
                 placeholder="First Name"
                 placeholderTextColor="#666"
                 value={firstName}
-                onChangeText={setFirstName}
+                onChangeText={(text) => {
+                  setFirstName(text);
+                  if (formError) setFormError('');
+                }}
                 autoCapitalize="words"
                 autoComplete="name-given"
                 textContentType="givenName"
@@ -167,7 +185,10 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
                 placeholder="Last Name"
                 placeholderTextColor="#666"
                 value={lastName}
-                onChangeText={setLastName}
+                onChangeText={(text) => {
+                  setLastName(text);
+                  if (formError) setFormError('');
+                }}
                 autoCapitalize="words"
                 autoComplete="name-family"
                 textContentType="familyName"
@@ -181,15 +202,16 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
                 placeholder="Password"
                 placeholderTextColor="#666"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (formError) setFormError('');
+                }}
                 secureTextEntry
                 autoCapitalize="none"
                 autoComplete="password"
                 textContentType="password"
               />
             </View>
-
-            {error ? <Text style={styles.error}>{error}</Text> : null}
 
             <TouchableOpacity
               style={styles.button}

@@ -1,13 +1,12 @@
 // LoginScreen.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
   TextInput,
   TouchableOpacity,
   Text,
-  Alert,
   ActivityIndicator,
   Image,
   KeyboardAvoidingView,
@@ -26,14 +25,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 
-WebBrowser.maybeCompleteAuthSession();
-
 type LoginScreenProps = NativeStackScreenProps<NavParamList, 'Login'>;
+
+WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [formError, setFormError] = useState<string>('');
   const { user } = useUser();
 
   useEffect(() => {
@@ -44,15 +44,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   }, [user]);
 
   const handleEmailLogin = async () => {
+    // Reset form error
+    setFormError('');
+
+    // Basic validation
     if (!email.trim() || !password) {
-      Alert.alert('Validation Error', 'Please enter both email and password.');
+      setFormError('Please enter both email and password.');
       return;
     }
 
-    // Basic email format validation
+    // Email format validation
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email.trim())) {
-      Alert.alert('Validation Error', 'Please enter a valid email address.');
+      setFormError('Please enter a valid email address.');
       return;
     }
 
@@ -60,7 +64,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
     } catch (error: any) {
-      Alert.alert('Login Error', error.message);
+      console.error('Login Error:', error);
+      setFormError(error.message);
     } finally {
       setLoading(false);
     }
@@ -72,17 +77,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         colors={['#6a11cb', '#2575fc']}
         style={styles.gradient}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.container}
-        >
           <Animatable.View
             animation="fadeInDown"
             duration={1500}
             style={styles.logoContainer}
           >
             <Image
-              source={require('../assets/images/icon.png')}
+              source={require('../assets/images/icon.png')} // Replace with your logo
               style={styles.logo}
               resizeMode="contain"
             />
@@ -94,14 +95,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             duration={1500}
             style={styles.formContainer}
           >
+            {formError ? <Text style={styles.error}>{formError}</Text> : null}
+
             <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={24} color="#fff" style={styles.icon} />
+              <Ionicons name="mail-outline" size={24} color="#333" style={styles.icon} />
               <TextInput
                 style={styles.input}
                 placeholder="Email"
-                placeholderTextColor="#ddd"
+                placeholderTextColor="#666"
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (formError) setFormError('');
+                }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -110,13 +116,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={24} color="#fff" style={styles.icon} />
+              <Ionicons name="lock-closed-outline" size={24} color="#333" style={styles.icon} />
               <TextInput
                 style={styles.input}
                 placeholder="Password"
-                placeholderTextColor="#ddd"
+                placeholderTextColor="#666"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (formError) setFormError('');
+                }}
                 secureTextEntry
                 autoCapitalize="none"
                 autoComplete="password"
@@ -152,7 +161,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
               <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </Animatable.View>
-        </KeyboardAvoidingView>
       </LinearGradient>
     </TouchableWithoutFeedback>
   );
@@ -168,6 +176,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoContainer: {
+    marginTop: 70,
     alignItems: 'center',
     marginBottom: 30,
   },
@@ -189,7 +198,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: '#fff',
     borderRadius: 10,
     marginBottom: 15,
     paddingHorizontal: 10,
@@ -200,7 +209,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 50,
-    color: '#fff',
+    color: '#333',
   },
   button: {
     backgroundColor: '#ff6b6b',
@@ -208,11 +217,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowColor: '#000', // For iOS shadow
+    shadowOffset: { width: 0, height: 2 }, // For iOS shadow
+    shadowOpacity: 0.3, // For iOS shadow
+    shadowRadius: 4, // For iOS shadow
+    elevation: 5, // For Android shadow
   },
   buttonText: {
     color: '#fff',
@@ -227,11 +236,11 @@ const styles = StyleSheet.create({
   separatorLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#333',
   },
   separatorText: {
     marginHorizontal: 10,
-    color: '#fff',
+    color: '#333',
     fontSize: 16,
   },
   signupContainer: {
@@ -240,13 +249,18 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   signupText: {
-    color: '#fff',
+    color: '#333',
     fontSize: 16,
   },
   signupLink: {
     color: '#ff6b6b',
     fontSize: 16,
     fontWeight: '600',
+  },
+  error: {
+    color: '#ff6b6b',
+    marginBottom: 12,
+    textAlign: 'center',
   },
 });
 
