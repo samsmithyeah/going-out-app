@@ -408,10 +408,10 @@ const CrewSettingsScreen: React.FC = () => {
       </View>
 
       {/* Members List */}
+      <Text style={styles.listTitle}>{`${members.length} members:`}</Text>
       <MemberList
         members={members}
         currentUserId={user?.uid || null}
-        listTitle={`${members.length} members:`}
         isLoading={loading}
         emptyMessage="No members in this crew."
         adminIds={[crew.ownerId]}
@@ -547,6 +547,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+  },
+  listTitle: {
+    fontSize: 20,
+    marginTop: 20,
+    fontWeight: 'bold',
   },
   groupInfo: {
     alignItems: 'center',

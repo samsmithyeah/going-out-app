@@ -16,7 +16,6 @@ interface MemberListProps {
   members: User[];
   currentUserId: string | null;
   onMemberPress?: (member: User) => void;
-  listTitle?: string;
   isLoading?: boolean;
   emptyMessage?: string;
   adminIds?: string[];
@@ -26,7 +25,6 @@ const MemberList: React.FC<MemberListProps> = ({
   members,
   currentUserId,
   onMemberPress,
-  listTitle,
   isLoading = false,
   emptyMessage = 'No members found.',
   adminIds = [],
@@ -85,7 +83,6 @@ const MemberList: React.FC<MemberListProps> = ({
     // Display Skeletons or Loading Indicators
     return (
       <View style={styles.container}>
-        {listTitle && <Text style={styles.sectionTitle}>{listTitle}</Text>}
         {[...Array(5)].map((_, index) => (
           <SkeletonUserItem key={index} />
         ))}
@@ -95,7 +92,6 @@ const MemberList: React.FC<MemberListProps> = ({
 
   return (
     <View style={styles.container}>
-      {listTitle && <Text style={styles.sectionTitle}>{listTitle}</Text>}
       <FlatList
         data={sortedMembers}
         keyExtractor={(item) => item.uid}
@@ -113,11 +109,6 @@ export default MemberList;
 const styles = StyleSheet.create({
   container: {
     marginVertical: 10,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    marginBottom: 10,
-    fontWeight: 'bold',
   },
   memberItem: {
     flexDirection: 'row',

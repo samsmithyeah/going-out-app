@@ -217,7 +217,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search crews"
+          placeholder="Search"
           value={searchQuery}
           onChangeText={setSearchQuery}
           autoCapitalize="none"
