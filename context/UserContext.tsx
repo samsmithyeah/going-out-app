@@ -1,4 +1,5 @@
 // context/UserContext.tsx
+
 import React, {
   createContext,
   useState,
@@ -6,9 +7,10 @@ import React, {
   ReactNode,
   useEffect,
 } from 'react';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase'; // Ensure correct import paths
 import { User } from '../types/User';
 import { Alert } from 'react-native';
+import { doc, getDoc } from 'firebase/firestore'; // Firestore functions
 
 type UserContextType = {
   user: User | null;
@@ -26,26 +28,34 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    console.log('Current user:', user?.displayName);
-  }, [user]);
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+    // Listen for authentication state changes
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
-        const user: User = {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          displayName: firebaseUser.displayName || '',
-          firstName: firebaseUser.displayName?.split(' ')[0] || '',
-          lastName: firebaseUser.displayName?.split(' ')[1] || '',
-          photoURL: firebaseUser.photoURL || '',
-        };
-        setUser(user);
+        try {
+          // Reference to the user's document in Firestore
+          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data() as User;
+            setUser(userData);
+          } else {
+            // Handle case where user document doesn't exist
+            console.warn('User document does not exist in Firestore.');
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Error fetching user data from Firestore:', error);
+          Alert.alert('Error', 'There was an issue fetching your profile.');
+          setUser(null);
+        }
       } else {
+        // User is signed out
         setUser(null);
       }
     });
 
+    // Cleanup the listener on unmount
     return () => unsubscribe();
   }, []);
 
@@ -60,7 +70,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           text: 'Logout',
           onPress: async () => {
             await auth.signOut();
-            setUser(null); // Update user state
+            setUser(null); // Reset user state
           },
         },
       ]);
