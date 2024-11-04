@@ -30,6 +30,7 @@ import { User } from '../types/User';
 import { MaterialIcons } from '@expo/vector-icons';
 import { NavParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
+import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList'; // Import the new MemberList component
 import { Timestamp } from 'firebase/firestore'; // Import Timestamp correctly
 
@@ -262,18 +263,35 @@ const CrewScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* Crew Header */}
+      <View style={styles.header}>
+        <ProfilePicturePicker
+          imageUrl={crew.iconUrl || null}
+          onImageUpdate={() => {}}
+          editable={false}
+          storagePath={`crews/${crewId}/icon.jpg`}
+          size={80}
+        />
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.crewName}>{crew.name}</Text>
+          <Text style={styles.crewMemberCount}>
+            {crew.memberIds.length}{' '}
+            {crew.memberIds.length === 1 ? 'Member' : 'Members'}
+          </Text>
+        </View>
+      </View>
       {/* Members Up for Going Out Tonight */}
+      <Text style={styles.listTitle}>Up for going out tonight:</Text>
       {currentUserStatus ? (
         <MemberList
           members={membersUpForGoingOut}
           currentUserId={user?.uid || null}
-          listTitle="Up for going out tonight:"
           emptyMessage="No members are up for going out tonight."
         />
       ) : (
         <View style={styles.skeletonContainer}>
           {/* Render Skeleton User Items */}
-          {[...Array(5)].map((_, index) => (
+          {[...Array(4)].map((_, index) => (
             <SkeletonUserItem key={index} />
           ))}
 
@@ -299,8 +317,8 @@ const CrewScreen: React.FC = () => {
       >
         <Text style={styles.statusButtonText}>
           {currentUserStatus
-            ? "I'm not up for going out tonight"
-            : "I'm up for going out tonight"}
+            ? "👎 I'm not up for going out tonight"
+            : "👍 I'm up for going out tonight"}
         </Text>
       </TouchableOpacity>
     </View>
@@ -315,12 +333,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    backgroundColor: '#f5f5f5',
+    position: 'relative', // Ensure absolute positioning is relative to this container
   },
   statusButton: {
     padding: 15,
     borderRadius: 10,
-    marginVertical: 20,
     alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    marginHorizontal: 40, // Adjust to control button width and centering
   },
   statusButtonActive: {
     backgroundColor: '#ff6347', // Tomato color when active
@@ -340,9 +365,8 @@ const styles = StyleSheet.create({
   },
   skeletonContainer: {
     position: 'relative',
-    paddingVertical: 16,
+    paddingVertical: 10,
     paddingHorizontal: 8,
-    backgroundColor: '#f0f0f0', // Light gray background for skeleton list
     borderRadius: 8,
   },
   overlay: {
@@ -362,5 +386,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  headerTextContainer: {
+    marginLeft: 16,
+  },
+  crewName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 4,
+  },
+  crewMemberCount: {
+    fontSize: 14,
+    color: '#666',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    backgroundColor: '#fff', // White background for header
+    padding: 16,
+    borderRadius: 10,
+    shadowColor: '#000', // Subtle shadow for depth
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2, // For Android shadow
+  },
+  listTitle: {
+    fontSize: 20,
+    marginBottom: 10,
+    fontWeight: 'bold',
   },
 });
