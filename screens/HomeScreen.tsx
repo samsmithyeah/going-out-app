@@ -208,13 +208,13 @@ const HomeScreen: React.FC = () => {
   // Determine the status message based on upCrews and totalCrews
   const getStatusMessage = () => {
     if (totalCrews === 0) {
-      return 'You are not part of any crews.';
+      return 'You are not in any crews yet 😢';
     } else if (upCrews === 0) {
       return 'You are not marked as up for going out tonight in any of your crews.';
     } else if (upCrews === totalCrews) {
-      return 'You are marked as going out tonight in all of your crews.';
+      return 'You are marked as up for going out tonight in all of your crews!';
     } else {
-      return `You are marked as up for going out tonight in ${upCrews} of your ${totalCrews} crews.`;
+      return `You are up for going out tonight with ${upCrews} of your ${totalCrews} crews.`;
     }
   };
 
@@ -271,35 +271,37 @@ const HomeScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Toggle Status Button */}
-      <TouchableOpacity
-        style={[
-          styles.statusButton,
-          updatingStatus
-            ? styles.statusButtonDisabled
-            : upCrews === totalCrews
-              ? styles.statusButtonActive
-              : styles.statusButtonInactive,
-        ]}
-        onPress={handleToggleStatus} // Updated to use confirmation handler
-        disabled={updatingStatus}
-        accessibilityLabel="Toggle Status"
-        accessibilityHint={
-          upCrews === totalCrews
-            ? 'Mark yourself as not up for going out tonight in all your crews'
-            : 'Mark yourself as up for going out tonight in all your crews'
-        }
-      >
-        {updatingStatus ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.statusButtonText}>
-            {upCrews === totalCrews
-              ? "I'm not up for going out tonight"
-              : "I'll go out with anyone!"}
-          </Text>
-        )}
-      </TouchableOpacity>
+      {/* Toggle Status Button - Render only if the user is part of at least one crew */}
+      {totalCrews > 0 && (
+        <TouchableOpacity
+          style={[
+            styles.statusButton,
+            updatingStatus
+              ? styles.statusButtonDisabled
+              : upCrews === totalCrews
+                ? styles.statusButtonActive
+                : styles.statusButtonInactive,
+          ]}
+          onPress={handleToggleStatus} // Updated to use confirmation handler
+          disabled={updatingStatus}
+          accessibilityLabel="Toggle Status"
+          accessibilityHint={
+            upCrews === totalCrews
+              ? 'Mark yourself as not up for going out tonight in all your crews'
+              : 'Mark yourself as up for going out tonight in all your crews'
+          }
+        >
+          {updatingStatus ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.statusButtonText}>
+              {upCrews === totalCrews
+                ? "I'm not up for going out tonight"
+                : "I'll go out with anyone!"}
+            </Text>
+          )}
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -317,14 +319,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 50,
     marginBottom: 20,
-  },
-  profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60, // Makes the image circular
-    borderWidth: 3,
-    borderColor: '#fff',
-    marginBottom: 15,
   },
   greeting: {
     fontSize: 24,
