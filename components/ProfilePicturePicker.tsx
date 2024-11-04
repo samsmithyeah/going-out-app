@@ -24,12 +24,14 @@ interface ProfilePicturePickerProps {
   imageUrl: string | null;
   onImageUpdate: (newUrl: string) => void;
   editable: boolean;
-  storagePath: string;
+  storagePath?: string;
   size?: number;
   iconName?: keyof typeof Ionicons.glyphMap;
   iconColor?: string;
   iconOffsetX?: number;
   iconOffsetY?: number;
+  borderWidth?: number; // Optional border width
+  borderColor?: string; // Optional border color
 }
 
 const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
@@ -42,6 +44,8 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
   iconColor = '#888',
   iconOffsetX = 0.03,
   iconOffsetY = 0.03,
+  borderWidth = 0, // Default no border
+  borderColor = '#fff', // Default border color (white)
 }) => {
   const [isUploading, setIsUploading] = useState(false);
 
@@ -144,7 +148,13 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
       <View
         style={[
           styles.profilePictureContainer,
-          { width: size, height: size, borderRadius: size / 2 },
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            borderWidth: borderWidth, // Apply border width
+            borderColor: borderColor, // Apply border color
+          },
         ]}
       >
         {imageUrl ? (
