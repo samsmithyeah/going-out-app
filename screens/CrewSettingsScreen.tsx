@@ -372,7 +372,7 @@ const CrewSettingsScreen: React.FC = () => {
           imageUrl={crew.iconUrl ?? null}
           onImageUpdate={async (newUrl) => {
             // Update local state
-            setCrew((prev) => (prev ? { ...prev, iconUrl: newUrl } : prev));
+            setCrew({ ...crew, iconUrl: newUrl });
 
             // Update Firestore
             if (crewId) {
