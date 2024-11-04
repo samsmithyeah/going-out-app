@@ -154,8 +154,21 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
     >
       <ProfilePicturePicker
         imageUrl={user.photoURL ?? null}
-        onImageUpdate={(newUrl) => {
+        onImageUpdate={ async (newUrl) => {
+          // Update local state
           setUser({ ...user, photoURL: newUrl });
+
+          // Update Firestore
+          try {
+              const userRef = doc(db, 'users', user.uid);
+              await updateDoc(userRef, {
+                photoURL: newUrl,
+              });
+              console.log('photoURL updated successfully in Firestore', newUrl);
+            } catch (error) {
+              console.error('Error updating profile picture URL:', error);
+              Alert.alert('Update Error', 'Failed to update profile picture.');
+            }
         }}
         editable={true}
         storagePath={`users/${user.uid}/profile.jpg`}
@@ -172,9 +185,9 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
               placeholder="Enter new display name"
               autoFocus
               maxLength={30}
-              onSubmitEditing={handleSaveDisplayName} // Handle return key press
-              returnKeyType="done" // Customize the return key
-              blurOnSubmit={true} // Dismiss the keyboard on submit
+              onSubmitEditing={handleSaveDisplayName}
+              returnKeyType="done"
+              blurOnSubmit={true}
               editable={!saving}
             />
           </>

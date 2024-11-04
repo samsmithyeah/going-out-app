@@ -130,7 +130,7 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
 
       const downloadUrl = await getDownloadURL(storageRef);
       onImageUpdate(downloadUrl);
-      Alert.alert('Success', 'Image uploaded successfully');
+      console.log('Image uploaded successfully:', downloadUrl);
     } catch (error) {
       console.error('Error uploading image:', error);
       Alert.alert('Error', 'Could not upload image');
