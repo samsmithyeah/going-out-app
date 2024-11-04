@@ -1,6 +1,6 @@
 // LoginScreen.tsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,8 +9,6 @@ import {
   Text,
   ActivityIndicator,
   Image,
-  KeyboardAvoidingView,
-  Platform,
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
@@ -23,7 +21,6 @@ import { NavParamList } from '../navigation/AppNavigator';
 import { useUser } from '../context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Animatable from 'react-native-animatable';
 
 type LoginScreenProps = NativeStackScreenProps<NavParamList, 'Login'>;
 
@@ -73,25 +70,17 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <LinearGradient colors={['#6a11cb', '#2575fc']} style={styles.gradient}>
-        <Animatable.View
-          animation="fadeInDown"
-          duration={1500}
-          style={styles.logoContainer}
-        >
+      <LinearGradient colors={['#4e488c', '#2575fc']} style={styles.gradient}>
+        <View style={styles.logoContainer}>
           <Image
             source={require('../assets/images/icon.png')} // Replace with your logo
             style={styles.logo}
             resizeMode="contain"
           />
           <Text style={styles.title}>Welcome Back!</Text>
-        </Animatable.View>
+        </View>
 
-        <Animatable.View
-          animation="fadeInUp"
-          duration={1500}
-          style={styles.formContainer}
-        >
+        <View style={styles.formContainer}>
           {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
           <View style={styles.inputContainer}>
@@ -167,7 +156,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             <Text style={styles.signupText}>Don't have an account? </Text>
             <Text style={styles.signupLink}>Sign Up</Text>
           </TouchableOpacity>
-        </Animatable.View>
+        </View>
       </LinearGradient>
     </TouchableWithoutFeedback>
   );

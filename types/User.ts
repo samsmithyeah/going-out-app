@@ -5,4 +5,5 @@ export interface User {
   lastName?: string;
   email: string;
   photoURL?: string;
+  expoPushToken?: string;
 }

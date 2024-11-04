@@ -19,14 +19,13 @@ import { RouteProp } from '@react-navigation/native';
 import {
   auth,
   updateProfile,
-  addUserToFirestore,
   FirebaseUser,
   createUserWithEmailAndPassword,
 } from '../firebase';
+import { addUserToFirestore } from '../helpers/AddUserToFirestore';
 import { useUser } from '../context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Animatable from 'react-native-animatable';
 
 type NavParamList = {
   SignUp: undefined;
@@ -113,29 +112,21 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <LinearGradient colors={['#ffecd2', '#fcb69f']} style={styles.gradient}>
+      <LinearGradient colors={['#4e488c', '#2575fc']} style={styles.gradient}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.container}
         >
-          <Animatable.View
-            animation="fadeInDown"
-            duration={1500}
-            style={styles.logoContainer}
-          >
+          <View style={styles.logoContainer}>
             <Image
               source={require('../assets/images/icon.png')} // Replace with your logo
               style={styles.logo}
               resizeMode="contain"
             />
             <Text style={styles.title}>Create Account</Text>
-          </Animatable.View>
+          </View>
 
-          <Animatable.View
-            animation="fadeInUp"
-            duration={1500}
-            style={styles.formContainer}
-          >
+          <View style={styles.formContainer}>
             {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
             <View style={styles.inputContainer}>
@@ -256,7 +247,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.loginText}>Already have an account? </Text>
               <Text style={styles.loginLink}>Login</Text>
             </TouchableOpacity>
-          </Animatable.View>
+          </View>
         </KeyboardAvoidingView>
       </LinearGradient>
     </TouchableWithoutFeedback>
@@ -283,7 +274,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    color: '#333',
+    color: '#fff',
     fontWeight: '700',
   },
   formContainer: {

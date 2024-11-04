@@ -3,12 +3,8 @@
 import React, { useEffect } from 'react';
 import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
-import {
-  auth,
-  signInWithCredential,
-  GoogleAuthProvider,
-  addUserToFirestore,
-} from '../firebase';
+import { auth, signInWithCredential, GoogleAuthProvider } from '../firebase';
+import { addUserToFirestore } from '../helpers/AddUserToFirestore';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function GoogleAuth() {
