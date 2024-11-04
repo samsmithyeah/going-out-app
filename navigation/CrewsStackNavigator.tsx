@@ -15,7 +15,7 @@ const CrewsStackNavigator: React.FC = () => {
       <Stack.Screen
         name="CrewsList"
         component={CrewsListScreen}
-        options={{ title: 'Your Crews', headerStatusBarHeight: 0 }}
+        options={{ title: 'Your Crews', headerShown: false }}
       />
       <Stack.Screen
         name="Crew"
