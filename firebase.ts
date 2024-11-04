@@ -24,7 +24,6 @@ import {
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { User } from './types/User';
 
 // Your Firebase configuration (from the Firebase console)
 const firebaseConfig = {
@@ -56,29 +55,6 @@ try {
 const db = getFirestore(app);
 const functions = getFunctions(app);
 const storage = getStorage(app);
-
-const addUserToFirestore = async (user: User) => {
-  const userDocRef = doc(db, 'users', user.uid);
-  try {
-    console.log(
-      `Adding/updating user in Firestore: ${user.displayName} (${user.email}). Photo: ${user.photoURL}`,
-    );
-    const userData: User = {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      firstName: user.firstName, // Assuming firstName is directly available
-      lastName: user.lastName, // Same for lastName
-      photoURL: user.photoURL,
-      // Add other user fields as needed
-    };
-
-    await setDoc(userDocRef, userData, { merge: true });
-    console.log('User document added/updated in Firestore.');
-  } catch (err: any) {
-    console.error('Error adding/updating user document:', err);
-  }
-};
 
 // const isAndroid = Platform.OS === 'android';
 // const isIOS = Platform.OS === 'ios';
@@ -127,6 +103,5 @@ export {
   collection,
   addDoc,
   onSnapshot,
-  addUserToFirestore,
   FirebaseUser,
 };

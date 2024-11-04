@@ -19,10 +19,10 @@ import { RouteProp } from '@react-navigation/native';
 import {
   auth,
   updateProfile,
-  addUserToFirestore,
   FirebaseUser,
   createUserWithEmailAndPassword,
 } from '../firebase';
+import { addUserToFirestore } from '../helpers/AddUserToFirestore';
 import { useUser } from '../context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
