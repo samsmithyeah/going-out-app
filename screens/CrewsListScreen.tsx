@@ -30,6 +30,7 @@ import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator';
+import ScreenTitle from '../components/ScreenTitle';
 import { Crew } from './CrewScreen';
 import { User } from '../types/User'; // Import User interface
 
@@ -205,7 +206,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Title */}
-      <Text style={styles.title}>Crews</Text>
+      <ScreenTitle title="Crews" />
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>

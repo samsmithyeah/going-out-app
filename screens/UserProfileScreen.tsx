@@ -21,6 +21,7 @@ import { User } from '../types/User';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabsParamList } from '../navigation/TabNavigator';
+import ScreenTitle from '../components/ScreenTitle';
 
 type UserProfileScreenProps = BottomTabScreenProps<
   TabsParamList,
@@ -152,55 +153,61 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ProfilePicturePicker
-        imageUrl={user.photoURL ?? null}
-        onImageUpdate={async (newUrl) => {
-          // Update local state
-          setUser({ ...user, photoURL: newUrl });
+      <ScreenTitle title="Your profile" />
+      <View style={styles.detailsContainer}>
+        <ProfilePicturePicker
+          imageUrl={user.photoURL ?? null}
+          onImageUpdate={async (newUrl) => {
+            // Update local state
+            setUser({ ...user, photoURL: newUrl });
 
-          // Update Firestore
-          try {
-            const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, {
-              photoURL: newUrl,
-            });
-            console.log('photoURL updated successfully in Firestore', newUrl);
-          } catch (error) {
-            console.error('Error updating profile picture URL:', error);
-            Alert.alert('Update Error', 'Failed to update profile picture.');
-          }
-        }}
-        editable={true}
-        storagePath={`users/${user.uid}/profile.jpg`}
-        size={150}
-      />
+            // Update Firestore
+            try {
+              const userRef = doc(db, 'users', user.uid);
+              await updateDoc(userRef, {
+                photoURL: newUrl,
+              });
+              console.log('photoURL updated successfully in Firestore', newUrl);
+            } catch (error) {
+              console.error('Error updating profile picture URL:', error);
+              Alert.alert('Update Error', 'Failed to update profile picture.');
+            }
+          }}
+          editable={true}
+          storagePath={`users/${user.uid}/profile.jpg`}
+          size={150}
+        />
 
-      <View style={styles.displayNameContainer}>
-        {isEditing ? (
-          <>
-            <TextInput
-              style={styles.displayNameInput}
-              value={newDisplayName}
-              onChangeText={setNewDisplayName}
-              placeholder="Enter new display name"
-              autoFocus
-              maxLength={30}
-              onSubmitEditing={handleSaveDisplayName}
-              returnKeyType="done"
-              blurOnSubmit={true}
-              editable={!saving}
-            />
-          </>
-        ) : (
-          <>
-            <Text style={styles.displayName}>
-              {user.displayName || 'No Display Name'}
-            </Text>
-            <TouchableOpacity onPress={handleEditPress} style={styles.editIcon}>
-              <Ionicons name="pencil-outline" size={20} color="#1e90ff" />
-            </TouchableOpacity>
-          </>
-        )}
+        <View style={styles.displayNameContainer}>
+          {isEditing ? (
+            <>
+              <TextInput
+                style={styles.displayNameInput}
+                value={newDisplayName}
+                onChangeText={setNewDisplayName}
+                placeholder="Enter new display name"
+                autoFocus
+                maxLength={30}
+                onSubmitEditing={handleSaveDisplayName}
+                returnKeyType="done"
+                blurOnSubmit={true}
+                editable={!saving}
+              />
+            </>
+          ) : (
+            <>
+              <Text style={styles.displayName}>
+                {user.displayName || 'No Display Name'}
+              </Text>
+              <TouchableOpacity
+                onPress={handleEditPress}
+                style={styles.editIcon}
+              >
+                <Ionicons name="pencil-outline" size={20} color="#1e90ff" />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       </View>
 
       {isEditing && (
@@ -243,8 +250,11 @@ export default UserProfileScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
     padding: 20,
+  },
+  detailsContainer: {
+    alignItems: 'center',
+    marginTop: 20,
   },
   displayNameContainer: {
     flexDirection: 'row',
@@ -291,6 +301,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '60%',
     justifyContent: 'center',
+    position: 'absolute',
   },
   logoutText: {
     color: 'white',

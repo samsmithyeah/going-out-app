@@ -26,6 +26,7 @@ import { TabsParamList } from '../navigation/TabNavigator';
 import { Ionicons } from '@expo/vector-icons';
 import { User } from '../types/User';
 import { Crew } from '../screens/CrewScreen';
+import ScreenTitle from '../components/ScreenTitle';
 import InvitationCard from '../components/InvitationCard';
 
 type InvitationsScreenProps = BottomTabScreenProps<
@@ -241,6 +242,7 @@ const InvitationsScreen: React.FC<InvitationsScreenProps> = ({
 
   return (
     <View style={styles.container}>
+      <ScreenTitle title="Invitations" />
       {invitations.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="mail-open-outline" size={80} color="#ccc" />
