@@ -47,11 +47,11 @@ const TabNavigator: React.FC = () => {
         name="Invitations"
         component={InvitationsScreen}
         options={{
-          title: 'Invitations',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="mail-outline" size={size} color={color} />
           ),
           headerStatusBarHeight: 0,
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -63,6 +63,7 @@ const TabNavigator: React.FC = () => {
             <Ionicons name="person-outline" size={size} color={color} />
           ),
           headerStatusBarHeight: 0,
+          headerShown: false,
         }}
       />
     </Tab.Navigator>
