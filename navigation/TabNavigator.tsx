@@ -53,7 +53,12 @@ const TabNavigator: React.FC = () => {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="mail-outline" size={size} color={color} />
           ),
-          tabBarBadge: pendingCount > 0 ? (pendingCount > 99 ? '99+' : pendingCount) : undefined,
+          tabBarBadge:
+            pendingCount > 0
+              ? pendingCount > 99
+                ? '99+'
+                : pendingCount
+              : undefined,
           headerShown: false,
         }}
       />

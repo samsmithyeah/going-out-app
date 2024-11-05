@@ -1,6 +1,12 @@
 // context/InvitationsContext.tsx
 
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  ReactNode,
+  useEffect,
+} from 'react';
 import {
   collection,
   query,
@@ -29,13 +35,17 @@ interface InvitationsContextType {
   declineInvitation: (invitation: InvitationWithDetails) => Promise<void>;
 }
 
-const InvitationsContext = createContext<InvitationsContextType | undefined>(undefined);
+const InvitationsContext = createContext<InvitationsContextType | undefined>(
+  undefined,
+);
 
 type InvitationsProviderProps = {
   children: ReactNode;
 };
 
-export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({ children }) => {
+export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
+  children,
+}) => {
   const { user } = useUser();
   const navigation = useNavigation<StackNavigationProp<NavParamList>>();
   const [invitations, setInvitations] = useState<InvitationWithDetails[]>([]);
@@ -70,8 +80,12 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({ childr
         }));
 
         // Extract unique crewIds and fromUserIds
-        const uniqueCrewIds = Array.from(new Set(invitationsList.map((inv) => inv.crewId)));
-        const uniqueFromUserIds = Array.from(new Set(invitationsList.map((inv) => inv.fromUserId)));
+        const uniqueCrewIds = Array.from(
+          new Set(invitationsList.map((inv) => inv.crewId)),
+        );
+        const uniqueFromUserIds = Array.from(
+          new Set(invitationsList.map((inv) => inv.fromUserId)),
+        );
 
         // Fetch crew details
         const newCrewsCache = { ...crewsCache };
@@ -133,11 +147,12 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({ childr
         setUsersCache(newUsersCache);
 
         // Combine invitation with crew and inviter details
-        const invitationsWithDetails: InvitationWithDetails[] = invitationsList.map((inv) => ({
-          ...inv,
-          crew: newCrewsCache[inv.crewId],
-          inviter: newUsersCache[inv.fromUserId],
-        }));
+        const invitationsWithDetails: InvitationWithDetails[] =
+          invitationsList.map((inv) => ({
+            ...inv,
+            crew: newCrewsCache[inv.crewId],
+            inviter: newUsersCache[inv.fromUserId],
+          }));
 
         setInvitations(invitationsWithDetails);
         setLoading(false);
@@ -186,7 +201,6 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({ childr
         screen: 'Crew',
         params: { crewId: invitation.crewId },
       });
-      
     } catch (error) {
       console.error('Error accepting invitation:', error);
       Alert.alert('Error', 'Could not accept invitation');
@@ -229,7 +243,9 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({ childr
 export const useInvitations = () => {
   const context = useContext(InvitationsContext);
   if (context === undefined) {
-    throw new Error('useInvitations must be used within an InvitationsProvider');
+    throw new Error(
+      'useInvitations must be used within an InvitationsProvider',
+    );
   }
   return context;
 };

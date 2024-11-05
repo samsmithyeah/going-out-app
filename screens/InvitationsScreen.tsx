@@ -15,7 +15,8 @@ import { useInvitations } from '../context/InvitationsContext';
 import { InvitationWithDetails } from '../types/Invitation';
 
 const InvitationsScreen: React.FC = () => {
-  const { invitations, loading, acceptInvitation, declineInvitation } = useInvitations();
+  const { invitations, loading, acceptInvitation, declineInvitation } =
+    useInvitations();
 
   const renderItem = ({ item }: { item: InvitationWithDetails }) => (
     <InvitationCard
