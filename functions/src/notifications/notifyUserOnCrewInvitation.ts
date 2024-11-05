@@ -7,6 +7,8 @@ import { sendExpoNotifications } from '../utils/sendExpoNotifications';
 export const notifyUserOnCrewInvitation = onDocumentCreated(
   'invitations/{invitationId}',
   async (event) => {
+    const db = admin.firestore();
+
     // Ensure event data exists
     if (!event.data) {
       console.log('Event data is undefined.');
@@ -24,7 +26,7 @@ export const notifyUserOnCrewInvitation = onDocumentCreated(
     }
 
     // Fetch the invited user's data
-    const invitedUserRef = admin.firestore().collection('users').doc(toUserId);
+    const invitedUserRef = db.collection('users').doc(toUserId);
     const invitedUserDoc = await invitedUserRef.get();
 
     if (!invitedUserDoc.exists) {
@@ -59,7 +61,7 @@ export const notifyUserOnCrewInvitation = onDocumentCreated(
     }
 
     // Fetch the crew's data to get the crew name
-    const crewRef = admin.firestore().collection('crews').doc(crewId);
+    const crewRef = db.collection('crews').doc(crewId);
     const crewDoc = await crewRef.get();
 
     if (!crewDoc.exists) {
@@ -75,7 +77,7 @@ export const notifyUserOnCrewInvitation = onDocumentCreated(
     const crewName = crewData.name;
 
     // Fetch the inviter's data to get their display name
-    const inviterUserRef = admin.firestore().collection('users').doc(fromUserId);
+    const inviterUserRef = db.collection('users').doc(fromUserId);
     const inviterUserDoc = await inviterUserRef.get();
 
     if (!inviterUserDoc.exists) {
@@ -88,6 +90,14 @@ export const notifyUserOnCrewInvitation = onDocumentCreated(
 
     const messageBody = `${inviterUserName} has invited you to join their crew!`;
 
+    // Calculate the current number of pending invitations for the user
+    const pendingInvitationsSnapshot = await db.collection('invitations')
+      .where('toUserId', '==', toUserId)
+      .where('status', '==', 'pending')
+      .get();
+
+    const pendingCount = pendingInvitationsSnapshot.size;
+
     const messages: ExpoPushMessage[] = expoPushTokens.map((pushToken) => ({
       to: pushToken,
       sound: 'default',
@@ -99,6 +109,7 @@ export const notifyUserOnCrewInvitation = onDocumentCreated(
         toUserId,
         screen: 'Invitations',
       },
+      badge: pendingCount,
     }));
 
     // Send the notifications

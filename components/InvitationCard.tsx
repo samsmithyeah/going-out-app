@@ -3,7 +3,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { InvitationWithDetails } from '../screens/InvitationsScreen';
+import { InvitationWithDetails } from '../types/Invitation';
 
 interface InvitationCardProps {
   invitation: InvitationWithDetails;

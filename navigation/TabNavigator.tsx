@@ -1,4 +1,4 @@
-// navigation/DrawerNavigator.tsx
+// navigation/TabNavigator.tsx
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -7,6 +7,7 @@ import HomeScreen from '../screens/HomeScreen';
 import InvitationsScreen from '../screens/InvitationsScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
 import CrewsStackNavigator from './CrewsStackNavigator';
+import { useInvitations } from '../context/InvitationsContext';
 
 export type TabsParamList = {
   Home: undefined;
@@ -18,6 +19,8 @@ export type TabsParamList = {
 const Tab = createBottomTabNavigator<TabsParamList>();
 
 const TabNavigator: React.FC = () => {
+  const { pendingCount } = useInvitations();
+
   return (
     <Tab.Navigator initialRouteName="Home">
       <Tab.Screen
@@ -50,7 +53,12 @@ const TabNavigator: React.FC = () => {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="mail-outline" size={size} color={color} />
           ),
-          headerStatusBarHeight: 0,
+          tabBarBadge:
+            pendingCount > 0
+              ? pendingCount > 99
+                ? '99+'
+                : pendingCount
+              : undefined,
           headerShown: false,
         }}
       />
@@ -62,7 +70,6 @@ const TabNavigator: React.FC = () => {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
-          headerStatusBarHeight: 0,
           headerShown: false,
         }}
       />
