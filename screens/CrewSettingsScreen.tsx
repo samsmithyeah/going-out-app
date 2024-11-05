@@ -141,11 +141,6 @@ const CrewSettingsScreen: React.FC = () => {
         return;
       }
 
-      if (user.uid !== crew?.ownerId) {
-        Alert.alert('Error', 'Only the crew owner can invite members');
-        return;
-      }
-
       const normalizedEmail = inviteeEmail.trim().toLowerCase();
 
       // Find the user by email

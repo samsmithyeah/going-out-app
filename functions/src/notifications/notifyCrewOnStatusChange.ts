@@ -5,9 +5,9 @@ import * as admin from 'firebase-admin';
 import { Expo, ExpoPushMessage } from 'expo-server-sdk';
 import { sendExpoNotifications } from '../utils/sendExpoNotifications';
 
-const getDateDescription = (dateStr: string): string => {
+export const getDateDescription = (dateStr: string): string => {
   const today = new Date();
-  const targetDate = new Date(`${dateStr}T00:00:00Z`); // Treat as UTC date
+  const targetDate = new Date(`${dateStr}T00:00:00Z`);
 
   // Get today's date in UTC
   const currentUTC = new Date(

@@ -4,6 +4,7 @@ import { notifyCrewMembersOnNewJoin } from './notifications/notifyCrewMembersOnN
 import { notifyCrewOnStatusChange } from './notifications/notifyCrewOnStatusChange';
 import { notifyUserOnCrewInvitation } from './notifications/notifyUserOnCrewInvitation';
 import { notifyCrewMembersOnMemberLeave } from './notifications/notifyCrewMembersOnMemberLeave';
+import { notifyCrewOnThreeUp } from './notifications/notifyCrewOnThreeUp';
 import { deleteCrew } from './utils/deleteCrew';
 
 export {
@@ -12,6 +13,7 @@ export {
   notifyCrewMembersOnMemberLeave,
   notifyCrewOnStatusChange,
   notifyUserOnCrewInvitation,
+  notifyCrewOnThreeUp,
   deleteCrew,
 };
 
