@@ -17,6 +17,9 @@ import { Alert } from 'react-native';
 import { Crew } from '../screens/CrewScreen';
 import { User } from '../types/User';
 import { InvitationWithDetails, Invitation } from '../types/Invitation';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
+import { NavParamList } from '../navigation/AppNavigator';
 
 interface InvitationsContextType {
   invitations: InvitationWithDetails[];
@@ -34,6 +37,7 @@ type InvitationsProviderProps = {
 
 export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({ children }) => {
   const { user } = useUser();
+  const navigation = useNavigation<StackNavigationProp<NavParamList>>();
   const [invitations, setInvitations] = useState<InvitationWithDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [crewsCache, setCrewsCache] = useState<{ [key: string]: Crew }>({});
@@ -165,8 +169,6 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({ childr
         return;
       }
 
-      const crewData = crewSnap.data();
-
       // Update the crew's memberIds
       await updateDoc(crewRef, {
         memberIds: arrayUnion(user.uid),
@@ -180,11 +182,11 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({ childr
 
       Alert.alert('Success', `You have joined ${invitation.crew?.name}`);
 
-      // Optionally, navigate to the Crew screen
-      // navigation.navigate('CrewsStack', {
-      //   screen: 'Crew',
-      //   params: { crewId: invitation.crewId },
-      // });
+      navigation.navigate('CrewsStack', {
+        screen: 'Crew',
+        params: { crewId: invitation.crewId },
+      });
+      
     } catch (error) {
       console.error('Error accepting invitation:', error);
       Alert.alert('Error', 'Could not accept invitation');
