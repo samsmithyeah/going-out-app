@@ -61,11 +61,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#fff',
     borderRadius: 10,
-    elevation: 3, // For Android shadow
-    shadowColor: '#000', // For iOS shadow
-    shadowOffset: { width: 0, height: 2 }, // For iOS shadow
-    shadowOpacity: 0.1, // For iOS shadow
-    shadowRadius: 5, // For iOS shadow
+    borderWidth: 2,
+    borderColor: '#f0f0f0',
     padding: 16,
     alignItems: 'center',
     marginBottom: 10, // Space between cards

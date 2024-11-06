@@ -85,16 +85,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', // Arrange image and text horizontally
     alignItems: 'center', // Vertically center items
     padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderWidth: 2,
+    borderColor: '#f0f0f0',
     backgroundColor: '#fff',
     borderRadius: 10,
     marginBottom: 8,
-    elevation: 1, // Add slight shadow for Android
-    shadowColor: '#000', // Add shadow for iOS
-    shadowOffset: { width: 0, height: 1 }, // iOS shadow
-    shadowOpacity: 0.1, // iOS shadow
-    shadowRadius: 1, // iOS shadow
   },
   crewImage: {
     width: 50, // Adjust size as needed
