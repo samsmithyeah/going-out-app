@@ -374,19 +374,13 @@ const CrewScreen: React.FC = () => {
 
       {/* Members Up for Going Out on Selected Date */}
       <Text style={styles.listTitle}>
-        {selectedDate === getTodayDateString()
-          ? 'Up for going out tonight:'
-          : `Up for going out on ${moment(selectedDate).format('MMMM Do, YYYY')}:`}
+        {"Up for going out:"}
       </Text>
       {currentUserStatus ? (
         <MemberList
           members={membersUpForGoingOut}
           currentUserId={user?.uid || null}
-          emptyMessage={
-            selectedDate === getTodayDateString()
-              ? 'No members are up for going out tonight.'
-              : `No members are up for going out on ${moment(selectedDate).format('MMMM Do, YYYY')}.`
-          }
+          emptyMessage={"No one's up for going out on this date"}
         />
       ) : (
         <View style={styles.skeletonContainer}>
