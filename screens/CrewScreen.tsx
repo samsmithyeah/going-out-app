@@ -407,11 +407,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff', // White background for header
     padding: 16,
     borderRadius: 10,
-    shadowColor: '#000', // Subtle shadow for depth
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2, // For Android shadow
+    borderWidth: 2,
+    borderColor: '#f0f0f0',
   },
   listTitle: {
     fontSize: 20,

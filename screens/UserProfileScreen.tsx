@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -247,10 +248,13 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
 
 export default UserProfileScreen;
 
+const { width } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    alignItems: 'center',
   },
   detailsContainer: {
     alignItems: 'center',
@@ -290,8 +294,11 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: 40,
-    width: '100%',
-    alignItems: 'center',
+    width: width * 0.8,
+    justifyContent: 'center',
+    flexDirection: 'row',
+    position: 'absolute',
+    bottom: 100,
   },
   logoutButton: {
     flexDirection: 'row',

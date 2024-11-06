@@ -334,11 +334,8 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginBottom: 40,
     width: width * 0.9,
-    shadowColor: '#000', // Shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3, // Shadow for Android
+    borderWidth: 2,
+    borderColor: '#f0f0f0',
   },
   statusIcon: {
     marginRight: 15,
@@ -353,28 +350,23 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   statusButton: {
-    width: '80%',
+    width: width * 0.7,
     padding: 15,
-    borderRadius: 30, // More rounded for a modern look
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    shadowColor: '#000', // Shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5, // Shadow for Android
     position: 'absolute',
     bottom: 50,
   },
   statusButtonActive: {
-    backgroundColor: '#ff6347', // Tomato color when active (all crews up)
+    backgroundColor: '#ff6347',
   },
   statusButtonInactive: {
-    backgroundColor: '#32cd32', // LimeGreen color when inactive (toggle to up)
+    backgroundColor: '#32cd32',
   },
   statusButtonDisabled: {
-    backgroundColor: '#a9a9a9', // DarkGray color when disabled
+    backgroundColor: '#a9a9a9',
   },
   statusButtonText: {
     color: 'white',
