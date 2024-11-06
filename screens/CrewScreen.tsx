@@ -373,9 +373,7 @@ const CrewScreen: React.FC = () => {
       />
 
       {/* Members Up for Going Out on Selected Date */}
-      <Text style={styles.listTitle}>
-        {"Up for going out:"}
-      </Text>
+      <Text style={styles.listTitle}>{'Up for going out:'}</Text>
       {currentUserStatus ? (
         <MemberList
           members={membersUpForGoingOut}
