@@ -368,7 +368,8 @@ const CrewScreen: React.FC = () => {
         mode="date"
         onConfirm={handleConfirmDate}
         onCancel={hideDatePicker}
-        minimumDate={new Date()} // Prevent selecting past dates
+        minimumDate={new Date()}
+        date={new Date(selectedDate)}
       />
 
       {/* Members Up for Going Out on Selected Date */}
