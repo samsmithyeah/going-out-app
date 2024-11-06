@@ -28,7 +28,7 @@ import {
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
 import { User } from '../types/User';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Ensure Ionicons is imported
 import { NavParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
@@ -282,6 +282,25 @@ const CrewScreen: React.FC = () => {
     hideDatePicker();
   };
 
+  // Function to increment the selected date by one day
+  const incrementDate = () => {
+    const newDate = moment(selectedDate).add(1, 'days').format('YYYY-MM-DD');
+    setSelectedDate(newDate);
+  };
+
+  // Function to decrement the selected date by one day
+  const decrementDate = () => {
+    const today = moment().startOf('day');
+    const current = moment(selectedDate, 'YYYY-MM-DD').startOf('day');
+
+    if (current.isAfter(today)) {
+      const newDate = current.subtract(1, 'days').format('YYYY-MM-DD');
+      setSelectedDate(newDate);
+    } else {
+      Alert.alert('Invalid Date', 'You cannot select a past date.');
+    }
+  };
+
   if (loading || !crew) {
     return (
       <View style={styles.loaderContainer}>
@@ -310,18 +329,38 @@ const CrewScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Date Picker Button */}
-      <TouchableOpacity
-        style={styles.datePickerButton}
-        onPress={showDatePicker}
-      >
-        <Ionicons name="calendar-outline" size={20} color="#1e90ff" />
-        <Text style={styles.datePickerText}>
-          {selectedDate === getTodayDateString()
-            ? 'Today'
-            : moment(selectedDate).format('MMMM Do, YYYY')}
-        </Text>
-      </TouchableOpacity>
+      {/* Date Picker with Arrow Buttons */}
+      <View style={styles.datePickerContainer}>
+        {/* Left Arrow Button */}
+        <TouchableOpacity
+          onPress={decrementDate}
+          disabled={selectedDate === getTodayDateString()}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={selectedDate === getTodayDateString() ? '#ccc' : '#1e90ff'}
+          />
+        </TouchableOpacity>
+
+        {/* Date Picker Button */}
+        <TouchableOpacity
+          style={styles.datePickerButton}
+          onPress={showDatePicker}
+        >
+          <Ionicons name="calendar-outline" size={20} color="#1e90ff" />
+          <Text style={styles.datePickerText}>
+            {selectedDate === getTodayDateString()
+              ? 'Today'
+              : moment(selectedDate).format('MMMM Do, YYYY')}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Right Arrow Button */}
+        <TouchableOpacity onPress={incrementDate}>
+          <Ionicons name="arrow-forward" size={24} color="#1e90ff" />
+        </TouchableOpacity>
+      </View>
 
       {/* Date Picker Modal */}
       <DateTimePickerModal
@@ -476,16 +515,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontWeight: 'bold',
   },
+  datePickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 15,
+  },
   datePickerButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     borderRadius: 25,
-    marginBottom: 15,
+    marginHorizontal: 10,
     borderWidth: 1,
     borderColor: '#ddd',
-    width: '60%',
     justifyContent: 'center',
   },
   datePickerText: {
