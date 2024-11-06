@@ -23,16 +23,18 @@ import {
   onSnapshot,
   updateDoc,
   setDoc,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
 import { User } from '../types/User';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { NavParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList'; // Import the new MemberList component
-import { Timestamp } from 'firebase/firestore'; // Import Timestamp correctly
+import DateTimePickerModal from 'react-native-modal-datetime-picker'; // Import date picker
+import moment from 'moment'; // For date formatting
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
 
@@ -57,17 +59,22 @@ const CrewScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<NavParamList>>();
   const [crew, setCrew] = useState<Crew | null>(null);
   const [members, setMembers] = useState<User[]>([]);
-  const [statuses, setStatuses] = useState<{ [userId: string]: boolean }>({});
+  const [statusesForSelectedDate, setStatusesForSelectedDate] = useState<{
+    [userId: string]: boolean;
+  }>({});
   const [loading, setLoading] = useState(true);
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [selectedDate, setSelectedDate] =
+    useState<string>(getTodayDateString());
 
   // Utility function to get today's date in 'YYYY-MM-DD' format
-  const getTodayDateString = (): string => {
+  function getTodayDateString(): string {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  };
+  }
 
   // Fetch crew data
   useEffect(() => {
@@ -143,17 +150,16 @@ const CrewScreen: React.FC = () => {
     fetchMembers();
   }, [crew]);
 
-  // Listener for the userStatuses subcollection
+  // Listener for the userStatuses subcollection based on selectedDate
   useEffect(() => {
     if (!crewId || !user) return;
 
-    const todayDate = getTodayDateString();
     const userStatusesRef = collection(
       db,
       'crews',
       crewId,
       'statuses',
-      todayDate,
+      selectedDate,
       'userStatuses',
     );
 
@@ -163,12 +169,12 @@ const CrewScreen: React.FC = () => {
         const newStatuses: { [userId: string]: boolean } = {};
         snapshot.forEach((docSnap) => {
           const statusData = docSnap.data() as Status;
-          const userId = docSnap.id; // Derive userId from document ID
+          const userId = docSnap.id;
           newStatuses[userId] = statusData.upForGoingOutTonight || false;
           console.log(`User ID: ${userId}, Status: ${newStatuses[userId]}`);
         });
-        console.log('All Statuses:', newStatuses);
-        setStatuses(newStatuses);
+        console.log(`All Statuses for ${selectedDate}:`, newStatuses);
+        setStatusesForSelectedDate(newStatuses);
       },
       (error) => {
         if (user) {
@@ -181,22 +187,21 @@ const CrewScreen: React.FC = () => {
     return () => {
       unsubscribeUserStatuses();
     };
-  }, [crewId, user]);
+  }, [crewId, user, selectedDate]);
 
-  // Function to toggle user's status for today
+  // Function to toggle user's status for the selected date
   const toggleStatus = async () => {
     if (!user?.uid || !crew) {
       Alert.alert('Error', 'User or Crew data is missing');
       return;
     }
 
-    const todayDate = getTodayDateString();
     const userStatusRef = doc(
       db,
       'crews',
       crewId,
       'statuses',
-      todayDate,
+      selectedDate,
       'userStatuses',
       user.uid,
     );
@@ -209,15 +214,19 @@ const CrewScreen: React.FC = () => {
           upForGoingOutTonight: !currentStatus,
           timestamp: Timestamp.fromDate(new Date()),
         });
-        console.log(`Updated Status for User ${user.uid}: ${!currentStatus}`);
+        console.log(
+          `Updated Status for User ${user.uid} on ${selectedDate}: ${!currentStatus}`,
+        );
       } else {
-        // If no status exists for today, create it with true
+        // If no status exists for the selected date, create it with true
         await setDoc(userStatusRef, {
-          date: todayDate,
+          date: selectedDate,
           upForGoingOutTonight: true,
           timestamp: Timestamp.fromDate(new Date()),
         });
-        console.log(`Created Status for User ${user.uid}: true`);
+        console.log(
+          `Created Status for User ${user.uid} on ${selectedDate}: true`,
+        );
       }
 
       // The onSnapshot listener will automatically update the local state
@@ -227,17 +236,22 @@ const CrewScreen: React.FC = () => {
     }
   };
 
-  // Derive current user's status directly from statuses object
-  const currentUserStatus = user?.uid ? statuses[user.uid] || false : false;
+  // Derive current user's status for the selected date
+  const currentUserStatus = user?.uid
+    ? statusesForSelectedDate[user.uid] || false
+    : false;
 
-  // Get list of members who are up for going out tonight
-  const membersUpForGoingOut = members.filter((member) => statuses[member.uid]);
+  // Get list of members who are up for going out on the selected date
+  const membersUpForGoingOut = members.filter(
+    (member) => statusesForSelectedDate[member.uid],
+  );
 
   // Debugging: Log the current status and members up for going out
   useEffect(() => {
+    console.log('Selected Date:', selectedDate);
     console.log('Current User Status:', currentUserStatus);
     console.log('Members Up For Going Out:', membersUpForGoingOut);
-  }, [membersUpForGoingOut, currentUserStatus]);
+  }, [membersUpForGoingOut, currentUserStatus, selectedDate]);
 
   // Add a cog icon in the header to navigate to CrewSettingsScreen
   useLayoutEffect(() => {
@@ -252,6 +266,21 @@ const CrewScreen: React.FC = () => {
       ),
     });
   }, [navigation, crewId]);
+
+  // Date Picker Handlers
+  const showDatePicker = () => {
+    setDatePickerVisibility(true);
+  };
+
+  const hideDatePicker = () => {
+    setDatePickerVisibility(false);
+  };
+
+  const handleConfirmDate = (date: Date) => {
+    const formattedDate = moment(date).format('YYYY-MM-DD');
+    setSelectedDate(formattedDate);
+    hideDatePicker();
+  };
 
   if (loading || !crew) {
     return (
@@ -280,13 +309,44 @@ const CrewScreen: React.FC = () => {
           </Text>
         </View>
       </View>
-      {/* Members Up for Going Out Tonight */}
-      <Text style={styles.listTitle}>Up for going out tonight:</Text>
+
+      {/* Date Picker Button */}
+      <TouchableOpacity
+        style={styles.datePickerButton}
+        onPress={showDatePicker}
+      >
+        <Ionicons name="calendar-outline" size={20} color="#1e90ff" />
+        <Text style={styles.datePickerText}>
+          {selectedDate === getTodayDateString()
+            ? 'Today'
+            : moment(selectedDate).format('MMMM Do, YYYY')}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Date Picker Modal */}
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={handleConfirmDate}
+        onCancel={hideDatePicker}
+        minimumDate={new Date()} // Prevent selecting past dates
+      />
+
+      {/* Members Up for Going Out on Selected Date */}
+      <Text style={styles.listTitle}>
+        {selectedDate === getTodayDateString()
+          ? 'Up for going out tonight:'
+          : `Up for going out on ${moment(selectedDate).format('MMMM Do, YYYY')}:`}
+      </Text>
       {currentUserStatus ? (
         <MemberList
           members={membersUpForGoingOut}
           currentUserId={user?.uid || null}
-          emptyMessage="No members are up for going out tonight."
+          emptyMessage={
+            selectedDate === getTodayDateString()
+              ? 'No members are up for going out tonight.'
+              : `No members are up for going out on ${moment(selectedDate).format('MMMM Do, YYYY')}.`
+          }
         />
       ) : (
         <View style={styles.skeletonContainer}>
@@ -298,8 +358,8 @@ const CrewScreen: React.FC = () => {
           {/* Overlaid Message */}
           <View style={styles.overlay}>
             <Text style={styles.overlayText}>
-              Crew members who are up for going out tonight are only visible if
-              you're up for it too!
+              Crew members who are up for going out on this date are only
+              visible if you're up for it too!
             </Text>
           </View>
         </View>
@@ -317,8 +377,8 @@ const CrewScreen: React.FC = () => {
       >
         <Text style={styles.statusButtonText}>
           {currentUserStatus
-            ? "👎 I'm not up for going out tonight"
-            : "👍 I'm up for going out tonight"}
+            ? "👎 I'm not up for going out on this date"
+            : "👍 I'm up for going out on this date"}
         </Text>
       </TouchableOpacity>
     </View>
@@ -357,6 +417,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   loaderContainer: {
     flex: 1,
@@ -414,5 +475,22 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: 10,
     fontWeight: 'bold',
+  },
+  datePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 25,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    width: '60%',
+    justifyContent: 'center',
+  },
+  datePickerText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#333',
   },
 });
