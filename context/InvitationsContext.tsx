@@ -20,7 +20,7 @@ import {
 import { db } from '../firebase';
 import { useUser } from './UserContext';
 import { Alert } from 'react-native';
-import { Crew } from '../screens/CrewScreen';
+import { Crew } from '../types/Crew';
 import { User } from '../types/User';
 import { InvitationWithDetails, Invitation } from '../types/Invitation';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -101,6 +101,7 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
                   ownerId: crewData.ownerId,
                   memberIds: crewData.memberIds,
                   iconUrl: crewData.iconUrl,
+                  activity: crewData.activity,
                 };
               } else {
                 newCrewsCache[crewId] = {
@@ -109,6 +110,7 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
                   ownerId: '',
                   memberIds: [],
                   iconUrl: '',
+                  activity: '',
                 };
               }
             }
