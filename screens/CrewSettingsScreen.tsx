@@ -457,7 +457,8 @@ const CrewSettingsScreen: React.FC = () => {
       </View>
 
       {/* Crew Activity Section */}
-        <Text style={styles.sectionTitle}>Crew Activity</Text>
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>Crew activity:</Text>
         <View style={styles.activityDisplayContainer}>
           <Text style={styles.activityText}>{crew.activity || 'going out'}</Text>
           {user?.uid === crew.ownerId && (
@@ -470,9 +471,24 @@ const CrewSettingsScreen: React.FC = () => {
             </TouchableOpacity>
           )}
         </View>
+      </View>
+
+      {/* Members List Header with Add Button */}
+      <View style={styles.sectionContainer}>
+      <View style={styles.membersListHeader}>
+        <Text style={styles.sectionTitle}>{`${members.length} member${members.length !== 1 ? 's' : ''}:`}</Text>
+        {user?.uid === crew.ownerId && (
+          <TouchableOpacity
+            style={styles.addButtonInline}
+            onPress={() => setIsInviteModalVisible(true)}
+            accessibilityLabel="Invite Member"
+          >
+            <Ionicons name="add-circle-outline" size={30} color="#1e90ff" />
+          </TouchableOpacity>
+        )}
+      </View>
 
       {/* Members List */}
-      <Text style={styles.sectionTitle}>{`${members.length} member${members.length !== 1 ? 's' : ''}:`}</Text>
       <MemberList
         members={members}
         currentUserId={user?.uid || null}
@@ -480,17 +496,7 @@ const CrewSettingsScreen: React.FC = () => {
         emptyMessage="No members in this crew."
         adminIds={[crew.ownerId]}
       />
-
-      {/* Invite Member Button */}
-      {user?.uid === crew.ownerId && (
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setIsInviteModalVisible(true)}
-          accessibilityLabel="Invite Member"
-        >
-          <MaterialIcons name="person-add" size={28} color="white" />
-        </TouchableOpacity>
-      )}
+</View>
 
       {/* Leave Crew Button */}
       {user?.uid && user.uid !== crew.ownerId && (
@@ -646,14 +652,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    marginTop: 20,
     fontWeight: 'bold',
   },
   groupInfo: {
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
   },
   groupNameContainer: {
     flexDirection: 'row',
@@ -668,7 +671,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     padding: 5,
   },
-  activityContainer: {
+  sectionContainer: {
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
@@ -676,15 +679,21 @@ const styles = StyleSheet.create({
   activityDisplayContainer: {
     marginTop: 10,
     flexDirection: 'row',
-    borderBottomColor: '#ddd',
-    borderBottomWidth: 1,
   },
   activityText: {
     fontSize: 18,
-    marginBottom: 20,
+    marginBottom: 15,
   },
   editActivityButton: {
     marginLeft: 10,
+  },
+  membersListHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  addButtonInline: {
+    padding: 5,
   },
   memberItem: {
     flexDirection: 'row',
@@ -716,22 +725,6 @@ const styles = StyleSheet.create({
   },
   youText: {
     color: 'gray',
-  },
-  addButton: {
-    backgroundColor: '#1e90ff',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    elevation: 5, // Add shadow for Android
-    shadowColor: '#000', // Add shadow for iOS
-    shadowOffset: { width: 0, height: 2 }, // iOS shadow
-    shadowOpacity: 0.3, // iOS shadow
-    shadowRadius: 3, // iOS shadow
   },
   leaveButton: {
     backgroundColor: '#ff6347',
