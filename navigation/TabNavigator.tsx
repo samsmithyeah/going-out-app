@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import InvitationsScreen from '../screens/InvitationsScreen';
-import UserProfileScreen from '../screens/UserProfileScreen';
+import UserProfileStackNavigator from './UserProfileStackNavigator';
 import CrewsStackNavigator from './CrewsStackNavigator';
 import { useInvitations } from '../context/InvitationsContext';
 
@@ -64,7 +64,7 @@ const TabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="UserProfile"
-        component={UserProfileScreen}
+        component={UserProfileStackNavigator}
         options={{
           title: 'Your profile',
           tabBarIcon: ({ color, size }) => (

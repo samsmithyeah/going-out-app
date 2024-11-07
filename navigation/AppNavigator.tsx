@@ -16,6 +16,7 @@ export type NavParamList = {
   Crew: { crewId: string };
   CrewSettings: { crewId: string };
   UserProfile: { userId: string };
+  EditUserProfile: undefined;
   Invitations: undefined;
 };
 

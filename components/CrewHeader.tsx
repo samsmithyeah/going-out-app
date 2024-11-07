@@ -1,7 +1,7 @@
 // components/CrewHeader.tsx
 
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Crew } from '../types/Crew';
 import ProfilePicturePicker from './ProfilePicturePicker'; // Reuse existing component
 
