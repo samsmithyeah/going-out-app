@@ -35,16 +35,9 @@ import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList'; // Import the new MemberList component
 import DateTimePickerModal from 'react-native-modal-datetime-picker'; // Import date picker
 import moment from 'moment'; // For date formatting
+import { Crew } from '../types/Crew';
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
-
-export interface Crew {
-  id: string;
-  name: string;
-  ownerId: string;
-  memberIds: string[];
-  iconUrl?: string;
-}
 
 interface Status {
   date: string; // Format: 'YYYY-MM-DD'

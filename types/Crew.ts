@@ -4,4 +4,5 @@ export interface Crew {
   ownerId: string;
   memberIds: string[];
   iconUrl?: string;
+  activity: string;
 }
