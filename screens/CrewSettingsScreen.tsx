@@ -406,7 +406,10 @@ const CrewSettingsScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 30 }}
+    >
       {/* Loading Overlay */}
       {(isDeleting || isUpdatingName || isUpdatingActivity) && (
         <View style={styles.loadingOverlay}>
