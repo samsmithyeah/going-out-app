@@ -6,7 +6,6 @@ import {
   Text,
   TouchableOpacity,
   Alert,
-  Modal,
   TextInput,
   StyleSheet,
   ActivityIndicator,
@@ -37,6 +36,7 @@ import { NavParamList } from '../navigation/AppNavigator';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList';
 import { Crew } from '../types/Crew';
+import CustomModal from '../components/CustomModal'; // Import CustomModal
 
 type CrewSettingsScreenRouteProp = RouteProp<NavParamList, 'CrewSettings'>;
 
@@ -457,7 +457,7 @@ const CrewSettingsScreen: React.FC = () => {
       </View>
 
       {/* Crew Activity Section */}
-        <Text style={styles.listTitle}>Crew activity:</Text>
+        <Text style={styles.sectionTitle}>Crew Activity</Text>
         <View style={styles.activityDisplayContainer}>
           <Text style={styles.activityText}>{crew.activity || 'going out'}</Text>
           {user?.uid === crew.ownerId && (
@@ -472,7 +472,7 @@ const CrewSettingsScreen: React.FC = () => {
         </View>
 
       {/* Members List */}
-      <Text style={styles.listTitle}>{`${members.length} member${members.length !== 1 ? 's' : ''}:`}</Text>
+      <Text style={styles.sectionTitle}>{`${members.length} member${members.length !== 1 ? 's' : ''}:`}</Text>
       <MemberList
         members={members}
         currentUserId={user?.uid || null}
@@ -519,120 +519,119 @@ const CrewSettingsScreen: React.FC = () => {
       )}
 
       {/* Modal for Inviting Member */}
-      <Modal visible={isInviteModalVisible} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Invite member by email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Member's Email"
-              value={inviteeEmail}
-              onChangeText={setInviteeEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={inviteUserToCrew}
-                accessibilityLabel="Send Invitation"
-              >
-                <Text style={styles.modalButtonText}>Send invitation</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setIsInviteModalVisible(false)}
-                accessibilityLabel="Cancel Invitation"
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <CustomModal
+        isVisible={isInviteModalVisible}
+        onClose={() => {
+          setIsInviteModalVisible(false);
+          setInviteeEmail('');
+        }}
+        title="Invite member by email"
+        buttons={[
+          {
+            label: 'Invite',
+            onPress: inviteUserToCrew,
+            style: styles.modalButton,
+            disabled: isUpdatingName || isUpdatingActivity, // Adjust as needed
+          },
+          {
+            label: 'Cancel',
+            onPress: () => {
+              setIsInviteModalVisible(false);
+              setInviteeEmail('');
+            },
+            style: [styles.modalButton, styles.cancelButton],
+            disabled: isUpdatingName || isUpdatingActivity,
+          },
+        ]}
+        loading={isUpdatingName || isUpdatingActivity}
+      >
+        <TextInput
+          style={styles.input}
+          placeholder="Member's email"
+          value={inviteeEmail}
+          onChangeText={setInviteeEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </CustomModal>
 
       {/* Modal for Editing Crew Name */}
-      <Modal visible={isEditNameModalVisible} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit crew name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="New Crew Name"
-              value={newCrewName}
-              onChangeText={setNewCrewName}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handleUpdateCrewName}
-                accessibilityLabel="Update Crew Name"
-              >
-                {isUpdatingName ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.modalButtonText}>Update name</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => {
-                  setIsEditNameModalVisible(false);
-                  setNewCrewName('');
-                }}
-                accessibilityLabel="Cancel Name Update"
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <CustomModal
+        isVisible={isEditNameModalVisible}
+        onClose={() => {
+          setIsEditNameModalVisible(false);
+          setNewCrewName('');
+        }}
+        title="Edit crew name"
+        buttons={[
+          {
+            label: 'Update',
+            onPress: handleUpdateCrewName,
+            style: styles.modalButton,
+            disabled: isUpdatingName || isUpdatingActivity,
+          },
+          {
+            label: 'Cancel',
+            onPress: () => {
+              setIsEditNameModalVisible(false);
+              setNewCrewName('');
+            },
+            style: [styles.modalButton, styles.cancelButton],
+            disabled: isUpdatingName || isUpdatingActivity,
+          },
+        ]}
+        loading={isUpdatingName}
+      >
+        <TextInput
+          style={styles.input}
+          placeholder="New crew name"
+          value={newCrewName}
+          onChangeText={setNewCrewName}
+        />
+      </CustomModal>
 
       {/* Modal for Editing Crew Activity */}
-      <Modal visible={isEditActivityModalVisible} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit crew activity</Text>
-            <TextInput
-              style={[
-                styles.input,
-                activityError ? styles.inputError : {},
-              ]}
-              placeholder="Enter crew activity"
-              value={newActivity}
-              onChangeText={setNewActivity}
-            />
-            {activityError ? (
-              <Text style={styles.errorText}>{activityError}</Text>
-            ) : null}
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handleUpdateActivity}
-                accessibilityLabel="Update Crew Activity"
-              >
-                {isUpdatingActivity ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Ionicons name="checkmark" size={24} color="white" />
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => {
-                  setIsEditActivityModalVisible(false);
-                  setNewActivity('');
-                  setActivityError('');
-                }}
-                accessibilityLabel="Cancel Activity Update"
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <CustomModal
+        isVisible={isEditActivityModalVisible}
+        onClose={() => {
+          setIsEditActivityModalVisible(false);
+          setNewActivity('');
+          setActivityError('');
+        }}
+        title="Edit crew activity"
+        buttons={[
+          {
+            label: 'Update',
+            onPress: handleUpdateActivity,
+            style: styles.modalButton,
+            disabled: isUpdatingActivity,
+          },
+          {
+            label: 'Cancel',
+            onPress: () => {
+              setIsEditActivityModalVisible(false);
+              setNewActivity('');
+              setActivityError('');
+            },
+            style: [styles.modalButton, styles.cancelButton],
+            disabled: isUpdatingActivity,
+          },
+        ]}
+        loading={isUpdatingActivity}
+      >
+        <TextInput
+          style={[
+            styles.input,
+            activityError ? styles.inputError : {},
+          ]}
+          placeholder="Enter crew activity"
+          value={newActivity}
+          onChangeText={setNewActivity}
+        />
+        {activityError ? (
+          <Text style={styles.errorText}>{activityError}</Text>
+        ) : null}
+      </CustomModal>
     </ScrollView>
   );
 };
@@ -645,7 +644,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  listTitle: {
+  sectionTitle: {
     fontSize: 20,
     marginTop: 20,
     fontWeight: 'bold',
@@ -668,10 +667,6 @@ const styles = StyleSheet.create({
   editButton: {
     marginLeft: 10,
     padding: 5,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    marginBottom: 10,
   },
   activityContainer: {
     padding: 10,
@@ -762,27 +757,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 22,
-    backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent background
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 35,
-    alignItems: 'center',
-    width: '80%',
-    shadowColor: '#000',
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 20,
-    marginBottom: 15,
-    textAlign: 'center',
-  },
   input: {
     width: '100%',
     borderWidth: 1,
@@ -841,5 +815,3 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 });
-
-// No longer using react-native-picker-select, so no related styles
