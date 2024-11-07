@@ -31,12 +31,12 @@ import { User } from '../types/User';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Ensure Ionicons is imported
 import { NavParamList } from '../navigation/AppNavigator';
 import SkeletonUserItem from '../components/SkeletonUserItem';
-import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList'; // Import the new MemberList component
 import DateTimePickerModal from 'react-native-modal-datetime-picker'; // Import date picker
 import moment from 'moment'; // For date formatting
 import { Crew } from '../types/Crew';
 import CustomButton from '../components/CustomButton'; // Import CustomButton
+import CrewHeader from '../components/CrewHeader'; // Import the new CrewHeader component
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
 
@@ -286,8 +286,11 @@ const CrewScreen: React.FC = () => {
           <MaterialIcons name="settings" size={24} color="black" />
         </TouchableOpacity>
       ),
+      // Set the custom header title once crew data is loaded
+      headerTitle: crew ? () => <CrewHeader crew={crew} /> : 'Crew',
+      headerTitleAlign: 'left',
     });
-  }, [navigation, crewId]);
+  }, [navigation, crew, crewId]);
 
   // Date Picker Handlers
   const showDatePicker = () => {
@@ -333,25 +336,6 @@ const CrewScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Crew Header */}
-      {/* Commented out for now. May move this info to custom header at some point*/}
-      {/* <View style={styles.header}>
-        <ProfilePicturePicker
-          imageUrl={crew.iconUrl || null}
-          onImageUpdate={() => {}}
-          editable={false}
-          storagePath={`crews/${crewId}/icon.jpg`}
-          size={80}
-        />
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.crewName}>{crew.name}</Text>
-          <Text style={styles.crewMemberCount}>
-            {crew.memberIds.length}{' '}
-            {crew.memberIds.length === 1 ? 'Member' : 'Members'}
-          </Text>
-        </View>
-      </View> */}
-
       {/* Date Picker with Arrow Buttons */}
       <View style={styles.datePickerContainer}>
         {/* Left Arrow Button */}
@@ -414,7 +398,7 @@ const CrewScreen: React.FC = () => {
       ) : (
         <View style={styles.skeletonContainer}>
           {/* Render Skeleton User Items */}
-          {[...Array(4)].map((_, index) => (
+          {[...Array(6)].map((_, index) => (
             <SkeletonUserItem key={index} />
           ))}
 
@@ -508,29 +492,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     fontWeight: '500',
-  },
-  headerTextContainer: {
-    marginLeft: 16,
-  },
-  crewName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 4,
-  },
-  crewMemberCount: {
-    fontSize: 14,
-    color: '#666',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    backgroundColor: '#fff', // White background for header
-    padding: 16,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#f0f0f0',
   },
   listTitle: {
     fontSize: 20,
