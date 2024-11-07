@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   Text,
-  ActivityIndicator,
   Image,
   TouchableWithoutFeedback,
   Keyboard,
@@ -16,11 +15,12 @@ import { auth } from '../firebase';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import * as WebBrowser from 'expo-web-browser';
-import GoogleAuth from '../components/GoogleAuth';
+import GoogleLoginButton from '../components/GoogleLoginButton';
 import { NavParamList } from '../navigation/AppNavigator';
 import { useUser } from '../context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import CustomButton from '../components/CustomButton'; // Import CustomButton
 
 type LoginScreenProps = NativeStackScreenProps<NavParamList, 'Login'>;
 
@@ -129,17 +129,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             />
           </View>
 
-          <TouchableOpacity
-            style={styles.button}
+          {/* Replace TouchableOpacity with CustomButton for Login */}
+          <CustomButton
+            title="Login"
             onPress={handleEmailLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Login</Text>
-            )}
-          </TouchableOpacity>
+            variant="primary" // Assuming 'primary' is the default/desired variant
+            accessibilityLabel="Login"
+            accessibilityHint="Press to log into your account"
+            loading={loading} // Show loading indicator when logging in
+          />
 
           <View style={styles.separatorContainer}>
             <View style={styles.separatorLine} />
@@ -147,7 +145,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             <View style={styles.separatorLine} />
           </View>
 
-          <GoogleAuth />
+          <GoogleLoginButton />
 
           <TouchableOpacity
             style={styles.signupContainer}
@@ -165,11 +163,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   gradient: {
     flex: 1,
-  },
-  container: {
-    flex: 1,
-    padding: 16,
-    justifyContent: 'center',
   },
   logoContainer: {
     marginTop: 70,
@@ -190,6 +183,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 15,
     padding: 20,
+    marginHorizontal: 20,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -206,6 +200,15 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 50,
     color: '#333',
+  },
+  // Updated styles for CustomButton
+  loginButton: {
+    // Optional: add margin or other styles if needed
+    marginTop: 10,
+  },
+  signupButton: {
+    // Optional: add margin or other styles if needed
+    marginTop: 20,
   },
   button: {
     backgroundColor: '#ff6b6b',

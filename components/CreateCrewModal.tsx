@@ -75,12 +75,13 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
           label: 'Create',
           onPress: createCrew,
           disabled: loading,
+          variant: 'primary',
         },
         {
           label: 'Cancel',
           onPress: handleCancel,
-          style: styles.cancelButton,
           disabled: loading,
+          variant: 'secondary',
         },
       ]}
       loading={loading}
@@ -108,10 +109,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     padding: 15,
     marginBottom: 20,
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
-  },
-  cancelButton: {
-    backgroundColor: '#ccc',
   },
 });

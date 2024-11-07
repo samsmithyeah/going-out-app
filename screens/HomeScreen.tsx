@@ -4,7 +4,6 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   Alert,
   StyleSheet,
   ActivityIndicator,
@@ -25,6 +24,7 @@ import { useUser } from '../context/UserContext';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useFocusEffect } from '@react-navigation/native';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
+import CustomButton from '../components/CustomButton'; // Import CustomButton
 
 const HomeScreen: React.FC = () => {
   const { user } = useUser();
@@ -222,7 +222,7 @@ const HomeScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1e90ff" />
+        <ActivityIndicator size="large" color="#1E90FF" />
       </View>
     );
   }
@@ -259,10 +259,10 @@ const HomeScreen: React.FC = () => {
           size={30}
           color={
             upCrews === 0
-              ? '#ff6347' // Tomato
+              ? '#FF6347' // Tomato
               : upCrews === totalCrews
-                ? '#32cd32' // LimeGreen
-                : '#1e90ff' // DodgerBlue
+                ? '#32CD32' // LimeGreen
+                : '#1E90FF' // DodgerBlue
           }
           style={styles.statusIcon}
         />
@@ -273,34 +273,32 @@ const HomeScreen: React.FC = () => {
 
       {/* Toggle Status Button - Render only if the user is part of at least one crew */}
       {totalCrews > 0 && (
-        <TouchableOpacity
-          style={[
-            styles.statusButton,
-            updatingStatus
-              ? styles.statusButtonDisabled
-              : upCrews === totalCrews
-                ? styles.statusButtonActive
-                : styles.statusButtonInactive,
-          ]}
-          onPress={handleToggleStatus} // Updated to use confirmation handler
-          disabled={updatingStatus}
-          accessibilityLabel="Toggle Status"
-          accessibilityHint={
-            upCrews === totalCrews
-              ? 'Mark yourself as not up for it in all your crews for today'
-              : 'Mark yourself as up for it in all your crews for today'
-          }
-        >
-          {updatingStatus ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.statusButtonText}>
-              {upCrews === totalCrews
+        <View style={{ position: 'absolute', bottom: 20 }}>
+          <CustomButton
+            title={
+              upCrews === totalCrews
                 ? "I'm no longer up for seeing any of my crews today"
-                : "I'm up for seeing any of my crews today!"}
-            </Text>
-          )}
-        </TouchableOpacity>
+                : "I'm up for seeing any of my crews today!"
+            }
+            onPress={handleToggleStatus}
+            loading={updatingStatus}
+            variant={upCrews === totalCrews ? 'danger' : 'primary'} // Choose variant based on status
+            icon={{
+              name:
+                upCrews === totalCrews
+                  ? 'remove-circle-outline'
+                  : 'checkmark-circle-outline',
+              size: 24,
+              library: 'Ionicons', // Specify icon library if different
+            }}
+            accessibilityLabel="Toggle Status"
+            accessibilityHint={
+              upCrews === totalCrews
+                ? 'Mark yourself as not up for it in all your crews for today'
+                : 'Mark yourself as up for it in all your crews for today'
+            }
+          />
+        </View>
       )}
     </View>
   );
@@ -312,8 +310,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5', // Solid light background
+    backgroundColor: '#F5F5F5', // Solid light background
     alignItems: 'center',
+    justifyContent: 'flex-start', // Ensure content starts from top
   },
   profileContainer: {
     alignItems: 'center',
@@ -322,7 +321,7 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 24,
-    color: '#333', // Dark text for readability
+    color: '#333333', // Dark text for readability
     fontWeight: '700',
     marginTop: 15,
     marginBottom: 10,
@@ -330,12 +329,13 @@ const styles = StyleSheet.create({
   statusSummaryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     padding: 20,
     borderRadius: 15,
     width: width * 0.9,
     borderWidth: 2,
-    borderColor: '#f0f0f0',
+    borderColor: '#F0F0F0',
+    marginBottom: 20, // Space between card and button
   },
   statusIcon: {
     marginRight: 15,
@@ -345,40 +345,16 @@ const styles = StyleSheet.create({
   },
   statusSummaryText: {
     fontSize: 18,
-    color: '#333',
+    color: '#333333',
     fontWeight: '500',
     flexWrap: 'wrap',
-  },
-  statusButton: {
-    width: width * 0.7,
-    padding: 15,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    position: 'absolute',
-    bottom: 50,
-  },
-  statusButtonActive: {
-    backgroundColor: '#ff6347',
-  },
-  statusButtonInactive: {
-    backgroundColor: '#32cd32',
-  },
-  statusButtonDisabled: {
-    backgroundColor: '#a9a9a9',
-  },
-  statusButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center', // Center the text horizontally
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // Additional styles can be added here if needed
 });
 
 export default HomeScreen;
