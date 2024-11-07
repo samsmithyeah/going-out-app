@@ -67,7 +67,7 @@ export const notifyCrewOnThreeUp = onDocumentWritten(
 
     const totalUpCount = upMemberIds.length;
 
-    console.log(`Total members up for going out tonight: ${totalUpCount}`);
+    console.log(`Total members up for it today: ${totalUpCount}`);
 
     // Proceed only if totalUpCount is 3 or more
     if (totalUpCount >= 3) {
@@ -112,11 +112,13 @@ export const notifyCrewOnThreeUp = onDocumentWritten(
           return null;
         }
 
-        console.log(`Members not up for going out tonight: ${membersNotUp}`);
+        const crewActivity = crewData.activity.toLowerCase() || 'meeting up';
+
+        console.log(`Members not up for ${crewActivity} today: ${membersNotUp}`);
 
         // Prepare notification message
         const dateDescription = getDateDescription(date);
-        const messageBody = `${totalUpCount} of your crew members are up for going out ${dateDescription}!`;
+        const messageBody = `${totalUpCount} of your crew members are up for ${crewActivity} ${dateDescription}!`;
 
         // Fetch push tokens for members not up
         const batchSize = 10; // Firestore 'in' queries support up to 10 elements per query

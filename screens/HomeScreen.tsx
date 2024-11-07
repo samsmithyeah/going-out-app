@@ -171,7 +171,7 @@ const HomeScreen: React.FC = () => {
 
       Alert.alert(
         'Success',
-        `You've been marked as ${newStatus ? 'up' : 'not up'} for going out tonight in all your crews.`,
+        `You've been marked as ${newStatus ? 'up' : 'not up'} for it in all your crews.`,
       );
     } catch (error) {
       console.error('Error toggling statuses:', error);
@@ -185,8 +185,8 @@ const HomeScreen: React.FC = () => {
   const handleToggleStatus = () => {
     const action =
       upCrews === totalCrews
-        ? 'mark yourself as not up for going out tonight in all your crews'
-        : 'mark yourself as up for going out tonight in all your crews';
+        ? 'mark yourself as not up for it in all your crews'
+        : 'mark yourself as up for it in all your crews';
     Alert.alert(
       'Confirm status change',
       `Are you sure you want to ${action}?`,
@@ -296,7 +296,7 @@ const HomeScreen: React.FC = () => {
           ) : (
             <Text style={styles.statusButtonText}>
               {upCrews === totalCrews
-                ? "I'm not up for seeing any of my crews today"
+                ? "I'm no longer up for seeing any of my crews today"
                 : "I'm up for seeing any of my crews today!"}
             </Text>
           )}

@@ -234,12 +234,19 @@ const CrewScreen: React.FC = () => {
     ? statusesForSelectedDate[user.uid] || false
     : false;
 
-  // Get list of members who are up for going out on the selected date
+  // Get list of members who are up for it on the selected date
   const membersUpForGoingOut = members.filter(
     (member) => statusesForSelectedDate[member.uid],
   );
 
-  // Debugging: Log the current status and members up for going out
+  const getCrewActivity = () => {
+    if (crew?.activity) {
+      return crew.activity.toLowerCase();
+    }
+    return 'meeting up';
+  }
+
+  // Debugging: Log the current status and members up for it
   useEffect(() => {
     console.log('Selected Date:', selectedDate);
     console.log('Current User Status:', currentUserStatus);
@@ -367,12 +374,12 @@ const CrewScreen: React.FC = () => {
       />
 
       {/* Members up for it selected date */}
-      <Text style={styles.listTitle}>{`Up for ${crew.activity.toLowerCase()}:`}</Text>
+      <Text style={styles.listTitle}>{`Up for ${getCrewActivity()}:`}</Text>
       {currentUserStatus ? (
         <MemberList
           members={membersUpForGoingOut}
           currentUserId={user?.uid || null}
-          emptyMessage={"No one's up for going out on this date"}
+          emptyMessage={"No one's up for it on this date"}
         />
       ) : (
         <View style={styles.skeletonContainer}>
@@ -384,7 +391,7 @@ const CrewScreen: React.FC = () => {
           {/* Overlaid Message */}
           <View style={styles.overlay}>
             <Text style={styles.overlayText}>
-              Crew members who are up for {crew.activity.toLowerCase()} on this date are only
+              Crew members who are up for {getCrewActivity()} on this date are only
               visible if you're up for it too!
             </Text>
           </View>
@@ -403,8 +410,8 @@ const CrewScreen: React.FC = () => {
       >
         <Text style={styles.statusButtonText}>
           {currentUserStatus
-            ? `👎 I'm no longer up for ${crew.activity.toLowerCase()} on this date`
-            : `👍 I'm up for ${crew.activity.toLowerCase()} on this date`}
+            ? `👎 I'm no longer up for ${getCrewActivity()} on this date`
+            : `👍 I'm up for ${getCrewActivity()} on this date`}
         </Text>
       </TouchableOpacity>
     </View>

@@ -82,7 +82,7 @@ const CrewSettingsScreen: React.FC = () => {
           };
           setCrew(crewData);
           setNewCrewName(crewData.name);
-          setNewActivity(crewData.activity || 'going out'); // Set default if activity is undefined
+          setNewActivity(crewData.activity || 'going out');
           navigation.setOptions({ title: 'Crew Info' });
         } else {
           if (!isDeleting) {
@@ -461,7 +461,6 @@ const CrewSettingsScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>Crew activity:</Text>
         <View style={styles.activityDisplayContainer}>
           <Text style={styles.activityText}>{crew.activity || 'going out'}</Text>
-          {user?.uid === crew.ownerId && (
             <TouchableOpacity
               onPress={() => setIsEditActivityModalVisible(true)}
               style={styles.editActivityButton}
@@ -469,7 +468,6 @@ const CrewSettingsScreen: React.FC = () => {
             >
               <Ionicons name="pencil" size={20} color="#1e90ff" />
             </TouchableOpacity>
-          )}
         </View>
       </View>
 
@@ -477,15 +475,13 @@ const CrewSettingsScreen: React.FC = () => {
       <View style={styles.sectionContainer}>
       <View style={styles.membersListHeader}>
         <Text style={styles.sectionTitle}>{`${members.length} member${members.length !== 1 ? 's' : ''}:`}</Text>
-        {user?.uid === crew.ownerId && (
           <TouchableOpacity
             style={styles.addButtonInline}
             onPress={() => setIsInviteModalVisible(true)}
             accessibilityLabel="Invite Member"
           >
-            <Ionicons name="add-circle-outline" size={30} color="#1e90ff" />
+            <Ionicons name="add-circle" size={30} color="#1e90ff" />
           </TouchableOpacity>
-        )}
       </View>
 
       {/* Members List */}
@@ -499,7 +495,6 @@ const CrewSettingsScreen: React.FC = () => {
 </View>
 
       {/* Leave Crew Button */}
-      {user?.uid && user.uid !== crew.ownerId && (
         <TouchableOpacity
           style={styles.leaveButton}
           onPress={handleLeaveCrew}
@@ -507,7 +502,6 @@ const CrewSettingsScreen: React.FC = () => {
         >
           <Text style={styles.leaveButtonText}>Leave crew</Text>
         </TouchableOpacity>
-      )}
 
       {/* Delete Crew Button (Visible to Owner Only) */}
       {user?.uid === crew.ownerId && (
