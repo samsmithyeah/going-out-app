@@ -1,13 +1,17 @@
-// components/GoogleAuth.tsx
+// components/GoogleLoginButton.tsx
 
-import React, { useEffect } from 'react';
-import { TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import { auth, signInWithCredential, GoogleAuthProvider } from '../firebase';
 import { addUserToFirestore } from '../helpers/AddUserToFirestore';
-import { Ionicons } from '@expo/vector-icons';
+import CustomButton from './CustomButton'; // Import CustomButton
 
-export default function GoogleAuth() {
+export default function GoogleLoginButton() {
+  // State to manage loading indicator
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // Configure Google Auth request
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
     clientId:
       '814136772684-024bdeavoudavtj3qosdj9b7o8unsium.apps.googleusercontent.com',
@@ -16,6 +20,7 @@ export default function GoogleAuth() {
   useEffect(() => {
     const handleSignIn = async () => {
       if (response?.type === 'success') {
+        setLoading(true); // Start loading
         const { id_token } = response.params;
         const credential = GoogleAuthProvider.credential(id_token);
         try {
@@ -30,7 +35,10 @@ export default function GoogleAuth() {
           };
           await addUserToFirestore(firestoreUser);
         } catch (error: any) {
+          console.error('Login Error:', error);
           Alert.alert('Login Error', error.message);
+        } finally {
+          setLoading(false); // End loading
         }
       }
     };
@@ -43,36 +51,20 @@ export default function GoogleAuth() {
   };
 
   return (
-    <TouchableOpacity
-      style={styles.googleButton}
+    <CustomButton
+      title="Login with Google"
       onPress={handleGoogleSignIn}
-      disabled={!request}
-    >
-      <Ionicons name="logo-google" size={24} color="#fff" />
-      <Text style={styles.googleButtonText}>Login with Google</Text>
-    </TouchableOpacity>
+      variant="danger" // Assuming 'secondary' is styled for Google
+      accessibilityLabel="Login with Google"
+      accessibilityHint="Authenticate using your Google account"
+      icon={{
+        name: 'logo-google',
+        size: 24,
+        color: '#fff',
+        library: 'Ionicons',
+      }}
+      loading={loading} // Show loading indicator when signing in
+      disabled={!request || loading}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  googleButton: {
-    flexDirection: 'row',
-    backgroundColor: '#db4437',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3, // For Android shadow
-    shadowColor: '#000', // For iOS shadow
-    shadowOffset: { width: 0, height: 2 }, // For iOS shadow
-    shadowOpacity: 0.25, // For iOS shadow
-    shadowRadius: 3.84, // For iOS shadow
-  },
-  googleButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 10,
-  },
-});

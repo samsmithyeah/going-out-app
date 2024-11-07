@@ -23,6 +23,7 @@ import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { TabsParamList } from '../navigation/TabNavigator';
 import ScreenTitle from '../components/ScreenTitle';
+import CustomButton from '../components/CustomButton'; // Import CustomButton
 
 type UserProfileScreenProps = BottomTabScreenProps<
   TabsParamList,
@@ -203,6 +204,8 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
               <TouchableOpacity
                 onPress={handleEditPress}
                 style={styles.editIcon}
+                accessibilityLabel="Edit Display Name"
+                accessibilityHint="Enable editing of your display name"
               >
                 <Ionicons name="pencil-outline" size={20} color="#1e90ff" />
               </TouchableOpacity>
@@ -213,34 +216,52 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
 
       {isEditing && (
         <View style={styles.actionButtonsContainer}>
-          <TouchableOpacity
+          {/* Replace Save Button */}
+          <CustomButton
+            title="Save"
             onPress={handleSaveDisplayName}
-            style={styles.iconButton}
-            disabled={saving}
+            loading={saving}
+            variant="success" // Green variant
+            icon={{
+              name: 'checkmark',
+              size: 24,
+              library: 'Ionicons',
+            }}
             accessibilityLabel="Save Display Name"
-          >
-            {saving ? (
-              <ActivityIndicator size="small" color="#28a745" />
-            ) : (
-              <Ionicons name="checkmark" size={24} color="#28a745" />
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
+            accessibilityHint="Save your new display name"
+          />
+
+          {/* Replace Cancel Button */}
+          <CustomButton
+            title="Cancel"
             onPress={handleCancelEdit}
-            style={styles.iconButton}
-            disabled={saving}
+            loading={saving} // Optional: show loading state if needed
+            variant="danger" // Red variant
+            icon={{
+              name: 'close',
+              size: 24,
+              library: 'Ionicons',
+            }}
             accessibilityLabel="Cancel Editing"
-          >
-            <Ionicons name="close" size={24} color="#ff3b30" />
-          </TouchableOpacity>
+            accessibilityHint="Discard changes to your display name"
+          />
         </View>
       )}
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="exit-outline" size={24} color="white" />
-          <Text style={styles.logoutText}>Log out</Text>
-        </TouchableOpacity>
+        {/* Replace Log out Button */}
+        <CustomButton
+          title="Log out"
+          onPress={handleLogout}
+          variant="danger" // Red variant
+          icon={{
+            name: 'exit-outline',
+            size: 24,
+            library: 'Ionicons',
+          }}
+          accessibilityLabel="Log out"
+          accessibilityHint="Log out of your account"
+        />
       </View>
     </KeyboardAvoidingView>
   );
@@ -283,9 +304,8 @@ const styles = StyleSheet.create({
   actionButtonsContainer: {
     flexDirection: 'row',
     marginTop: 10,
-  },
-  iconButton: {
-    marginHorizontal: 10,
+    justifyContent: 'space-between',
+    width: '80%',
   },
   loaderContainer: {
     flex: 1,

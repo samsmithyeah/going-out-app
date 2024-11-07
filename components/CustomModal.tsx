@@ -4,18 +4,17 @@ import React, { ReactNode } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
   Modal,
   TouchableWithoutFeedback,
   Keyboard,
-  ActivityIndicator,
 } from 'react-native';
+import CustomButton from './CustomButton';
 
 type ButtonProps = {
   label: string;
   onPress: () => void;
-  style?: object;
+  variant: 'primary' | 'secondary' | 'danger' | 'success' | 'secondaryDanger'; // Include all available variants
   disabled?: boolean;
 };
 
@@ -48,20 +47,16 @@ const CustomModal: React.FC<CustomModalProps> = ({
             {/* Buttons */}
             <View style={styles.buttonContainer}>
               {buttons.map((button, index) => (
-                <TouchableOpacity
+                <CustomButton
                   key={index}
-                  style={[styles.button, button.style]}
+                  title={button.label}
                   onPress={button.onPress}
+                  variant={button.variant}
                   disabled={button.disabled || loading}
+                  loading={loading}
                   accessibilityLabel={`${button.label} Button`}
                   accessibilityHint={`Press to ${button.label.toLowerCase()}`}
-                >
-                  {loading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.buttonText}>{button.label}</Text>
-                  )}
-                </TouchableOpacity>
+                />
               ))}
             </View>
           </View>
@@ -100,23 +95,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginTop: 15,
-  },
-  button: {
-    backgroundColor: '#1e90ff',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 25,
-    alignItems: 'center',
-    flex: 1,
-    marginHorizontal: 5,
-  },
-  cancelButton: {
-    backgroundColor: '#ccc',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 16,
   },
 });

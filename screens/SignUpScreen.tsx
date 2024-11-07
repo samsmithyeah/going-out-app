@@ -7,7 +7,6 @@ import {
   TextInput,
   TouchableOpacity,
   Text,
-  ActivityIndicator,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -25,6 +24,7 @@ import {
 import { addUserToFirestore } from '../helpers/AddUserToFirestore';
 import { useUser } from '../context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
+import CustomButton from '../components/CustomButton'; // Adjust the path as necessary
 import { LinearGradient } from 'expo-linear-gradient';
 
 type NavParamList = {
@@ -219,17 +219,14 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
               />
             </View>
 
-            <TouchableOpacity
-              style={styles.button}
+            <CustomButton
+              title="Sign Up"
               onPress={handleSignUp}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Sign Up</Text>
-              )}
-            </TouchableOpacity>
+              variant="danger"
+              accessibilityLabel="Sign Up"
+              accessibilityHint="Press to create a new account"
+              loading={loading}
+            />
 
             <View style={styles.separatorContainer}>
               <View style={styles.separatorLine} />
@@ -237,8 +234,8 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
               <View style={styles.separatorLine} />
             </View>
 
-            {/* If you have a GoogleAuth component for sign-up as well */}
-            {/* <GoogleAuth /> */}
+            {/* If you have a GoogleLoginButton component for sign-up as well */}
+            {/* <GoogleLoginButton /> */}
 
             <TouchableOpacity
               style={styles.loginContainer}

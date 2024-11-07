@@ -61,13 +61,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      Alert.alert('Logout', 'Are you sure you want to logout?', [
+      Alert.alert('Log out', 'Are you sure you want to log out?', [
         {
           text: 'Cancel',
           style: 'cancel',
         },
         {
-          text: 'Logout',
+          text: 'Log out',
+          style: 'destructive',
           onPress: async () => {
             await auth.signOut();
             setUser(null); // Reset user state

@@ -4,12 +4,12 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   Alert,
   TextInput,
   StyleSheet,
   ActivityIndicator,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import {
   useRoute,
@@ -31,12 +31,13 @@ import {
 import { deleteCrew, db } from '../firebase';
 import { useUser } from '../context/UserContext';
 import { User } from '../types/User';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { NavParamList } from '../navigation/AppNavigator';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList';
 import { Crew } from '../types/Crew';
 import CustomModal from '../components/CustomModal'; // Import CustomModal
+import CustomButton from '../components/CustomButton'; // Import CustomButton
 
 type CrewSettingsScreenRouteProp = RouteProp<NavParamList, 'CrewSettings'>;
 
@@ -405,7 +406,10 @@ const CrewSettingsScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 30 }}
+    >
       {/* Loading Overlay */}
       {(isDeleting || isUpdatingName || isUpdatingActivity) && (
         <View style={styles.loadingOverlay}>
@@ -504,27 +508,26 @@ const CrewSettingsScreen: React.FC = () => {
       </View>
 
       {/* Leave Crew Button */}
-      <TouchableOpacity
-        style={styles.leaveButton}
-        onPress={handleLeaveCrew}
-        accessibilityLabel="Leave Crew"
-      >
-        <Text style={styles.leaveButtonText}>Leave crew</Text>
-      </TouchableOpacity>
+      <View style={styles.leaveButton}>
+        <CustomButton
+          title="Leave crew"
+          onPress={handleLeaveCrew}
+          variant="secondaryDanger" // Red variant indicating a destructive action
+          accessibilityLabel="Leave Crew"
+          accessibilityHint="Leave the current crew"
+        />
+      </View>
 
       {/* Delete Crew Button (Visible to Owner Only) */}
       {user?.uid === crew.ownerId && (
-        <TouchableOpacity
-          style={styles.deleteButton}
+        <CustomButton
+          title="Delete crew"
           onPress={handleDeleteCrew}
+          variant="danger" // Red variant indicating a destructive action
           accessibilityLabel="Delete Crew"
-        >
-          {isDeleting ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text style={styles.deleteButtonText}>Delete crew</Text>
-          )}
-        </TouchableOpacity>
+          accessibilityHint="Permanently delete this crew"
+          loading={isDeleting} // Show loading indicator when deleting
+        />
       )}
 
       {/* Modal for Inviting Member */}
@@ -539,7 +542,7 @@ const CrewSettingsScreen: React.FC = () => {
           {
             label: 'Invite',
             onPress: inviteUserToCrew,
-            style: styles.modalButton,
+            variant: 'primary',
             disabled: isUpdatingName || isUpdatingActivity, // Adjust as needed
           },
           {
@@ -548,7 +551,7 @@ const CrewSettingsScreen: React.FC = () => {
               setIsInviteModalVisible(false);
               setInviteeEmail('');
             },
-            style: [styles.modalButton, styles.cancelButton],
+            variant: 'secondary',
             disabled: isUpdatingName || isUpdatingActivity,
           },
         ]}
@@ -576,7 +579,7 @@ const CrewSettingsScreen: React.FC = () => {
           {
             label: 'Update',
             onPress: handleUpdateCrewName,
-            style: styles.modalButton,
+            variant: 'primary',
             disabled: isUpdatingName || isUpdatingActivity,
           },
           {
@@ -585,7 +588,7 @@ const CrewSettingsScreen: React.FC = () => {
               setIsEditNameModalVisible(false);
               setNewCrewName('');
             },
-            style: [styles.modalButton, styles.cancelButton],
+            variant: 'secondary',
             disabled: isUpdatingName || isUpdatingActivity,
           },
         ]}
@@ -612,7 +615,7 @@ const CrewSettingsScreen: React.FC = () => {
           {
             label: 'Update',
             onPress: handleUpdateActivity,
-            style: styles.modalButton,
+            variant: 'primary',
             disabled: isUpdatingActivity,
           },
           {
@@ -622,7 +625,7 @@ const CrewSettingsScreen: React.FC = () => {
               setNewActivity('');
               setActivityError('');
             },
-            style: [styles.modalButton, styles.cancelButton],
+            variant: 'secondary',
             disabled: isUpdatingActivity,
           },
         ]}
@@ -644,7 +647,6 @@ const CrewSettingsScreen: React.FC = () => {
 
 export default CrewSettingsScreen;
 
-// Define custom styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -727,36 +729,27 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
   leaveButton: {
-    backgroundColor: '#ff6347',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
     marginTop: 10,
+    marginBottom: 10,
   },
   leaveButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
+    // No need for text styles as CustomButton handles it
   },
   deleteButton: {
-    backgroundColor: '#dc143c',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
     marginTop: 10,
   },
   deleteButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
+    // No need for text styles as CustomButton handles it
   },
   input: {
     width: '100%',
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
+    borderRadius: 25,
+    padding: 15,
+    marginBottom: 20,
+    fontSize: 14,
+    color: '#333',
   },
   inputError: {
     borderColor: 'red',
@@ -772,19 +765,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   modalButton: {
-    backgroundColor: '#1e90ff',
-    padding: 10,
-    borderRadius: 5,
-    width: '48%',
-    alignItems: 'center',
-    justifyContent: 'center',
+    // Styles are managed by CustomButton based on variant
   },
   cancelButton: {
-    backgroundColor: '#ccc',
+    // Styles are managed by CustomButton based on variant
   },
   modalButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    // Styles are managed by CustomButton based on variant
   },
   loaderContainer: {
     flex: 1,

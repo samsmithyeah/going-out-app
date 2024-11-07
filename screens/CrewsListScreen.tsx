@@ -4,13 +4,13 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   Alert,
+  TextInput,
   StyleSheet,
   ActivityIndicator,
-  TextInput,
+  TouchableOpacity,
 } from 'react-native';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import {
   collection,
   query,
@@ -46,6 +46,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   // Track loading state for user data
   const [usersLoading, setUsersLoading] = useState<boolean>(false);
 
+  // Fetch crews where the user is a member, ordered by name ascending
   useEffect(() => {
     if (!user?.uid) {
       setLoading(false);
@@ -142,7 +143,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     );
 
     return () => unsubscribe();
-  }, [user?.uid]);
+  }, [user?.uid, searchQuery, usersCache]);
 
   // Effect to handle search query changes
   useEffect(() => {
@@ -173,8 +174,20 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Title */}
-      <ScreenTitle title="Crews" />
+      {/* Header Container */}
+      <View style={styles.headerContainer}>
+        {/* Screen Title */}
+        <ScreenTitle title="Crews" />
+
+        {/* Add Crew Button */}
+        <TouchableOpacity
+          onPress={() => setIsModalVisible(true)}
+          accessibilityLabel="Add crew"
+          accessibilityHint="Press to create a new crew"
+        >
+          <Ionicons name="add-circle" size={30} color="#1e90ff" />
+        </TouchableOpacity>
+      </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
@@ -202,16 +215,6 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
         navigation={navigation}
       />
 
-      {/* Add Crew Button */}
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => setIsModalVisible(true)}
-        accessibilityLabel="Add Crew Button"
-        accessibilityHint="Press to create a new crew"
-      >
-        <MaterialIcons name="add" size={28} color="white" />
-      </TouchableOpacity>
-
       {/* Create Crew Modal */}
       <CreateCrewModal
         isVisible={isModalVisible}
@@ -238,6 +241,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -254,21 +262,5 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#333',
-  },
-  addButton: {
-    backgroundColor: '#1e90ff',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    elevation: 5, // Add shadow for Android
-    shadowColor: '#000', // Add shadow for iOS
-    shadowOffset: { width: 0, height: 2 }, // iOS shadow
-    shadowOpacity: 0.3, // iOS shadow
-    shadowRadius: 3, // iOS shadow
   },
 });
