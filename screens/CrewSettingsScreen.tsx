@@ -534,7 +534,7 @@ const CrewSettingsScreen: React.FC = () => {
           setIsInviteModalVisible(false);
           setInviteeEmail('');
         }}
-        title="Invite member by email"
+        title="Invite new crew member"
         buttons={[
           {
             label: 'Invite',
