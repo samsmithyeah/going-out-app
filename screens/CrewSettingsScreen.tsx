@@ -50,7 +50,8 @@ const CrewSettingsScreen: React.FC = () => {
   const [members, setMembers] = useState<User[]>([]);
   const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
   const [isEditNameModalVisible, setIsEditNameModalVisible] = useState(false);
-  const [isEditActivityModalVisible, setIsEditActivityModalVisible] = useState(false);
+  const [isEditActivityModalVisible, setIsEditActivityModalVisible] =
+    useState(false);
   const [inviteeEmail, setInviteeEmail] = useState('');
   const [newCrewName, setNewCrewName] = useState('');
   const [newActivity, setNewActivity] = useState('');
@@ -348,7 +349,7 @@ const CrewSettingsScreen: React.FC = () => {
 
     try {
       await updateDoc(doc(db, 'crews', crewId), { name: newCrewName.trim() });
-      setCrew((prev) => prev ? { ...prev, name: newCrewName.trim() } : prev);
+      setCrew((prev) => (prev ? { ...prev, name: newCrewName.trim() } : prev));
       setIsEditNameModalVisible(false);
       Alert.alert('Success', 'Crew name updated successfully');
     } catch (error) {
@@ -379,8 +380,12 @@ const CrewSettingsScreen: React.FC = () => {
     setIsUpdatingActivity(true);
 
     try {
-      await updateDoc(doc(db, 'crews', crewId), { activity: newActivity.trim() });
-      setCrew((prev) => prev ? { ...prev, activity: newActivity.trim() } : prev);
+      await updateDoc(doc(db, 'crews', crewId), {
+        activity: newActivity.trim(),
+      });
+      setCrew((prev) =>
+        prev ? { ...prev, activity: newActivity.trim() } : prev,
+      );
       setIsEditActivityModalVisible(false);
       Alert.alert('Success', 'Crew activity updated successfully');
     } catch (error) {
@@ -409,8 +414,8 @@ const CrewSettingsScreen: React.FC = () => {
             {isDeleting
               ? 'Deleting Crew...'
               : isUpdatingName
-              ? 'Updating Crew Name...'
-              : 'Updating Activity...'}
+                ? 'Updating Crew Name...'
+                : 'Updating Activity...'}
           </Text>
         </View>
       )}
@@ -460,21 +465,25 @@ const CrewSettingsScreen: React.FC = () => {
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>Crew activity:</Text>
         <View style={styles.activityDisplayContainer}>
-          <Text style={styles.activityText}>{crew.activity || 'going out'}</Text>
-            <TouchableOpacity
-              onPress={() => setIsEditActivityModalVisible(true)}
-              style={styles.editActivityButton}
-              accessibilityLabel="Edit Crew Activity"
-            >
-              <Ionicons name="pencil" size={20} color="#1e90ff" />
-            </TouchableOpacity>
+          <Text style={styles.activityText}>
+            {crew.activity || 'going out'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => setIsEditActivityModalVisible(true)}
+            style={styles.editActivityButton}
+            accessibilityLabel="Edit Crew Activity"
+          >
+            <Ionicons name="pencil" size={20} color="#1e90ff" />
+          </TouchableOpacity>
         </View>
       </View>
 
       {/* Members List Header with Add Button */}
       <View style={styles.sectionContainer}>
-      <View style={styles.membersListHeader}>
-        <Text style={styles.sectionTitle}>{`${members.length} member${members.length !== 1 ? 's' : ''}:`}</Text>
+        <View style={styles.membersListHeader}>
+          <Text
+            style={styles.sectionTitle}
+          >{`${members.length} member${members.length !== 1 ? 's' : ''}:`}</Text>
           <TouchableOpacity
             style={styles.addButtonInline}
             onPress={() => setIsInviteModalVisible(true)}
@@ -482,26 +491,26 @@ const CrewSettingsScreen: React.FC = () => {
           >
             <Ionicons name="add-circle" size={30} color="#1e90ff" />
           </TouchableOpacity>
+        </View>
+
+        {/* Members List */}
+        <MemberList
+          members={members}
+          currentUserId={user?.uid || null}
+          isLoading={loading}
+          emptyMessage="No members in this crew."
+          adminIds={[crew.ownerId]}
+        />
       </View>
 
-      {/* Members List */}
-      <MemberList
-        members={members}
-        currentUserId={user?.uid || null}
-        isLoading={loading}
-        emptyMessage="No members in this crew."
-        adminIds={[crew.ownerId]}
-      />
-</View>
-
       {/* Leave Crew Button */}
-        <TouchableOpacity
-          style={styles.leaveButton}
-          onPress={handleLeaveCrew}
-          accessibilityLabel="Leave Crew"
-        >
-          <Text style={styles.leaveButtonText}>Leave crew</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.leaveButton}
+        onPress={handleLeaveCrew}
+        accessibilityLabel="Leave Crew"
+      >
+        <Text style={styles.leaveButtonText}>Leave crew</Text>
+      </TouchableOpacity>
 
       {/* Delete Crew Button (Visible to Owner Only) */}
       {user?.uid === crew.ownerId && (
@@ -620,10 +629,7 @@ const CrewSettingsScreen: React.FC = () => {
         loading={isUpdatingActivity}
       >
         <TextInput
-          style={[
-            styles.input,
-            activityError ? styles.inputError : {},
-          ]}
+          style={[styles.input, activityError ? styles.inputError : {}]}
           placeholder="Enter crew activity"
           value={newActivity}
           onChangeText={setNewActivity}

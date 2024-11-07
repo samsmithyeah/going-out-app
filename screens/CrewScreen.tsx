@@ -244,7 +244,7 @@ const CrewScreen: React.FC = () => {
       return crew.activity.toLowerCase();
     }
     return 'meeting up';
-  }
+  };
 
   // Debugging: Log the current status and members up for it
   useEffect(() => {
@@ -391,8 +391,8 @@ const CrewScreen: React.FC = () => {
           {/* Overlaid Message */}
           <View style={styles.overlay}>
             <Text style={styles.overlayText}>
-              Crew members who are up for {getCrewActivity()} on this date are only
-              visible if you're up for it too!
+              Crew members who are up for {getCrewActivity()} on this date are
+              only visible if you're up for it too!
             </Text>
           </View>
         </View>
