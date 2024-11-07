@@ -19,9 +19,9 @@ export const getDateDescription = (dateStr: string): string => {
   const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) {
-    return 'tonight';
+    return 'today';
   } else if (diffDays === 1) {
-    return 'tomorrow night';
+    return 'tomorrow';
   } else if (diffDays >= 2 && diffDays <= 6) {
     // Get the day of the week, e.g., "Friday"
     const options: Intl.DateTimeFormatOptions = { weekday: 'long' };
@@ -98,17 +98,19 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
     const dateDescription = getDateDescription(date);
     console.log(`Date Description: ${dateDescription}`);
 
+    const crewActivity = crewData.activity.toLowerCase() || 'meeting up';
+
     // Determine notification message based on status change
     let messageBody = '';
     if (statusChangedToUp) {
-      messageBody = `${userName} is up for going out ${dateDescription}!`;
+      messageBody = `${userName} is up for ${crewActivity} ${dateDescription}!`;
     } else if (statusChangedToDown) {
-      messageBody = `${userName} is no longer up for going out ${dateDescription}.`;
+      messageBody = `${userName} is no longer up for ${crewActivity} ${dateDescription}.`;
     }
 
     console.log(`Notification Message: ${messageBody}`);
 
-    // Fetch userStatuses to identify members who are also up for going out on the same date
+    // Fetch userStatuses to identify members who are also up for it on the same date
     const userStatusesRef = admin
       .firestore()
       .collection('crews')

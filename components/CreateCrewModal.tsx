@@ -90,7 +90,6 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
         placeholder="Crew name"
         value={newCrewName}
         onChangeText={setNewCrewName}
-        autoCapitalize="words"
         autoCorrect={false}
         returnKeyType="done"
         onSubmitEditing={createCrew}

@@ -6,10 +6,10 @@ import {
   Text,
   TouchableOpacity,
   Alert,
-  Modal,
   TextInput,
   StyleSheet,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import {
   useRoute,
@@ -35,7 +35,8 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { NavParamList } from '../navigation/AppNavigator';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList';
-import { Crew } from './CrewScreen';
+import { Crew } from '../types/Crew';
+import CustomModal from '../components/CustomModal'; // Import CustomModal
 
 type CrewSettingsScreenRouteProp = RouteProp<NavParamList, 'CrewSettings'>;
 
@@ -44,15 +45,21 @@ const CrewSettingsScreen: React.FC = () => {
   const route = useRoute<CrewSettingsScreenRouteProp>();
   const { crewId } = route.params;
   const navigation = useNavigation<NavigationProp<NavParamList>>();
+
   const [crew, setCrew] = useState<Crew | null>(null);
   const [members, setMembers] = useState<User[]>([]);
   const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
   const [isEditNameModalVisible, setIsEditNameModalVisible] = useState(false);
+  const [isEditActivityModalVisible, setIsEditActivityModalVisible] =
+    useState(false);
   const [inviteeEmail, setInviteeEmail] = useState('');
   const [newCrewName, setNewCrewName] = useState('');
+  const [newActivity, setNewActivity] = useState('');
+  const [activityError, setActivityError] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingName, setIsUpdatingName] = useState(false);
+  const [isUpdatingActivity, setIsUpdatingActivity] = useState(false);
 
   // Fetch crew data and listen for real-time updates
   useEffect(() => {
@@ -76,6 +83,7 @@ const CrewSettingsScreen: React.FC = () => {
           };
           setCrew(crewData);
           setNewCrewName(crewData.name);
+          setNewActivity(crewData.activity || 'going out');
           navigation.setOptions({ title: 'Crew Info' });
         } else {
           if (!isDeleting) {
@@ -352,6 +360,42 @@ const CrewSettingsScreen: React.FC = () => {
     }
   };
 
+  // Function to handle activity update
+  const handleUpdateActivity = async () => {
+    if (!newActivity.trim()) {
+      Alert.alert('Error', 'Crew activity cannot be empty');
+      return;
+    }
+
+    if (newActivity.trim().length < 3) {
+      Alert.alert('Error', 'Crew activity must be at least 3 characters long');
+      return;
+    }
+
+    if (newActivity.trim().length > 50) {
+      Alert.alert('Error', 'Crew activity cannot exceed 50 characters');
+      return;
+    }
+
+    setIsUpdatingActivity(true);
+
+    try {
+      await updateDoc(doc(db, 'crews', crewId), {
+        activity: newActivity.trim(),
+      });
+      setCrew((prev) =>
+        prev ? { ...prev, activity: newActivity.trim() } : prev,
+      );
+      setIsEditActivityModalVisible(false);
+      Alert.alert('Success', 'Crew activity updated successfully');
+    } catch (error) {
+      console.error('Error updating crew activity:', error);
+      Alert.alert('Error', 'Could not update crew activity');
+    } finally {
+      setIsUpdatingActivity(false);
+    }
+  };
+
   if (loading || !crew) {
     return (
       <View style={styles.loaderContainer}>
@@ -361,7 +405,22 @@ const CrewSettingsScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
+      {/* Loading Overlay */}
+      {(isDeleting || isUpdatingName || isUpdatingActivity) && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={styles.loadingText}>
+            {isDeleting
+              ? 'Deleting Crew...'
+              : isUpdatingName
+                ? 'Updating Crew Name...'
+                : 'Updating Activity...'}
+          </Text>
+        </View>
+      )}
+
+      {/* Crew Header */}
       <View style={styles.groupInfo}>
         <ProfilePicturePicker
           imageUrl={crew.iconUrl ?? null}
@@ -402,157 +461,202 @@ const CrewSettingsScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Members List */}
-      <Text style={styles.listTitle}>{`${members.length} members:`}</Text>
-      <MemberList
-        members={members}
-        currentUserId={user?.uid || null}
-        isLoading={loading}
-        emptyMessage="No members in this crew."
-        adminIds={[crew.ownerId]}
-      />
+      {/* Crew Activity Section */}
+      <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>Crew activity:</Text>
+        <View style={styles.activityDisplayContainer}>
+          <Text style={styles.activityText}>
+            {crew.activity || 'going out'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => setIsEditActivityModalVisible(true)}
+            style={styles.editActivityButton}
+            accessibilityLabel="Edit Crew Activity"
+          >
+            <Ionicons name="pencil" size={20} color="#1e90ff" />
+          </TouchableOpacity>
+        </View>
+      </View>
 
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => setIsInviteModalVisible(true)}
-        accessibilityLabel="Invite Member"
-      >
-        <MaterialIcons name="person-add" size={28} color="white" />
-      </TouchableOpacity>
+      {/* Members List Header with Add Button */}
+      <View style={styles.sectionContainer}>
+        <View style={styles.membersListHeader}>
+          <Text
+            style={styles.sectionTitle}
+          >{`${members.length} member${members.length !== 1 ? 's' : ''}:`}</Text>
+          <TouchableOpacity
+            style={styles.addButtonInline}
+            onPress={() => setIsInviteModalVisible(true)}
+            accessibilityLabel="Invite Member"
+          >
+            <Ionicons name="add-circle" size={30} color="#1e90ff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Members List */}
+        <MemberList
+          members={members}
+          currentUserId={user?.uid || null}
+          isLoading={loading}
+          emptyMessage="No members in this crew."
+          adminIds={[crew.ownerId]}
+        />
+      </View>
 
       {/* Leave Crew Button */}
-      {user?.uid && (
-        <TouchableOpacity
-          style={styles.leaveButton}
-          onPress={handleLeaveCrew}
-          accessibilityLabel="Leave Crew"
-        >
-          <Text style={styles.leaveButtonText}>Leave crew</Text>
-        </TouchableOpacity>
-      )}
+      <TouchableOpacity
+        style={styles.leaveButton}
+        onPress={handleLeaveCrew}
+        accessibilityLabel="Leave Crew"
+      >
+        <Text style={styles.leaveButtonText}>Leave crew</Text>
+      </TouchableOpacity>
 
       {/* Delete Crew Button (Visible to Owner Only) */}
       {user?.uid === crew.ownerId && (
         <TouchableOpacity
-          style={styles.leaveButton}
+          style={styles.deleteButton}
           onPress={handleDeleteCrew}
           accessibilityLabel="Delete Crew"
         >
           {isDeleting ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text style={styles.leaveButtonText}>Delete crew</Text>
+            <Text style={styles.deleteButtonText}>Delete crew</Text>
           )}
         </TouchableOpacity>
       )}
 
       {/* Modal for Inviting Member */}
-      <Modal visible={isInviteModalVisible} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Invite Member by Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Member's Email"
-              value={inviteeEmail}
-              onChangeText={setInviteeEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={inviteUserToCrew}
-                accessibilityLabel="Send Invitation"
-              >
-                <Text style={styles.modalButtonText}>Send Invitation</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setIsInviteModalVisible(false)}
-                accessibilityLabel="Cancel Invitation"
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <CustomModal
+        isVisible={isInviteModalVisible}
+        onClose={() => {
+          setIsInviteModalVisible(false);
+          setInviteeEmail('');
+        }}
+        title="Invite new crew member"
+        buttons={[
+          {
+            label: 'Invite',
+            onPress: inviteUserToCrew,
+            style: styles.modalButton,
+            disabled: isUpdatingName || isUpdatingActivity, // Adjust as needed
+          },
+          {
+            label: 'Cancel',
+            onPress: () => {
+              setIsInviteModalVisible(false);
+              setInviteeEmail('');
+            },
+            style: [styles.modalButton, styles.cancelButton],
+            disabled: isUpdatingName || isUpdatingActivity,
+          },
+        ]}
+        loading={isUpdatingName || isUpdatingActivity}
+      >
+        <TextInput
+          style={styles.input}
+          placeholder="Member's email"
+          value={inviteeEmail}
+          onChangeText={setInviteeEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </CustomModal>
 
       {/* Modal for Editing Crew Name */}
-      <Modal visible={isEditNameModalVisible} animationType="slide" transparent>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Crew Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="New Crew Name"
-              value={newCrewName}
-              onChangeText={setNewCrewName}
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handleUpdateCrewName}
-                accessibilityLabel="Update Crew Name"
-              >
-                {isUpdatingName ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.modalButtonText}>Update Name</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => {
-                  setIsEditNameModalVisible(false);
-                  setNewCrewName('');
-                }}
-                accessibilityLabel="Cancel Name Update"
-              >
-                <Text style={styles.modalButtonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <CustomModal
+        isVisible={isEditNameModalVisible}
+        onClose={() => {
+          setIsEditNameModalVisible(false);
+          setNewCrewName('');
+        }}
+        title="Edit crew name"
+        buttons={[
+          {
+            label: 'Update',
+            onPress: handleUpdateCrewName,
+            style: styles.modalButton,
+            disabled: isUpdatingName || isUpdatingActivity,
+          },
+          {
+            label: 'Cancel',
+            onPress: () => {
+              setIsEditNameModalVisible(false);
+              setNewCrewName('');
+            },
+            style: [styles.modalButton, styles.cancelButton],
+            disabled: isUpdatingName || isUpdatingActivity,
+          },
+        ]}
+        loading={isUpdatingName}
+      >
+        <TextInput
+          style={styles.input}
+          placeholder="New crew name"
+          value={newCrewName}
+          onChangeText={setNewCrewName}
+        />
+      </CustomModal>
 
-      {/* Deletion Indicator */}
-      {isDeleting && (
-        <View style={styles.deletionOverlay}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.deletionText}>Deleting Crew...</Text>
-        </View>
-      )}
-
-      {/* Updating Name Indicator */}
-      {isUpdatingName && (
-        <View style={styles.updatingNameOverlay}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.updatingNameText}>Updating Name...</Text>
-        </View>
-      )}
-    </View>
+      {/* Modal for Editing Crew Activity */}
+      <CustomModal
+        isVisible={isEditActivityModalVisible}
+        onClose={() => {
+          setIsEditActivityModalVisible(false);
+          setNewActivity('');
+          setActivityError('');
+        }}
+        title="Edit crew activity"
+        buttons={[
+          {
+            label: 'Update',
+            onPress: handleUpdateActivity,
+            style: styles.modalButton,
+            disabled: isUpdatingActivity,
+          },
+          {
+            label: 'Cancel',
+            onPress: () => {
+              setIsEditActivityModalVisible(false);
+              setNewActivity('');
+              setActivityError('');
+            },
+            style: [styles.modalButton, styles.cancelButton],
+            disabled: isUpdatingActivity,
+          },
+        ]}
+        loading={isUpdatingActivity}
+      >
+        <TextInput
+          style={[styles.input, activityError ? styles.inputError : {}]}
+          placeholder="Enter crew activity"
+          value={newActivity}
+          onChangeText={setNewActivity}
+        />
+        {activityError ? (
+          <Text style={styles.errorText}>{activityError}</Text>
+        ) : null}
+      </CustomModal>
+    </ScrollView>
   );
 };
 
 export default CrewSettingsScreen;
 
+// Define custom styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
   },
-  listTitle: {
+  sectionTitle: {
     fontSize: 20,
-    marginTop: 20,
     fontWeight: 'bold',
   },
   groupInfo: {
     alignItems: 'center',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
   },
   groupNameContainer: {
     flexDirection: 'row',
@@ -567,9 +671,29 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     padding: 5,
   },
-  sectionTitle: {
-    fontSize: 20,
-    marginVertical: 10,
+  sectionContainer: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  activityDisplayContainer: {
+    marginTop: 10,
+    flexDirection: 'row',
+  },
+  activityText: {
+    fontSize: 18,
+    marginBottom: 15,
+  },
+  editActivityButton: {
+    marginLeft: 10,
+  },
+  membersListHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  addButtonInline: {
+    padding: 5,
   },
   memberItem: {
     flexDirection: 'row',
@@ -602,42 +726,29 @@ const styles = StyleSheet.create({
   youText: {
     color: 'gray',
   },
-  addButton: {
-    backgroundColor: '#1e90ff',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    elevation: 5, // Add shadow for Android
-    shadowColor: '#000', // Add shadow for iOS
-    shadowOffset: { width: 0, height: 2 }, // iOS shadow
-    shadowOpacity: 0.3, // iOS shadow
-    shadowRadius: 3, // iOS shadow
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 22,
-    backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent background
-  },
-  modalContent: {
-    backgroundColor: 'white',
+  leaveButton: {
+    backgroundColor: '#ff6347',
+    padding: 15,
     borderRadius: 10,
-    padding: 35,
     alignItems: 'center',
-    width: '80%',
-    shadowColor: '#000',
-    elevation: 5,
+    marginTop: 10,
   },
-  modalTitle: {
-    fontSize: 20,
-    marginBottom: 15,
-    textAlign: 'center',
+  leaveButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  deleteButton: {
+    backgroundColor: '#dc143c',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   input: {
     width: '100%',
@@ -645,7 +756,15 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     padding: 10,
-    marginBottom: 20,
+    marginBottom: 10,
+  },
+  inputError: {
+    borderColor: 'red',
+  },
+  errorText: {
+    color: 'red',
+    alignSelf: 'flex-start',
+    marginBottom: 10,
   },
   modalButtons: {
     flexDirection: 'row',
@@ -658,7 +777,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     width: '48%',
     alignItems: 'center',
-    flexDirection: 'row',
     justifyContent: 'center',
   },
   cancelButton: {
@@ -673,59 +791,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  deletionOverlay: {
+  loadingOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.7)', // Semi-transparent background
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1000, // Ensure it's on top of other elements
   },
-  deletionText: {
-    color: '#fff',
-    marginTop: 10,
-    fontSize: 18,
-  },
-  leaveButton: {
-    backgroundColor: '#ff6347',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  leaveButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  uploadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  uploadingText: {
-    color: '#fff',
-    marginTop: 10,
-    fontSize: 18,
-  },
-  updatingNameOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  updatingNameText: {
+  loadingText: {
     color: '#fff',
     marginTop: 10,
     fontSize: 18,

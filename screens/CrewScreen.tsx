@@ -35,16 +35,9 @@ import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList'; // Import the new MemberList component
 import DateTimePickerModal from 'react-native-modal-datetime-picker'; // Import date picker
 import moment from 'moment'; // For date formatting
+import { Crew } from '../types/Crew';
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
-
-export interface Crew {
-  id: string;
-  name: string;
-  ownerId: string;
-  memberIds: string[];
-  iconUrl?: string;
-}
 
 interface Status {
   date: string; // Format: 'YYYY-MM-DD'
@@ -241,12 +234,19 @@ const CrewScreen: React.FC = () => {
     ? statusesForSelectedDate[user.uid] || false
     : false;
 
-  // Get list of members who are up for going out on the selected date
+  // Get list of members who are up for it on the selected date
   const membersUpForGoingOut = members.filter(
     (member) => statusesForSelectedDate[member.uid],
   );
 
-  // Debugging: Log the current status and members up for going out
+  const getCrewActivity = () => {
+    if (crew?.activity) {
+      return crew.activity.toLowerCase();
+    }
+    return 'meeting up';
+  };
+
+  // Debugging: Log the current status and members up for it
   useEffect(() => {
     console.log('Selected Date:', selectedDate);
     console.log('Current User Status:', currentUserStatus);
@@ -312,7 +312,8 @@ const CrewScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Crew Header */}
-      <View style={styles.header}>
+      {/* Commented out for now. May move this info to custom header at some point*/}
+      {/* <View style={styles.header}>
         <ProfilePicturePicker
           imageUrl={crew.iconUrl || null}
           onImageUpdate={() => {}}
@@ -327,7 +328,7 @@ const CrewScreen: React.FC = () => {
             {crew.memberIds.length === 1 ? 'Member' : 'Members'}
           </Text>
         </View>
-      </View>
+      </View> */}
 
       {/* Date Picker with Arrow Buttons */}
       <View style={styles.datePickerContainer}>
@@ -372,13 +373,13 @@ const CrewScreen: React.FC = () => {
         date={new Date(selectedDate)}
       />
 
-      {/* Members Up for Going Out on Selected Date */}
-      <Text style={styles.listTitle}>{'Up for going out:'}</Text>
+      {/* Members up for it selected date */}
+      <Text style={styles.listTitle}>{`Up for ${getCrewActivity()}:`}</Text>
       {currentUserStatus ? (
         <MemberList
           members={membersUpForGoingOut}
           currentUserId={user?.uid || null}
-          emptyMessage={"No one's up for going out on this date"}
+          emptyMessage={"No one's up for it on this date"}
         />
       ) : (
         <View style={styles.skeletonContainer}>
@@ -390,8 +391,8 @@ const CrewScreen: React.FC = () => {
           {/* Overlaid Message */}
           <View style={styles.overlay}>
             <Text style={styles.overlayText}>
-              Crew members who are up for going out on this date are only
-              visible if you're up for it too!
+              Crew members who are up for {getCrewActivity()} on this date are
+              only visible if you're up for it too!
             </Text>
           </View>
         </View>
@@ -409,8 +410,8 @@ const CrewScreen: React.FC = () => {
       >
         <Text style={styles.statusButtonText}>
           {currentUserStatus
-            ? "👎 I'm not up for going out on this date"
-            : "👍 I'm up for going out on this date"}
+            ? `👎 I'm no longer up for ${getCrewActivity()} on this date`
+            : `👍 I'm up for ${getCrewActivity()} on this date`}
         </Text>
       </TouchableOpacity>
     </View>

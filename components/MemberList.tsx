@@ -99,6 +99,7 @@ const MemberList: React.FC<MemberListProps> = ({
         ListEmptyComponent={
           <Text style={styles.emptyText}>{emptyMessage}</Text>
         }
+        scrollEnabled={false}
       />
     </View>
   );
