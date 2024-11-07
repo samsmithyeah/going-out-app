@@ -398,9 +398,11 @@ const CrewScreen: React.FC = () => {
       ) : (
         <View style={styles.skeletonContainer}>
           {/* Render Skeleton User Items */}
-          {[...Array(6)].map((_, index) => (
-            <SkeletonUserItem key={index} />
-          ))}
+            <MemberList
+              members={[]}
+              currentUserId={null}
+              isLoading={true}
+            />
 
           {/* Overlaid Message */}
           <View style={styles.overlay}>

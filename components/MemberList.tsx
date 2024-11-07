@@ -83,7 +83,7 @@ const MemberList: React.FC<MemberListProps> = ({
     // Display Skeletons or Loading Indicators
     return (
       <View style={styles.container}>
-        {[...Array(5)].map((_, index) => (
+        {[...Array(6)].map((_, index) => (
           <SkeletonUserItem key={index} />
         ))}
       </View>
