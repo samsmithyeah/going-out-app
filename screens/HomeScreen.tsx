@@ -210,11 +210,11 @@ const HomeScreen: React.FC = () => {
     if (totalCrews === 0) {
       return 'You are not in any crews yet 😢';
     } else if (upCrews === 0) {
-      return 'You are not marked as up for going out tonight in any of your crews.';
+      return 'You are not marked as up for it in any of your crews today.';
     } else if (upCrews === totalCrews) {
-      return 'You are marked as up for going out tonight in all of your crews!';
+      return 'You are marked as up for it in all of your crews today!';
     } else {
-      return `You are up for going out tonight with ${upCrews} of your ${totalCrews} crews.`;
+      return `You are marked as up for it with ${upCrews} of your ${totalCrews} crews today.`;
     }
   };
 
@@ -231,6 +231,7 @@ const HomeScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Profile Section */}
       <View style={styles.profileContainer}>
+        <Text style={styles.greeting}>Hi {user?.firstName}!</Text>
         <ProfilePicturePicker
           imageUrl={user?.photoURL || null}
           onImageUpdate={() => {}}
@@ -243,7 +244,6 @@ const HomeScreen: React.FC = () => {
           iconOffsetX={0.03}
           iconOffsetY={0.03}
         />
-        <Text style={styles.greeting}>Hi {user?.firstName}!</Text>
       </View>
 
       {/* Status Summary Card */}
@@ -287,8 +287,8 @@ const HomeScreen: React.FC = () => {
           accessibilityLabel="Toggle Status"
           accessibilityHint={
             upCrews === totalCrews
-              ? 'Mark yourself as not up for going out tonight in all your crews'
-              : 'Mark yourself as up for going out tonight in all your crews'
+              ? 'Mark yourself as not up for it in all your crews for today'
+              : 'Mark yourself as up for it in all your crews for today'
           }
         >
           {updatingStatus ? (
@@ -296,8 +296,8 @@ const HomeScreen: React.FC = () => {
           ) : (
             <Text style={styles.statusButtonText}>
               {upCrews === totalCrews
-                ? "I'm not up for going out tonight"
-                : "I'll go out with anyone!"}
+                ? "I'm not up for seeing any of my crews today"
+                : "I'm up for seeing any of my crews today!"}
             </Text>
           )}
         </TouchableOpacity>
@@ -325,14 +325,14 @@ const styles = StyleSheet.create({
     color: '#333', // Dark text for readability
     fontWeight: '700',
     marginTop: 15,
+    marginBottom: 10,
   },
   statusSummaryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff', // White background for contrast
+    backgroundColor: '#fff',
     padding: 20,
     borderRadius: 15,
-    marginBottom: 40,
     width: width * 0.9,
     borderWidth: 2,
     borderColor: '#f0f0f0',
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
-    marginLeft: 10, // Space between icon and text if needed
+    textAlign: 'center', // Center the text horizontally
   },
   loadingContainer: {
     flex: 1,

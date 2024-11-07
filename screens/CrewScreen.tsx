@@ -305,7 +305,8 @@ const CrewScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Crew Header */}
-      <View style={styles.header}>
+      {/* Commented out for now. May move this info to custom header at some point*/}
+      {/* <View style={styles.header}>
         <ProfilePicturePicker
           imageUrl={crew.iconUrl || null}
           onImageUpdate={() => {}}
@@ -320,7 +321,7 @@ const CrewScreen: React.FC = () => {
             {crew.memberIds.length === 1 ? 'Member' : 'Members'}
           </Text>
         </View>
-      </View>
+      </View> */}
 
       {/* Date Picker with Arrow Buttons */}
       <View style={styles.datePickerContainer}>
@@ -365,8 +366,8 @@ const CrewScreen: React.FC = () => {
         date={new Date(selectedDate)}
       />
 
-      {/* Members Up for Going Out on Selected Date */}
-      <Text style={styles.listTitle}>{'Up for going out:'}</Text>
+      {/* Members up for it selected date */}
+      <Text style={styles.listTitle}>{`Up for ${crew.activity.toLowerCase()}:`}</Text>
       {currentUserStatus ? (
         <MemberList
           members={membersUpForGoingOut}
@@ -383,7 +384,7 @@ const CrewScreen: React.FC = () => {
           {/* Overlaid Message */}
           <View style={styles.overlay}>
             <Text style={styles.overlayText}>
-              Crew members who are up for going out on this date are only
+              Crew members who are up for {crew.activity.toLowerCase()} on this date are only
               visible if you're up for it too!
             </Text>
           </View>
@@ -402,8 +403,8 @@ const CrewScreen: React.FC = () => {
       >
         <Text style={styles.statusButtonText}>
           {currentUserStatus
-            ? "👎 I'm not up for going out on this date"
-            : "👍 I'm up for going out on this date"}
+            ? `👎 I'm no longer up for ${crew.activity.toLowerCase()} on this date`
+            : `👍 I'm up for ${crew.activity.toLowerCase()} on this date`}
         </Text>
       </TouchableOpacity>
     </View>
