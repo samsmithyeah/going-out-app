@@ -59,7 +59,6 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
             lastName: userData.lastName || '',
             email: userData.email || '',
             photoURL: userData.photoURL || '',
-            // Include other fields as necessary
           };
           setUser(updatedUser);
         } else {
@@ -96,7 +95,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleLogout = async () => {
     try {
-      await logout(); // Call the logout function from UserContext
+      await logout();
     } catch (error) {
       console.error('Error logging out: ', error);
       Alert.alert('Logout Error', 'An error occurred while logging out.');
@@ -131,14 +130,13 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
             Alert.alert('Update Error', 'Failed to update profile picture.');
           }
         }}
-        editable={false} // Set to false since editing is done via modal
+        editable={false}
         storagePath={`users/${user.uid}/profile.jpg`}
         size={150}
       />
 
       <View style={styles.infoContainer}>
-        <InfoItem label="First name" value={user.firstName || 'N/A'} />
-        <InfoItem label="Last name" value={user.lastName || 'N/A'} />
+        <InfoItem label="Name" value={`${user.firstName} ${user.lastName}`} />
         <InfoItem label="Display name" value={user.displayName || 'N/A'} />
         <InfoItem label="Email address" value={user.email || 'N/A'} />
       </View>
@@ -147,12 +145,11 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
         <CustomButton
           title="Log out"
           onPress={handleLogout}
-          variant="danger" // Assuming 'danger' variant styles the button appropriately
+          variant="danger"
           icon={{
             name: 'exit-outline',
             size: 24,
             library: 'Ionicons',
-            color: '#FFFFFF', // Icon color
           }}
           accessibilityLabel="Log out"
           accessibilityHint="Log out of your account"
