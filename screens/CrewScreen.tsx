@@ -30,7 +30,6 @@ import { useUser } from '../context/UserContext';
 import { User } from '../types/User';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Ensure Ionicons is imported
 import { NavParamList } from '../navigation/AppNavigator';
-import SkeletonUserItem from '../components/SkeletonUserItem';
 import MemberList from '../components/MemberList'; // Import the new MemberList component
 import DateTimePickerModal from 'react-native-modal-datetime-picker'; // Import date picker
 import moment from 'moment'; // For date formatting

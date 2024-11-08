@@ -1,6 +1,6 @@
 // screens/UserProfileScreen.tsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -8,45 +8,29 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
   Dimensions,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
 import { User } from '../types/User';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import { TabsParamList } from '../navigation/TabNavigator';
-import ScreenTitle from '../components/ScreenTitle';
-import CustomButton from '../components/CustomButton'; // Import CustomButton
+import { StackNavigationProp } from '@react-navigation/stack';
+import { UserProfileStackParamList } from '../navigation/UserProfileStackNavigator';
+import CustomButton from '../components/CustomButton'; // Assuming CustomButton is a styled button
 
-type UserProfileScreenProps = BottomTabScreenProps<
-  TabsParamList,
+type UserProfileScreenNavigationProp = StackNavigationProp<
+  UserProfileStackParamList,
   'UserProfile'
 >;
 
-const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
-  navigation,
-}) => {
+type Props = {
+  navigation: UserProfileScreenNavigationProp;
+};
+
+const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { user, setUser, logout } = useUser();
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [newDisplayName, setNewDisplayName] = useState<string>('');
-  const [saving, setSaving] = useState(false);
-
-  const handleLogout = async () => {
-    try {
-      await logout(); // Call the logout function from UserContext
-    } catch (error) {
-      console.error('Error logging out: ', error);
-      Alert.alert('Logout Error', 'An error occurred while logging out.');
-    }
-  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -62,19 +46,19 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
         if (userSnap.exists()) {
           const userData = userSnap.data();
 
-          // Ensure 'uid' exists in the fetched
+          // Ensure 'uid' exists in the fetched data
           if (!userData.uid) {
             Alert.alert('Error', 'User UID is missing in the profile.');
             return;
           }
 
           const updatedUser: User = {
-            uid: userSnap.id, // Ensure 'uid' is set correctly
+            uid: userSnap.id,
             displayName: userData.displayName || '',
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            email: userData.email,
-            photoURL: userData.photoURL,
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: userData.email || '',
+            photoURL: userData.photoURL || '',
             // Include other fields as necessary
           };
           setUser(updatedUser);
@@ -92,53 +76,30 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
     fetchUserProfile();
   }, [user?.uid, setUser]);
 
-  const handleEditPress = () => {
-    setNewDisplayName(user?.displayName || '');
-    setIsEditing(true);
-  };
+  // Add "Edit" button to header
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => navigation.navigate('EditUserProfile')}
+          style={styles.headerButton}
+          accessibilityLabel="Edit Profile"
+          accessibilityHint="Open profile edit screen"
+        >
+          <Text style={{ color: '#1e90ff', fontSize: 16 }}>Edit</Text>
+        </TouchableOpacity>
+      ),
+      headerStatusBarHeight: 0,
+      title: user?.displayName || 'Profile',
+    });
+  }, [navigation]);
 
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setNewDisplayName('');
-  };
-
-  const handleSaveDisplayName = async () => {
-    // Prevent multiple save actions
-    if (saving) return;
-
-    // Validate the new display name
-    if (!newDisplayName.trim()) {
-      Alert.alert('Validation Error', 'Display name cannot be empty.');
-      return;
-    }
-
-    // Ensure 'user' and 'user.uid' are defined
-    if (!user || !user.uid) {
-      Alert.alert('Error', 'User is not logged in.');
-      return;
-    }
-
-    setSaving(true);
-
+  const handleLogout = async () => {
     try {
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        displayName: newDisplayName.trim(),
-      });
-
-      // Update local user context
-      setUser({ ...user, displayName: newDisplayName.trim() });
-
-      // Alert.alert('Success', 'Display name updated successfully.');
-      setIsEditing(false);
-
-      // Dismiss the keyboard after saving
-      Keyboard.dismiss();
+      await logout(); // Call the logout function from UserContext
     } catch (error) {
-      console.error('Error updating display name:', error);
-      Alert.alert('Update Error', 'Failed to update display name.');
-    } finally {
-      setSaving(false);
+      console.error('Error logging out: ', error);
+      Alert.alert('Logout Error', 'An error occurred while logging out.');
     }
   };
 
@@ -151,121 +112,68 @@ const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScreenTitle title="Your profile" />
-      <View style={styles.detailsContainer}>
-        <ProfilePicturePicker
-          imageUrl={user.photoURL ?? null}
-          onImageUpdate={async (newUrl) => {
-            // Update local state
-            setUser({ ...user, photoURL: newUrl });
+    <View style={styles.container}>
+      <ProfilePicturePicker
+        imageUrl={user.photoURL ?? null}
+        onImageUpdate={async (newUrl) => {
+          // Update local state
+          setUser({ ...user, photoURL: newUrl });
 
-            // Update Firestore
-            try {
-              const userRef = doc(db, 'users', user.uid);
-              await updateDoc(userRef, {
-                photoURL: newUrl,
-              });
-              console.log('photoURL updated successfully in Firestore', newUrl);
-            } catch (error) {
-              console.error('Error updating profile picture URL:', error);
-              Alert.alert('Update Error', 'Failed to update profile picture.');
-            }
-          }}
-          editable={true}
-          storagePath={`users/${user.uid}/profile.jpg`}
-          size={150}
-        />
+          // Update Firestore
+          try {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+              photoURL: newUrl,
+            });
+            console.log('photoURL updated successfully in Firestore', newUrl);
+          } catch (error) {
+            console.error('Error updating profile picture URL:', error);
+            Alert.alert('Update Error', 'Failed to update profile picture.');
+          }
+        }}
+        editable={false} // Set to false since editing is done via modal
+        storagePath={`users/${user.uid}/profile.jpg`}
+        size={150}
+      />
 
-        <View style={styles.displayNameContainer}>
-          {isEditing ? (
-            <>
-              <TextInput
-                style={styles.displayNameInput}
-                value={newDisplayName}
-                onChangeText={setNewDisplayName}
-                placeholder="Enter new display name"
-                autoFocus
-                maxLength={30}
-                onSubmitEditing={handleSaveDisplayName}
-                returnKeyType="done"
-                blurOnSubmit={true}
-                editable={!saving}
-              />
-            </>
-          ) : (
-            <>
-              <Text style={styles.displayName}>
-                {user.displayName || 'No Display Name'}
-              </Text>
-              <TouchableOpacity
-                onPress={handleEditPress}
-                style={styles.editIcon}
-                accessibilityLabel="Edit Display Name"
-                accessibilityHint="Enable editing of your display name"
-              >
-                <Ionicons name="pencil-outline" size={20} color="#1e90ff" />
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
+      <View style={styles.infoContainer}>
+        <InfoItem label="First name" value={user.firstName || 'N/A'} />
+        <InfoItem label="Last name" value={user.lastName || 'N/A'} />
+        <InfoItem label="Display name" value={user.displayName || 'N/A'} />
+        <InfoItem label="Email address" value={user.email || 'N/A'} />
       </View>
 
-      {isEditing && (
-        <View style={styles.actionButtonsContainer}>
-          {/* Replace Save Button */}
-          <CustomButton
-            title="Save"
-            onPress={handleSaveDisplayName}
-            loading={saving}
-            variant="success" // Green variant
-            icon={{
-              name: 'checkmark',
-              size: 24,
-              library: 'Ionicons',
-            }}
-            accessibilityLabel="Save Display Name"
-            accessibilityHint="Save your new display name"
-          />
-
-          {/* Replace Cancel Button */}
-          <CustomButton
-            title="Cancel"
-            onPress={handleCancelEdit}
-            loading={saving} // Optional: show loading state if needed
-            variant="danger" // Red variant
-            icon={{
-              name: 'close',
-              size: 24,
-              library: 'Ionicons',
-            }}
-            accessibilityLabel="Cancel Editing"
-            accessibilityHint="Discard changes to your display name"
-          />
-        </View>
-      )}
-
       <View style={styles.buttonContainer}>
-        {/* Replace Log out Button */}
         <CustomButton
           title="Log out"
           onPress={handleLogout}
-          variant="danger" // Red variant
+          variant="danger" // Assuming 'danger' variant styles the button appropriately
           icon={{
             name: 'exit-outline',
             size: 24,
             library: 'Ionicons',
+            color: '#FFFFFF', // Icon color
           }}
           accessibilityLabel="Log out"
           accessibilityHint="Log out of your account"
         />
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
+
+// Reusable component for displaying label-value pairs
+interface InfoItemProps {
+  label: string;
+  value: string;
+}
+
+const InfoItem: React.FC<InfoItemProps> = ({ label, value }) => (
+  <View style={styles.infoItem}>
+    <Text style={styles.infoLabel}>{label}:</Text>
+    <Text style={styles.infoValue}>{value}</Text>
+  </View>
+);
 
 export default UserProfileScreen;
 
@@ -276,63 +184,49 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     alignItems: 'center',
-  },
-  detailsContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  displayNameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  displayName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  displayNameInput: {
-    fontSize: 24,
-    borderBottomWidth: 1,
-    borderColor: '#1e90ff',
-    padding: 5,
-    width: '60%',
-    textAlign: 'center',
-  },
-  editIcon: {
-    marginLeft: 10,
-  },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    marginTop: 10,
-    justifyContent: 'space-between',
-    width: '80%',
+    backgroundColor: '#f5f5f5', // Light background color
   },
   loaderContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerButton: {
+    marginRight: 16,
+  },
+  infoContainer: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginTop: 20,
+    shadowColor: '#000', // For iOS shadow
+    shadowOffset: { width: 0, height: 1 }, // For iOS shadow
+    shadowOpacity: 0.1, // For iOS shadow
+    shadowRadius: 2, // For iOS shadow
+    elevation: 2, // For Android shadow
+  },
+  infoItem: {
+    flexDirection: 'row',
+    marginVertical: 8,
+  },
+  infoLabel: {
+    fontWeight: '600',
+    fontSize: 16,
+    width: '40%',
+    color: '#333',
+  },
+  infoValue: {
+    fontSize: 16,
+    color: '#555',
+    flexShrink: 1, // Allows text to wrap if necessary
+  },
   buttonContainer: {
-    marginTop: 40,
+    marginTop: 30,
     width: width * 0.8,
     justifyContent: 'center',
-    flexDirection: 'row',
-    position: 'absolute',
-    bottom: 100,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    backgroundColor: '#ff3b30',
-    padding: 10,
-    borderRadius: 5,
     alignItems: 'center',
-    width: '60%',
-    justifyContent: 'center',
     position: 'absolute',
-  },
-  logoutText: {
-    color: 'white',
-    fontWeight: 'bold',
-    marginLeft: 10,
+    bottom: 30,
   },
 });

@@ -15,7 +15,9 @@ export type NavParamList = {
   CrewsList: undefined;
   Crew: { crewId: string };
   CrewSettings: { crewId: string };
+  UserProfileStack: undefined;
   UserProfile: { userId: string };
+  EditUserProfile: undefined;
   Invitations: undefined;
 };
 
@@ -25,26 +27,14 @@ const AppNavigator: React.FC = () => {
   const { user } = useUser();
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!user ? (
         <>
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="SignUp"
-            component={SignUpScreen}
-            options={{ headerShown: false }}
-          />
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="SignUp" component={SignUpScreen} />
         </>
       ) : (
-        <Stack.Screen
-          name="MainTabs"
-          component={TabNavigator}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="MainTabs" component={TabNavigator} />
       )}
     </Stack.Navigator>
   );

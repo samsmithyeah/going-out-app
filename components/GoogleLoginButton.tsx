@@ -28,7 +28,7 @@ export default function GoogleLoginButton() {
           const firestoreUser = {
             uid: userCredential.user.uid,
             email: userCredential.user.email || '',
-            displayName: userCredential.user.displayName || '',
+            displayName: userCredential.user.displayName?.split(' ')[0] || '', // Use first name as display name
             photoURL: userCredential.user.photoURL || undefined,
             firstName: userCredential.user.displayName?.split(' ')[0] || '',
             lastName: userCredential.user.displayName?.split(' ')[1] || '',

@@ -5,7 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import InvitationsScreen from '../screens/InvitationsScreen';
-import UserProfileScreen from '../screens/UserProfileScreen';
+import UserProfileStackNavigator from './UserProfileStackNavigator';
 import CrewsStackNavigator from './CrewsStackNavigator';
 import { useInvitations } from '../context/InvitationsContext';
 
@@ -13,7 +13,7 @@ export type TabsParamList = {
   Home: undefined;
   CrewsStack: { screen: string; params: { crewId: string } };
   Invitations: undefined;
-  UserProfile: undefined;
+  UserProfileStack: undefined;
 };
 
 const Tab = createBottomTabNavigator<TabsParamList>();
@@ -22,7 +22,10 @@ const TabNavigator: React.FC = () => {
   const { pendingCount } = useInvitations();
 
   return (
-    <Tab.Navigator initialRouteName="Home">
+    <Tab.Navigator
+      initialRouteName="Home"
+      screenOptions={{ headerShown: false }}
+    >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
@@ -31,7 +34,6 @@ const TabNavigator: React.FC = () => {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
-          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -43,7 +45,6 @@ const TabNavigator: React.FC = () => {
             <Ionicons name="people-outline" size={size} color={color} />
           ),
           unmountOnBlur: true,
-          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -59,18 +60,16 @@ const TabNavigator: React.FC = () => {
                 ? '99+'
                 : pendingCount
               : undefined,
-          headerShown: false,
         }}
       />
       <Tab.Screen
-        name="UserProfile"
-        component={UserProfileScreen}
+        name="UserProfileStack"
+        component={UserProfileStackNavigator}
         options={{
           title: 'Your profile',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
-          headerShown: false,
         }}
       />
     </Tab.Navigator>

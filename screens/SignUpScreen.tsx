@@ -91,7 +91,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
       const updatedUser = {
         uid: thisUser.uid,
         email: thisUser.email || '',
-        displayName: thisUser.displayName || '',
+        displayName: firstName.trim(),
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         photoURL: thisUser.photoURL || '',
