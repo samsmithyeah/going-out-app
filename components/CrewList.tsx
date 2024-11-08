@@ -34,8 +34,8 @@ const CrewList: React.FC<CrewListProps> = ({
         const memberNames = item.memberIds
           .map(
             (uid) =>
-              usersCache[uid]?.firstName ||
               usersCache[uid]?.displayName ||
+              usersCache[uid]?.firstName ||
               'Unknown',
           )
           .filter((name) => name) // Remove any undefined or empty names

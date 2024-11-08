@@ -231,7 +231,7 @@ const HomeScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Profile Section */}
       <View style={styles.profileContainer}>
-        <Text style={styles.greeting}>Hi {user?.firstName}!</Text>
+        <Text style={styles.greeting}>Hi {user?.displayName}!</Text>
         <ProfilePicturePicker
           imageUrl={user?.photoURL || null}
           onImageUpdate={() => {}}

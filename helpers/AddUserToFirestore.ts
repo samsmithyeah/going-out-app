@@ -79,9 +79,6 @@ const registerForPushNotificationsAsync = async (user: User) => {
 export const addUserToFirestore = async (user: User) => {
   const userDocRef = doc(db, 'users', user.uid);
   try {
-    console.log(
-      `Adding/updating user in Firestore: ${user.displayName} (${user.email}). Photo: ${user.photoURL}`,
-    );
     const userData: User = {
       uid: user.uid,
       email: user.email,

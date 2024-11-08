@@ -120,9 +120,12 @@ const EditUserProfileModal: React.FC = () => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Profile Picture */}
         <ProfilePicturePicker
           imageUrl={photoURL || null}
@@ -227,7 +230,6 @@ export default EditUserProfileModal;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff', // White background for native look
   },
   scrollContainer: {
     padding: 20,
@@ -265,6 +267,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
     justifyContent: 'space-between',
     width: '100%',
+    marginBottom: 100, // Add some margin to prevent the buttons from being hidden by the keyboard
   },
   loaderContainer: {
     flex: 1,
