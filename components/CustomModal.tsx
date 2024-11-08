@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent background
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: '#f9f9f9',
     borderRadius: 10,
     padding: 25,
     alignItems: 'center',

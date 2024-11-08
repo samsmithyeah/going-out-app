@@ -6,12 +6,10 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Keyboard,
-  Text,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -19,6 +17,7 @@ import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import CustomButton from '../components/CustomButton';
+import CustomTextInput from '../components/CustomTextInput';
 
 const EditUserProfileModal: React.FC = () => {
   const { user, setUser } = useUser();
@@ -150,41 +149,41 @@ const EditUserProfileModal: React.FC = () => {
         {/* Form Fields */}
         <View style={styles.formContainer}>
           {/* First Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>First name</Text>
-            <TextInput
-              style={styles.input}
+          <View>
+            <CustomTextInput
               value={firstName}
               onChangeText={setFirstName}
               placeholder="Enter your first name"
               autoCapitalize="words"
               returnKeyType="next"
+              hasBorder={true}
+              labelText="First name"
             />
           </View>
 
           {/* Last Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Last name</Text>
-            <TextInput
-              style={styles.input}
+          <View>
+            <CustomTextInput
               value={lastName}
               onChangeText={setLastName}
               placeholder="Enter your last name"
               autoCapitalize="words"
               returnKeyType="next"
+              hasBorder={true}
+              labelText="Last name"
             />
           </View>
 
           {/* Display Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Display name</Text>
-            <TextInput
-              style={styles.input}
+          <View>
+            <CustomTextInput
               value={displayName}
               onChangeText={setDisplayName}
               placeholder="Enter your display name"
               autoCapitalize="words"
               returnKeyType="done"
+              hasBorder={true}
+              labelText="Display name"
             />
           </View>
         </View>
@@ -239,32 +238,9 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 10,
   },
-  inputGroup: {
-    marginBottom: 15,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 25,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-    backgroundColor: '#f9f9f9',
-  },
-  errorText: {
-    color: 'red',
-    marginTop: 5,
-    fontSize: 14,
-  },
   actionButtonsContainer: {
     flexDirection: 'row',
-    marginTop: 30,
+    marginTop: 20,
     justifyContent: 'space-between',
     width: '100%',
     marginBottom: 100, // Add some margin to prevent the buttons from being hidden by the keyboard
@@ -273,10 +249,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  changePictureButtonContainer: {
-    marginTop: 10,
-    marginBottom: 20,
-    width: '100%',
   },
 });

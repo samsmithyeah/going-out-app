@@ -17,7 +17,17 @@
       "googleServicesFile": "./GoogleService-Info.plist",
       "bundleIdentifier": "com.samlovesit.GoingOutApp",
       "infoPlist": {
-        "NSUserNotificationUsageDescription": "This app uses push notifications to notify you of updates."
+        "NSUserNotificationUsageDescription": "This app uses push notifications to notify you of updates.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
+        "CFBundleURLTypes": [
+          {
+            "CFBundleTypeRole": "Editor",
+            "CFBundleURLName": "com.samlovesit.GoingOutApp",
+            "CFBundleURLSchemes": ["goingoutapp"]
+          }
+        ]
       },
       "config": {
         "usesNonExemptEncryption": false
@@ -50,7 +60,8 @@
         {
           "photosPermission": "This app accesses your photos to let you pick crew and profile pictures."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "permissions": ["CAMERA", "MEDIA_LIBRARY", "NOTIFICATIONS"],
     "experiments": {

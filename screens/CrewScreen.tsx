@@ -449,18 +449,6 @@ const styles = StyleSheet.create({
     bottom: 20,
     alignSelf: 'center',
   },
-  statusButtonActive: {
-    backgroundColor: '#ff6347', // Tomato color when active
-  },
-  statusButtonInactive: {
-    backgroundColor: '#32cd32', // LimeGreen color when inactive
-  },
-  statusButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
   loaderContainer: {
     flex: 1,
     justifyContent: 'center',
