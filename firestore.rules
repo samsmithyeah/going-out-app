@@ -1,0 +1,107 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users Collection
+    match /users/{uid} {
+      // Allow users to read user details if they are authenticated
+      allow read: if request.auth != null;
+
+      // Allow users to create and update their own user details
+      allow create, update: if request.auth != null && request.auth.uid == uid;
+
+      // Prevent users from modifying certain sensitive fields
+      allow update: if request.auth != null && request.auth.uid == uid
+        && !("uid" in request.resource.data)
+        && !("email" in request.resource.data);
+    }
+    
+    // Crews Collection
+    match /crews/{crewId} {
+      allow create: if request.auth != null;
+
+      // Temporary rule to allow all authenticated users to read all crews
+      allow read: if request.auth != null;
+      
+      // Allow update if the user is a crew member
+      allow update: if isCrewMember(crewId);
+      
+      // Allow delete if the user is the crew owner
+      allow delete: if isCrewOwner(crewId);
+      
+      // Subcollection: statuses
+      match /statuses/{date} {
+
+        // Temporary rule to allow all authenticated users to read all statuses
+        allow read: if request.auth != null;
+
+        // Allow crew members to create, update, and delete statuses
+        allow create, update, delete: if isCrewMember(crewId);
+
+        // Subcollection: userStatuses
+        match /userStatuses/{userId} {
+          // Temporary rule to allow all authenticated users to read all userStatuses
+          allow read: if request.auth != null;
+          
+          // Allow updates only to their own userStatus
+          allow create, update, delete: if isCrewMember(crewId) && request.auth.uid == userId;
+        }
+      }
+    }
+    
+    // Invitations Collection
+    match /invitations/{invitationId} {
+      // Temporary rule to allow read for authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow create if the sender is the authenticated user
+      allow create: if request.auth != null && request.resource.data.fromUserId == request.auth.uid;
+      
+      // Allow update if the user is the recipient
+      allow update: if isInvitationRecipient(invitationId);
+      
+      // Allow delete if the user is the sender
+      allow delete: if isInvitationSender(invitationId);
+    }
+    
+    // Helper Functions
+    
+    // Check if the authenticated user is a member of the crew
+    function isCrewMember(crewId) {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/crews/$(crewId)) &&
+             request.auth.uid in get(/databases/$(database)/documents/crews/$(crewId)).data.memberIds;
+    }
+    
+    // Check if the authenticated user is the owner of the crew
+    function isCrewOwner(crewId) {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/crews/$(crewId)) &&
+             get(/databases/$(database)/documents/crews/$(crewId)).data.ownerId == request.auth.uid;
+    }
+    
+    // Check if the authenticated user is either the sender or recipient of the invitation
+    function isInvitationParticipant(invitationId) {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/invitations/$(invitationId)) &&
+             (
+               get(/databases/$(database)/documents/invitations/$(invitationId)).data.toUserId == request.auth.uid ||
+               get(/databases/$(database)/documents/invitations/$(invitationId)).data.fromUserId == request.auth.uid
+             );
+    }
+    
+    // Check if the authenticated user is the recipient of the invitation
+    function isInvitationRecipient(invitationId) {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/invitations/$(invitationId)) &&
+             get(/databases/$(database)/documents/invitations/$(invitationId)).data.toUserId == request.auth.uid;
+    }
+    
+    // Check if the authenticated user is the sender of the invitation
+    function isInvitationSender(invitationId) {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/invitations/$(invitationId)) &&
+             get(/databases/$(database)/documents/invitations/$(invitationId)).data.fromUserId == request.auth.uid;
+    }
+  }
+}

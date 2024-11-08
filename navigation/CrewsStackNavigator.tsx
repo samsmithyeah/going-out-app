@@ -20,7 +20,11 @@ const CrewsStackNavigator: React.FC = () => {
       <Stack.Screen
         name="Crew"
         component={CrewScreen}
-        options={{ headerBackTitleVisible: false, headerStatusBarHeight: 0 }}
+        options={{
+          headerBackTitleVisible: false,
+          headerStatusBarHeight: 0,
+          title: 'Crew',
+        }}
       />
       <Stack.Screen
         name="CrewSettings"
