@@ -10,7 +10,6 @@ import {
   Platform,
   ScrollView,
   Keyboard,
-  Text,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -239,20 +238,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 10,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 25,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-    backgroundColor: '#f9f9f9',
-  },
-  errorText: {
-    color: 'red',
-    marginTop: 5,
-    fontSize: 14,
-  },
   actionButtonsContainer: {
     flexDirection: 'row',
     marginTop: 20,
@@ -264,10 +249,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  changePictureButtonContainer: {
-    marginTop: 10,
-    marginBottom: 20,
-    width: '100%',
   },
 });

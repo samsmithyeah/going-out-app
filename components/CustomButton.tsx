@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-unused-styles */
 // components/CustomButton.tsx
 
 import React from 'react';

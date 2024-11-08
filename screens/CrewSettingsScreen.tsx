@@ -698,37 +698,6 @@ const styles = StyleSheet.create({
   addButtonInline: {
     padding: 5,
   },
-  memberItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  avatarImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 16,
-  },
-  avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  memberText: {
-    fontSize: 16,
-    color: '#333',
-    paddingLeft: 10,
-  },
-  youText: {
-    color: 'gray',
-  },
   leaveButton: {
     marginTop: 10,
     marginBottom: 10,
@@ -737,20 +706,6 @@ const styles = StyleSheet.create({
     color: 'red',
     alignSelf: 'flex-start',
     marginBottom: 10,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  modalButton: {
-    // Styles are managed by CustomButton based on variant
-  },
-  cancelButton: {
-    // Styles are managed by CustomButton based on variant
-  },
-  modalButtonText: {
-    // Styles are managed by CustomButton based on variant
   },
   loaderContainer: {
     flex: 1,

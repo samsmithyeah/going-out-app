@@ -8,7 +8,6 @@ import {
   Image,
   TouchableWithoutFeedback,
   Keyboard,
-  Platform,
   TouchableOpacity,
 } from 'react-native';
 import { auth } from '../firebase';
