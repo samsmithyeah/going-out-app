@@ -4,14 +4,13 @@ import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
-  TextInput,
-  TouchableOpacity,
   Text,
   Image,
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  TouchableOpacity,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -23,9 +22,10 @@ import {
 } from '../firebase';
 import { addUserToFirestore } from '../helpers/AddUserToFirestore';
 import { useUser } from '../context/UserContext';
-import { Ionicons } from '@expo/vector-icons';
-import CustomButton from '../components/CustomButton'; // Adjust the path as necessary
+import CustomButton from '../components/CustomButton';
+import CustomTextInput from '../components/CustomTextInput'; // Import the CustomTextInput
 import { LinearGradient } from 'expo-linear-gradient';
+import zxcvbn from 'zxcvbn'; // Password strength library
 
 type NavParamList = {
   SignUp: undefined;
@@ -49,6 +49,29 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const [formError, setFormError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const { setUser } = useUser();
+
+  const [passwordStrength, setPasswordStrength] = useState<number>(0);
+
+  const evaluatePasswordStrength = (pass: string) => {
+    const evaluation = zxcvbn(pass);
+    setPasswordStrength(evaluation.score); // Score ranges from 0 to 4
+  };
+
+  const getPasswordStrengthLabel = () => {
+    switch (passwordStrength) {
+      case 0:
+      case 1:
+        return { label: 'Weak', color: '#ff4d4d' };
+      case 2:
+        return { label: 'Fair', color: '#ffae42' };
+      case 3:
+        return { label: 'Good', color: '#2ecc71' };
+      case 4:
+        return { label: 'Strong', color: '#27ae60' };
+      default:
+        return { label: '', color: '#ccc' };
+    }
+  };
 
   const handleSignUp = async () => {
     // Reset form error
@@ -91,7 +114,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
       const updatedUser = {
         uid: thisUser.uid,
         email: thisUser.email || '',
-        displayName: firstName.trim(),
+        displayName: `${firstName.trim()} ${lastName.trim()}`,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         photoURL: thisUser.photoURL || '',
@@ -123,107 +146,103 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
               style={styles.logo}
               resizeMode="contain"
             />
-            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.title}>Create account</Text>
           </View>
 
           <View style={styles.formContainer}>
             {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="mail-outline"
-                size={24}
-                color="#333"
-                style={styles.icon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#666"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  if (formError) setFormError('');
-                }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                textContentType="emailAddress"
-              />
-            </View>
+            <CustomTextInput
+              iconName="mail-outline"
+              placeholder="Email address"
+              placeholderTextColor="#666"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (formError) setFormError('');
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              textContentType="username" // Important for AutoFill
+              importantForAutofill="yes" // Ensures AutoFill is active
+            />
 
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="person-outline"
-                size={24}
-                color="#333"
-                style={styles.icon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="First Name"
-                placeholderTextColor="#666"
-                value={firstName}
-                onChangeText={(text) => {
-                  setFirstName(text);
-                  if (formError) setFormError('');
-                }}
-                autoCapitalize="words"
-                autoComplete="name-given"
-                textContentType="givenName"
-              />
-            </View>
+            <CustomTextInput
+              iconName="person-outline"
+              placeholder="First name"
+              placeholderTextColor="#666"
+              value={firstName}
+              onChangeText={(text) => {
+                setFirstName(text);
+                if (formError) setFormError('');
+              }}
+              autoCapitalize="words"
+              autoComplete="name-given"
+              textContentType="givenName"
+            />
 
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="person-outline"
-                size={24}
-                color="#333"
-                style={styles.icon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Last Name"
-                placeholderTextColor="#666"
-                value={lastName}
-                onChangeText={(text) => {
-                  setLastName(text);
-                  if (formError) setFormError('');
-                }}
-                autoCapitalize="words"
-                autoComplete="name-family"
-                textContentType="familyName"
-              />
-            </View>
+            <CustomTextInput
+              iconName="person-outline"
+              placeholder="Last name"
+              placeholderTextColor="#666"
+              value={lastName}
+              onChangeText={(text) => {
+                setLastName(text);
+                if (formError) setFormError('');
+              }}
+              autoCapitalize="words"
+              autoComplete="name-family"
+              textContentType="familyName"
+            />
 
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="lock-closed-outline"
-                size={24}
-                color="#333"
-                style={styles.icon}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor="#666"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (formError) setFormError('');
-                }}
-                secureTextEntry
-                autoCapitalize="none"
-                autoComplete="password"
-                textContentType="password"
-              />
-            </View>
+            <CustomTextInput
+              iconName="lock-closed-outline"
+              placeholder="Password"
+              placeholderTextColor="#666"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (formError) setFormError('');
+                evaluatePasswordStrength(text); // Evaluate strength on change
+              }}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="password"
+              textContentType="password" // Important for AutoFill
+              importantForAutofill="yes" // Ensures AutoFill is active
+            />
+
+            {/* Password Strength Indicator */}
+            {password.length > 0 && (
+              <View style={styles.passwordStrengthContainer}>
+                <View style={styles.passwordStrengthBarContainer}>
+                  <View
+                    style={[
+                      styles.passwordStrengthBar,
+                      {
+                        backgroundColor: getPasswordStrengthLabel().color,
+                        width: `${(passwordStrength + 1) * 20}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text
+                  style={[
+                    styles.passwordStrengthText,
+                    { color: getPasswordStrengthLabel().color },
+                  ]}
+                >
+                  {getPasswordStrengthLabel().label}
+                </Text>
+              </View>
+            )}
 
             <CustomButton
-              title="Sign Up"
+              title="Sign up"
               onPress={handleSignUp}
               variant="danger"
-              accessibilityLabel="Sign Up"
+              accessibilityLabel="Sign up"
               accessibilityHint="Press to create a new account"
               loading={loading}
             />
@@ -233,9 +252,6 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.separatorText}>OR</Text>
               <View style={styles.separatorLine} />
             </View>
-
-            {/* If you have a GoogleLoginButton component for sign-up as well */}
-            {/* <GoogleLoginButton /> */}
 
             <TouchableOpacity
               style={styles.loginContainer}
@@ -279,38 +295,23 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 20,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
+  passwordStrengthContainer: {
     marginBottom: 15,
-    paddingHorizontal: 10,
   },
-  icon: {
-    marginRight: 8,
+  passwordStrengthBarContainer: {
+    height: 5,
+    width: '100%',
+    backgroundColor: '#e0e0e0',
+    borderRadius: 2.5,
+    marginBottom: 5,
   },
-  input: {
-    flex: 1,
-    height: 50,
-    color: '#333',
+  passwordStrengthBar: {
+    height: '100%',
+    borderRadius: 2.5,
   },
-  button: {
-    backgroundColor: '#ff6b6b',
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-    shadowColor: '#000', // For iOS shadow
-    shadowOffset: { width: 0, height: 2 }, // For iOS shadow
-    shadowOpacity: 0.3, // For iOS shadow
-    shadowRadius: 4, // For iOS shadow
-    elevation: 5, // For Android shadow
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+  passwordStrengthText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   separatorContainer: {
     flexDirection: 'row',
@@ -330,7 +331,6 @@ const styles = StyleSheet.create({
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
   },
   loginText: {
     color: '#333',

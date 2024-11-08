@@ -5,7 +5,6 @@ import {
   View,
   Text,
   Alert,
-  TextInput,
   StyleSheet,
   ActivityIndicator,
   ScrollView,
@@ -38,6 +37,7 @@ import MemberList from '../components/MemberList';
 import { Crew } from '../types/Crew';
 import CustomModal from '../components/CustomModal'; // Import CustomModal
 import CustomButton from '../components/CustomButton'; // Import CustomButton
+import CustomTextInput from '../components/CustomTextInput'; // Import CustomTextInput
 
 type CrewSettingsScreenRouteProp = RouteProp<NavParamList, 'CrewSettings'>;
 
@@ -557,13 +557,13 @@ const CrewSettingsScreen: React.FC = () => {
         ]}
         loading={isUpdatingName || isUpdatingActivity}
       >
-        <TextInput
-          style={styles.input}
+        <CustomTextInput
           placeholder="Member's email"
           value={inviteeEmail}
           onChangeText={setInviteeEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          hasBorder={true}
         />
       </CustomModal>
 
@@ -594,11 +594,12 @@ const CrewSettingsScreen: React.FC = () => {
         ]}
         loading={isUpdatingName}
       >
-        <TextInput
-          style={styles.input}
+        <CustomTextInput
           placeholder="New crew name"
           value={newCrewName}
           onChangeText={setNewCrewName}
+          autoCapitalize="words"
+          hasBorder={true}
         />
       </CustomModal>
 
@@ -622,7 +623,7 @@ const CrewSettingsScreen: React.FC = () => {
             label: 'Cancel',
             onPress: () => {
               setIsEditActivityModalVisible(false);
-              setNewActivity('');
+              setNewActivity(crew.activity || 'going out');
               setActivityError('');
             },
             variant: 'secondary',
@@ -631,11 +632,11 @@ const CrewSettingsScreen: React.FC = () => {
         ]}
         loading={isUpdatingActivity}
       >
-        <TextInput
-          style={[styles.input, activityError ? styles.inputError : {}]}
+        <CustomTextInput
           placeholder="Enter crew activity"
           value={newActivity}
           onChangeText={setNewActivity}
+          hasBorder={true}
         />
         {activityError ? (
           <Text style={styles.errorText}>{activityError}</Text>
@@ -731,28 +732,6 @@ const styles = StyleSheet.create({
   leaveButton: {
     marginTop: 10,
     marginBottom: 10,
-  },
-  leaveButtonText: {
-    // No need for text styles as CustomButton handles it
-  },
-  deleteButton: {
-    marginTop: 10,
-  },
-  deleteButtonText: {
-    // No need for text styles as CustomButton handles it
-  },
-  input: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 25,
-    padding: 15,
-    marginBottom: 20,
-    fontSize: 14,
-    color: '#333',
-  },
-  inputError: {
-    borderColor: 'red',
   },
   errorText: {
     color: 'red',

@@ -6,6 +6,7 @@ import { useUser } from '../context/UserContext';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import CustomModal from './CustomModal';
+import CustomTextInput from './CustomTextInput';
 
 type CreateCrewModalProps = {
   isVisible: boolean;
@@ -86,30 +87,16 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
       ]}
       loading={loading}
     >
-      <TextInput
-        style={styles.input}
+      <CustomTextInput
         placeholder="Crew name"
+        placeholderTextColor="#666"
         value={newCrewName}
         onChangeText={setNewCrewName}
-        autoCorrect={false}
-        returnKeyType="done"
-        onSubmitEditing={createCrew}
+        autoCapitalize="words"
+        hasBorder={true}
       />
     </CustomModal>
   );
 };
 
 export default CreateCrewModal;
-
-const styles = StyleSheet.create({
-  input: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 25,
-    padding: 15,
-    marginBottom: 20,
-    fontSize: 14,
-    color: '#333',
-  },
-});

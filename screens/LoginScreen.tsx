@@ -4,12 +4,12 @@ import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
-  TextInput,
-  TouchableOpacity,
   Text,
   Image,
   TouchableWithoutFeedback,
   Keyboard,
+  Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { auth } from '../firebase';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -18,9 +18,9 @@ import * as WebBrowser from 'expo-web-browser';
 import GoogleLoginButton from '../components/GoogleLoginButton';
 import { NavParamList } from '../navigation/AppNavigator';
 import { useUser } from '../context/UserContext';
-import { Ionicons } from '@expo/vector-icons';
+import CustomButton from '../components/CustomButton';
+import CustomTextInput from '../components/CustomTextInput';
 import { LinearGradient } from 'expo-linear-gradient';
-import CustomButton from '../components/CustomButton'; // Import CustomButton
 
 type LoginScreenProps = NativeStackScreenProps<NavParamList, 'Login'>;
 
@@ -60,9 +60,23 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
+      // iOS should automatically offer to save the password upon successful login
     } catch (error: any) {
       console.error('Login Error:', error);
-      setFormError(error.message);
+      // Map Firebase error codes to user-friendly messages
+      switch (error.code) {
+        case 'auth/user-not-found':
+          setFormError('No account found for this email.');
+          break;
+        case 'auth/wrong-password':
+          setFormError('Incorrect password.');
+          break;
+        case 'auth/invalid-email':
+          setFormError('Invalid email address.');
+          break;
+        default:
+          setFormError('Failed to log in. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -77,66 +91,59 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={styles.title}>Welcome Back!</Text>
+          <Text style={styles.title}>Welcome!</Text>
         </View>
 
         <View style={styles.formContainer}>
           {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
-          <View style={styles.inputContainer}>
-            <Ionicons
-              name="mail-outline"
-              size={24}
-              color="#333"
-              style={styles.icon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#666"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (formError) setFormError('');
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              textContentType="emailAddress"
-            />
-          </View>
+          <CustomTextInput
+            iconName="mail-outline"
+            placeholder="Email address"
+            placeholderTextColor="#666"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (formError) setFormError('');
+            }}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            textContentType="username" // Important for AutoFill
+            importantForAutofill="yes" // Ensures AutoFill is active
+          />
 
-          <View style={styles.inputContainer}>
-            <Ionicons
-              name="lock-closed-outline"
-              size={24}
-              color="#333"
-              style={styles.icon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#666"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (formError) setFormError('');
-              }}
-              secureTextEntry
-              autoCapitalize="none"
-              autoComplete="password"
-              textContentType="password"
-            />
-          </View>
+          <CustomTextInput
+            iconName="lock-closed-outline"
+            placeholder="Password"
+            placeholderTextColor="#666"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (formError) setFormError('');
+            }}
+            secureTextEntry
+            autoCapitalize="none"
+            autoComplete="password"
+            textContentType="password" // Important for AutoFill
+            importantForAutofill="yes" // Ensures AutoFill is active
+          />
 
-          {/* Replace TouchableOpacity with CustomButton for Login */}
+          {/* "Forgot Password?" Link */}
+          <TouchableOpacity
+            style={styles.forgotPasswordContainer}
+            onPress={() => navigation.navigate('ForgotPassword')}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
+
           <CustomButton
             title="Login"
             onPress={handleEmailLogin}
-            variant="primary" // Assuming 'primary' is the default/desired variant
+            variant="primary" // Assuming 'primary' is defined in CustomButton
             accessibilityLabel="Login"
             accessibilityHint="Press to log into your account"
-            loading={loading} // Show loading indicator when logging in
+            loading={loading}
           />
 
           <View style={styles.separatorContainer}>
@@ -180,52 +187,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   formContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 15,
     padding: 20,
     marginHorizontal: 20,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 10,
+  forgotPasswordContainer: {
+    alignItems: 'flex-end',
     marginBottom: 15,
-    paddingHorizontal: 10,
+    paddingRight: 10,
   },
-  icon: {
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    height: 50,
-    color: '#333',
-  },
-  // Updated styles for CustomButton
-  loginButton: {
-    // Optional: add margin or other styles if needed
-    marginTop: 10,
-  },
-  signupButton: {
-    // Optional: add margin or other styles if needed
-    marginTop: 20,
-  },
-  button: {
-    backgroundColor: '#ff6b6b',
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-    shadowColor: '#000', // For iOS shadow
-    shadowOffset: { width: 0, height: 2 }, // For iOS shadow
-    shadowOpacity: 0.3, // For iOS shadow
-    shadowRadius: 4, // For iOS shadow
-    elevation: 5, // For Android shadow
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+  forgotPasswordText: {
+    color: '#ff6b6b',
+    fontSize: 14,
+    fontWeight: '500',
+    marginTop: -7,
   },
   separatorContainer: {
     flexDirection: 'row',
