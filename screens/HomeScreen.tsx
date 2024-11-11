@@ -88,7 +88,9 @@ const HomeScreen: React.FC = () => {
   const { user } = useUser();
   const [loading, setLoading] = useState<boolean>(true);
   const [markedDates, setMarkedDates] = useState<{ [key: string]: any }>({});
-  const [selectedDate, setSelectedDate] = useState<string>(moment().format('YYYY-MM-DD'));
+  const [selectedDate, setSelectedDate] = useState<string>(
+    moment().format('YYYY-MM-DD'),
+  );
   const [dateCounts, setDateCounts] = useState<{ [key: string]: number }>({});
 
   // Define the date range for the heatmap (e.g., past 30 days)
@@ -396,9 +398,10 @@ const HomeScreen: React.FC = () => {
 
   // Function to handle confirmation before toggling status
   const handleToggleStatus = () => {
-    const action = dateCounts[selectedDate] > 0
-      ? 'mark yourself as not up for it in all your crews on this day'
-      : 'mark yourself as up for it in all your crews on this day';
+    const action =
+      dateCounts[selectedDate] > 0
+        ? 'mark yourself as not up for it in all your crews on this day'
+        : 'mark yourself as up for it in all your crews on this day';
     Alert.alert(
       'Confirm Status Change',
       `Are you sure you want to ${action}?`,
@@ -456,11 +459,7 @@ const HomeScreen: React.FC = () => {
       {/* Status Summary */}
       <View style={styles.statusSummaryCard}>
         <Icon
-          name={
-            dateCounts[selectedDate] > 0
-              ? 'check-circle'
-              : 'highlight-off'
-          }
+          name={dateCounts[selectedDate] > 0 ? 'check-circle' : 'highlight-off'}
           size={30}
           color={
             dateCounts[selectedDate] > 0
@@ -472,9 +471,9 @@ const HomeScreen: React.FC = () => {
         <View style={styles.statusTextContainer}>
           <Text style={styles.statusSummaryText}>
             {dateCounts[selectedDate] > 0
-              ? `You are up for ${dateCounts[selectedDate]} crew(s) on ${moment(selectedDate).format(
-                  'MMMM Do, YYYY',
-                )}.`
+              ? `You are up for ${dateCounts[selectedDate]} crew(s) on ${moment(
+                  selectedDate,
+                ).format('MMMM Do, YYYY')}.`
               : `You are not up for any crews on ${moment(selectedDate).format(
                   'MMMM Do, YYYY',
                 )}.`}
@@ -491,9 +490,7 @@ const HomeScreen: React.FC = () => {
               : "I'm up for seeing any of my crews on this day!"
           }
           onPress={handleToggleStatus}
-          variant={
-            dateCounts[selectedDate] > 0 ? 'danger' : 'primary'
-          }
+          variant={dateCounts[selectedDate] > 0 ? 'danger' : 'primary'}
           icon={{
             name:
               dateCounts[selectedDate] > 0
