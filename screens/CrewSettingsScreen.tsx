@@ -250,6 +250,15 @@ const CrewSettingsScreen: React.FC = () => {
     );
   };
 
+  // Function to navigate to OtherUserProfileScreen
+  const navigateToUserProfile = (selectedUser: User) => {
+    if (selectedUser.uid === user?.uid) {
+      navigation.navigate('UserProfile', { userId: user.uid });
+      return;
+    }
+    navigation.navigate('OtherUserProfile', { userId: selectedUser.uid });
+  };
+
   // Function to handle crew name update
   const handleUpdateCrewName = async () => {
     if (!newCrewName.trim()) {
@@ -422,6 +431,7 @@ const CrewSettingsScreen: React.FC = () => {
           isLoading={loading}
           emptyMessage="No members in this crew."
           adminIds={[crew.ownerId]}
+          onMemberPress={navigateToUserProfile}
         />
       </View>
 

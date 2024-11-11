@@ -1,6 +1,6 @@
 // screens/AddMembersScreen.tsx
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Alert,
   TouchableOpacity,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp } from '@react-navigation/native';
 import {
   collection,
   query,
@@ -27,19 +27,24 @@ import { User } from '../types/User';
 import MemberList from '../components/MemberList';
 import CustomSearchInput from '../components/CustomSearchInput';
 import CustomButton from '../components/CustomButton';
+import CustomModal from '../components/CustomModal';
 import CustomTextInput from '../components/CustomTextInput';
-import CustomModal from '../components/CustomModal'; // Ensure this component exists
 import { NavParamList } from '../navigation/AppNavigator';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 interface MemberWithStatus extends User {
   status?: 'member' | 'invited' | 'available';
 }
 
-type AddMembersScreenRouteProp = RouteProp<NavParamList, 'AddMembers'>;
+type AddMembersScreenRouteProp = NativeStackScreenProps<
+  NavParamList,
+  'AddMembers'
+>;
 
-const AddMembersScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const route = useRoute<AddMembersScreenRouteProp>();
+const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
+  navigation,
+}) => {
+  const route = useRoute<RouteProp<NavParamList, 'AddMembers'>>();
   const { crewId } = route.params;
   const { user } = useUser();
 
@@ -51,6 +56,7 @@ const AddMembersScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [emailToAdd, setEmailToAdd] = useState<string>('');
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [invitingEmail, setInvitingEmail] = useState<boolean>(false);
 
   // Fetch all members from all of the user's crews and assign status
   useEffect(() => {
@@ -152,14 +158,14 @@ const AddMembersScreen: React.FC = () => {
   }, [crewId, user]);
 
   // Set up the navigation header with an "Add" button
-  useEffect(() => {
+  useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity
           onPress={handleAddSelectedMembers}
           disabled={selectedMemberIds.length === 0}
           accessibilityLabel="Add Selected Members to Crew"
-          accessibilityHint="Adds the selected members to the crew"
+          accessibilityHint="Invites the selected members to the crew"
           style={{ marginRight: 16 }}
         >
           <Text
@@ -172,8 +178,9 @@ const AddMembersScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
       ),
+      title: 'Add Members',
     });
-  }, [navigation, selectedMemberIds, allPotentialMembers]);
+  }, [navigation, selectedMemberIds]);
 
   // Handle selection toggling
   const handleSelectMember = (memberId: string) => {
@@ -184,6 +191,15 @@ const AddMembersScreen: React.FC = () => {
         return [...prevSelected, memberId];
       }
     });
+  };
+
+  // Function to navigate to OtherUserProfileScreen
+  const navigateToUserProfile = (selectedUser: User | MemberWithStatus) => {
+    if (selectedUser.uid === user?.uid) {
+      navigation.navigate('UserProfile', { userId: user.uid });
+      return;
+    }
+    navigation.navigate('OtherUserProfile', { userId: selectedUser.uid });
   };
 
   // Handle adding selected members to the crew
@@ -260,6 +276,8 @@ const AddMembersScreen: React.FC = () => {
       return;
     }
 
+    setInvitingEmail(true);
+
     try {
       // Normalize the email to lowercase
       const normalizedEmail = emailToAdd.trim().toLowerCase();
@@ -330,6 +348,8 @@ const AddMembersScreen: React.FC = () => {
     } catch (error) {
       console.error('Error adding member by email:', error);
       Alert.alert('Error', 'Could not add member by email');
+    } finally {
+      setInvitingEmail(false);
     }
   };
 
@@ -382,6 +402,7 @@ const AddMembersScreen: React.FC = () => {
             : 'No members available to add.'
         }
         adminIds={[]} // Adjust if there are admins to highlight
+        onMemberPress={navigateToUserProfile}
       />
 
       <Text style={styles.addViaEmailText}>Or invite via email address:</Text>
@@ -403,6 +424,7 @@ const AddMembersScreen: React.FC = () => {
           { label: 'Invite', onPress: handleAddByEmail, variant: 'primary' },
           { label: 'Cancel', onPress: closeEmailModal, variant: 'secondary' },
         ]}
+        loading={invitingEmail}
       >
         <CustomTextInput
           placeholder="Email address"
