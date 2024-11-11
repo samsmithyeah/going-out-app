@@ -13,15 +13,20 @@ import SkeletonUserItem from './SkeletonUserItem'; // Ensure this component exis
 import { User } from '../types/User';
 import { Ionicons } from '@expo/vector-icons';
 
+// Define the extended interface with optional status
+interface MemberWithStatus extends User {
+  status?: 'member' | 'invited' | 'available';
+}
+
 interface MemberListProps {
-  members: User[];
+  members: (User | MemberWithStatus)[];
   currentUserId: string | null;
   onMemberPress?: (member: User) => void;
   isLoading?: boolean;
   emptyMessage?: string;
   adminIds?: string[];
-  selectedMemberIds?: string[]; // New prop for selected members
-  onSelectMember?: (memberId: string) => void; // New prop for selection handler
+  selectedMemberIds?: string[]; // For selection
+  onSelectMember?: (memberId: string) => void; // For selection handler
 }
 
 const MemberList: React.FC<MemberListProps> = ({
@@ -52,13 +57,19 @@ const MemberList: React.FC<MemberListProps> = ({
     return membersCopy;
   }, [members]);
 
-  const renderItem = ({ item }: { item: User }) => {
+  const renderItem = ({ item }: { item: User | MemberWithStatus }) => {
+    // Determine if the member has a status
+    const memberWithStatus = item as MemberWithStatus;
+    const status = memberWithStatus.status;
+
     const isSelected = selectedMemberIds.includes(item.uid);
+    const isDisabled = status === 'member' || status === 'invited';
 
     return (
       <TouchableOpacity
         style={styles.memberItem}
         onPress={() => {
+          if (isDisabled) return; // Prevent interaction
           if (onSelectMember) {
             onSelectMember(item.uid);
           }
@@ -66,7 +77,10 @@ const MemberList: React.FC<MemberListProps> = ({
             onMemberPress(item);
           }
         }}
-        activeOpacity={onSelectMember || onMemberPress ? 0.7 : 1}
+        activeOpacity={
+          isDisabled ? 1 : onSelectMember || onMemberPress ? 0.7 : 1
+        }
+        disabled={isDisabled} // Visually disable the touchable
       >
         {/* Display Profile Picture */}
         <ProfilePicturePicker
@@ -77,21 +91,27 @@ const MemberList: React.FC<MemberListProps> = ({
           size={40}
         />
         <View style={styles.memberInfo}>
-          <Text style={styles.memberText}>
+          <Text style={[styles.memberText, isDisabled && styles.disabledText]}>
             {item.displayName || 'Unnamed Member'}{' '}
             {item.uid === currentUserId && (
               <Text style={styles.youText}>(You)</Text>
             )}
           </Text>
           {adminIds.includes(item.uid) && (
-            <>
-              <View style={styles.adminIndicator}>
-                <Text style={styles.adminText}>Admin</Text>
-              </View>
-            </>
+            <View style={styles.adminIndicator}>
+              <Text style={styles.adminText}>Admin</Text>
+            </View>
+          )}
+          {/* Display Status Text if Disabled */}
+          {isDisabled && status === 'member' && (
+            <Text style={styles.statusText}>Already a member of the crew</Text>
+          )}
+          {isDisabled && status === 'invited' && (
+            <Text style={styles.statusText}>Already invited to the crew</Text>
           )}
         </View>
-        {onSelectMember && (
+        {/* Only show selection icon if member is available */}
+        {onSelectMember && !isDisabled && (
           <Ionicons
             name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
             size={24}
@@ -150,6 +170,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  disabledText: {
+    color: '#999', // Darker gray text for disabled members
+  },
   youText: {
     color: 'gray',
   },
@@ -162,6 +185,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'green',
     fontWeight: '600',
+  },
+  statusText: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 4,
   },
   emptyText: {
     fontSize: 16,

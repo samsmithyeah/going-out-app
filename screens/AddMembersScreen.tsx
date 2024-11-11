@@ -23,6 +23,11 @@ import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';
 import { NavParamList } from '../navigation/AppNavigator';
 
+// Define the new interface
+interface MemberWithStatus extends User {
+  status: 'member' | 'invited' | 'available';
+}
+
 type AddMembersScreenRouteProp = RouteProp<NavParamList, 'AddMembers'>;
 
 const AddMembersScreen: React.FC = () => {
@@ -31,14 +36,16 @@ const AddMembersScreen: React.FC = () => {
   const { crewId } = route.params;
   const { user } = useUser();
 
-  const [allPotentialMembers, setAllPotentialMembers] = useState<User[]>([]);
+  const [allPotentialMembers, setAllPotentialMembers] = useState<
+    MemberWithStatus[]
+  >([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [emailToAdd, setEmailToAdd] = useState<string>('');
   const [addingByEmail, setAddingByEmail] = useState<boolean>(false);
 
-  // Fetch all members from all of the user's crews
+  // Fetch all members from all of the user's crews and assign status
   useEffect(() => {
     const fetchPotentialMembers = async () => {
       if (!user) {
@@ -65,18 +72,6 @@ const AddMembersScreen: React.FC = () => {
           memberIds.forEach((id) => memberIdsSet.add(id));
         });
 
-        // Remove members already in the current crew
-        const currentCrewRef = doc(db, 'crews', crewId);
-        const currentCrewSnap = await getDoc(currentCrewRef);
-        if (!currentCrewSnap.exists()) {
-          Alert.alert('Error', 'Crew does not exist');
-          setLoading(false);
-          return;
-        }
-        const currentCrewData = currentCrewSnap.data();
-        const currentCrewMemberIds: string[] = currentCrewData.memberIds || [];
-        currentCrewMemberIds.forEach((id) => memberIdsSet.delete(id));
-
         // Convert the set to an array
         const potentialMemberIds = Array.from(memberIdsSet);
 
@@ -93,14 +88,51 @@ const AddMembersScreen: React.FC = () => {
         );
         const userDocs = await Promise.all(userDocsPromises);
 
-        const potentialMembers: User[] = userDocs
+        const fetchedMembers: User[] = userDocs
           .filter((docSnap) => docSnap.exists())
           .map((docSnap) => ({
             uid: docSnap.id,
             ...(docSnap.data() as Omit<User, 'uid'>),
           }));
 
-        setAllPotentialMembers(potentialMembers);
+        // Fetch pending invitations to the crew
+        const invitationsRef = collection(db, 'invitations');
+        const invitationsQuery = query(
+          invitationsRef,
+          where('crewId', '==', crewId),
+          where('status', '==', 'pending'),
+        );
+        const invitationsSnapshot = await getDocs(invitationsQuery);
+
+        const invitedUserIds = invitationsSnapshot.docs.map(
+          (doc) => doc.data().toUserId,
+        );
+
+        // Fetch current crew members
+        const currentCrewRef = doc(db, 'crews', crewId);
+        const currentCrewSnap = await getDoc(currentCrewRef);
+        if (!currentCrewSnap.exists()) {
+          Alert.alert('Error', 'Crew does not exist');
+          setLoading(false);
+          return;
+        }
+        const currentCrewData = currentCrewSnap.data();
+        const currentCrewMemberIds: string[] = currentCrewData.memberIds || [];
+
+        // Map fetched members to include their status and exclude the current user
+        const membersWithStatus: MemberWithStatus[] = fetchedMembers
+          .filter((member) => member.uid !== user.uid) // Exclude the current user
+          .map((member) => {
+            if (currentCrewMemberIds.includes(member.uid)) {
+              return { ...member, status: 'member' };
+            } else if (invitedUserIds.includes(member.uid)) {
+              return { ...member, status: 'invited' };
+            } else {
+              return { ...member, status: 'available' };
+            }
+          });
+
+        setAllPotentialMembers(membersWithStatus);
       } catch (error) {
         console.error('Error fetching potential members:', error);
         Alert.alert('Error', 'Could not fetch potential members');
@@ -133,7 +165,7 @@ const AddMembersScreen: React.FC = () => {
     try {
       // Iterate through selectedMemberIds and send invitations
       const invitationsRef = collection(db, 'invitations');
-      const batch = writeBatch(db); // Optional: Use batch writes for atomicity
+      const batch = writeBatch(db); // Use batch writes for atomicity
 
       for (const memberId of selectedMemberIds) {
         // Check if there's already a pending invitation
@@ -206,7 +238,6 @@ const AddMembersScreen: React.FC = () => {
       const emailQuery = query(
         usersRef,
         where('email', '==', normalizedEmail),
-        where('memberIds', 'array-contains', user?.uid), // Ensure the user is part of at least one crew
         limit(1),
       );
       const querySnapshot = await getDocs(emailQuery);
@@ -218,6 +249,12 @@ const AddMembersScreen: React.FC = () => {
 
       const userDoc = querySnapshot.docs[0];
       const inviteeId = userDoc.id;
+
+      // Prevent the user from inviting themselves
+      if (inviteeId === user?.uid) {
+        Alert.alert('Error', 'You cannot invite yourself to the crew');
+        return;
+      }
 
       // Check if the user is already a member of the crew
       const crewDoc = await getDoc(doc(db, 'crews', crewId));

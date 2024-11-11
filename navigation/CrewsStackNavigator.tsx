@@ -37,8 +37,8 @@ const CrewsStackNavigator: React.FC = () => {
         component={AddMembersScreen}
         options={{
           headerBackTitleVisible: false,
-          headerStatusBarHeight: 0,
           title: 'Add members',
+          headerStatusBarHeight: 0,
         }}
       />
     </Stack.Navigator>
