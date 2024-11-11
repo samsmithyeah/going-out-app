@@ -16,17 +16,7 @@ import {
   useNavigation,
   NavigationProp,
 } from '@react-navigation/native';
-import {
-  doc,
-  getDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  onSnapshot,
-  addDoc,
-  updateDoc,
-} from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { deleteCrew, db } from '../firebase';
 import { useUser } from '../context/UserContext';
 import { User } from '../types/User';
@@ -35,9 +25,9 @@ import { NavParamList } from '../navigation/AppNavigator';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import MemberList from '../components/MemberList';
 import { Crew } from '../types/Crew';
-import CustomModal from '../components/CustomModal'; // Import CustomModal
-import CustomButton from '../components/CustomButton'; // Import CustomButton
-import CustomTextInput from '../components/CustomTextInput'; // Import CustomTextInput
+import CustomButton from '../components/CustomButton';
+import CustomTextInput from '../components/CustomTextInput';
+import CustomModal from '../components/CustomModal';
 
 type CrewSettingsScreenRouteProp = RouteProp<NavParamList, 'CrewSettings'>;
 
@@ -49,11 +39,9 @@ const CrewSettingsScreen: React.FC = () => {
 
   const [crew, setCrew] = useState<Crew | null>(null);
   const [members, setMembers] = useState<User[]>([]);
-  const [isInviteModalVisible, setIsInviteModalVisible] = useState(false);
   const [isEditNameModalVisible, setIsEditNameModalVisible] = useState(false);
   const [isEditActivityModalVisible, setIsEditActivityModalVisible] =
     useState(false);
-  const [inviteeEmail, setInviteeEmail] = useState('');
   const [newCrewName, setNewCrewName] = useState('');
   const [newActivity, setNewActivity] = useState('');
   const [activityError, setActivityError] = useState<string>('');
@@ -136,78 +124,6 @@ const CrewSettingsScreen: React.FC = () => {
 
     fetchMembers();
   }, [crew]);
-
-  // Function to invite a user by email
-  const inviteUserToCrew = async () => {
-    if (!inviteeEmail.trim()) {
-      Alert.alert('Error', 'Email address is required');
-      return;
-    }
-
-    try {
-      if (!user?.uid) {
-        Alert.alert('Error', 'User is not authenticated');
-        return;
-      }
-
-      const normalizedEmail = inviteeEmail.trim().toLowerCase();
-
-      // Find the user by email
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('email', '==', normalizedEmail));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        Alert.alert('Error', 'No user found with that email');
-        return;
-      }
-
-      const inviteeDoc = querySnapshot.docs[0];
-      const inviteeId = inviteeDoc.id;
-
-      // Check if the user is already a member
-      if (crew?.memberIds.includes(inviteeId)) {
-        Alert.alert('Error', 'User is already a member of the crew');
-        return;
-      }
-
-      // Check if there's already a pending invitation
-      const invitationsRef = collection(db, 'invitations');
-      const existingInvitationQuery = query(
-        invitationsRef,
-        where('crewId', '==', crewId),
-        where('toUserId', '==', inviteeId),
-        where('status', '==', 'pending'),
-      );
-      const existingInvitationSnapshot = await getDocs(existingInvitationQuery);
-
-      if (!existingInvitationSnapshot.empty) {
-        Alert.alert(
-          'Error',
-          'A pending invitation already exists for this user',
-        );
-        return;
-      }
-
-      // Create an invitation
-      await addDoc(collection(db, 'invitations'), {
-        crewId: crewId,
-        fromUserId: user.uid,
-        toUserId: inviteeId,
-        status: 'pending',
-        timestamp: new Date(),
-      });
-
-      // Close modal and clear input
-      setIsInviteModalVisible(false);
-      setInviteeEmail('');
-
-      Alert.alert('Success', 'Invitation sent');
-    } catch (error) {
-      console.error('Error inviting user:', error);
-      Alert.alert('Error', 'Could not send invitation');
-    }
-  };
 
   // Function to delete the crew
   const handleDeleteCrew = async () => {
@@ -490,8 +406,10 @@ const CrewSettingsScreen: React.FC = () => {
           >{`${members.length} member${members.length !== 1 ? 's' : ''}:`}</Text>
           <TouchableOpacity
             style={styles.addButtonInline}
-            onPress={() => setIsInviteModalVisible(true)}
-            accessibilityLabel="Invite Member"
+            onPress={() =>
+              navigation.navigate('AddMembers', { crewId: crewId })
+            }
+            accessibilityLabel="Add Member"
           >
             <Ionicons name="add-circle" size={30} color="#1e90ff" />
           </TouchableOpacity>
@@ -529,43 +447,6 @@ const CrewSettingsScreen: React.FC = () => {
           loading={isDeleting} // Show loading indicator when deleting
         />
       )}
-
-      {/* Modal for Inviting Member */}
-      <CustomModal
-        isVisible={isInviteModalVisible}
-        onClose={() => {
-          setIsInviteModalVisible(false);
-          setInviteeEmail('');
-        }}
-        title="Invite new crew member"
-        buttons={[
-          {
-            label: 'Invite',
-            onPress: inviteUserToCrew,
-            variant: 'primary',
-            disabled: isUpdatingName || isUpdatingActivity, // Adjust as needed
-          },
-          {
-            label: 'Cancel',
-            onPress: () => {
-              setIsInviteModalVisible(false);
-              setInviteeEmail('');
-            },
-            variant: 'secondary',
-            disabled: isUpdatingName || isUpdatingActivity,
-          },
-        ]}
-        loading={isUpdatingName || isUpdatingActivity}
-      >
-        <CustomTextInput
-          placeholder="Member's email"
-          value={inviteeEmail}
-          onChangeText={setInviteeEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          hasBorder={true}
-        />
-      </CustomModal>
 
       {/* Modal for Editing Crew Name */}
       <CustomModal

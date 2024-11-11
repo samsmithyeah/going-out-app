@@ -5,7 +5,6 @@ import {
   View,
   Text,
   Alert,
-  TextInput,
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
@@ -27,8 +26,9 @@ import { NavParamList } from '../navigation/AppNavigator';
 import ScreenTitle from '../components/ScreenTitle';
 import CrewList from '../components/CrewList';
 import CreateCrewModal from '../components/CreateCrewModal';
-import { Crew } from '../types/Crew'; // Ensure correct import path
-import { User } from '../types/User'; // Ensure correct import path
+import { Crew } from '../types/Crew';
+import { User } from '../types/User';
+import CustomSearchInput from '../components/CustomSearchInput';
 
 type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
@@ -190,23 +190,10 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons
-          name="search"
-          size={20}
-          color="#888"
-          style={styles.searchIcon}
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          autoCapitalize="none"
-          autoCorrect={false}
-          clearButtonMode="while-editing"
-        />
-      </View>
+      <CustomSearchInput
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+      />
 
       {/* Crew List */}
       <CrewList
@@ -245,22 +232,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e6e6e6',
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    marginBottom: 15,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
   },
 });

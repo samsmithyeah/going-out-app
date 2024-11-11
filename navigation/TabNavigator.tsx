@@ -24,7 +24,7 @@ const TabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
       initialRouteName="Home"
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, headerStatusBarHeight: 0 }}
     >
       <Tab.Screen
         name="Home"
