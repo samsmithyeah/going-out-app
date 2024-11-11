@@ -7,6 +7,8 @@ import CrewScreen from '../screens/CrewScreen';
 import CrewSettingsScreen from '../screens/CrewSettingsScreen';
 import { NavParamList } from './AppNavigator';
 import AddMembersScreen from '../screens/AddMembersScreen';
+import OtherUserProfileScreen from '../screens/OtherUserProfileScreen';
+import UserProfileScreen from '../screens/UserProfileScreen';
 
 const Stack = createStackNavigator<NavParamList>();
 
@@ -40,6 +42,16 @@ const CrewsStackNavigator: React.FC = () => {
           title: 'Add members',
           headerStatusBarHeight: 0,
         }}
+      />
+      <Stack.Screen
+        name="OtherUserProfile"
+        component={OtherUserProfileScreen}
+        options={{ headerStatusBarHeight: 0, headerBackTitleVisible: false }}
+      />
+      <Stack.Screen
+        name="UserProfile"
+        component={UserProfileScreen}
+        options={{ headerStatusBarHeight: 0, headerBackTitleVisible: false }}
       />
     </Stack.Navigator>
   );

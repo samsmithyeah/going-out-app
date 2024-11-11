@@ -70,16 +70,11 @@ const MemberList: React.FC<MemberListProps> = ({
         style={styles.memberItem}
         onPress={() => {
           if (isDisabled) return; // Prevent interaction
-          if (onSelectMember) {
-            onSelectMember(item.uid);
-          }
           if (onMemberPress) {
             onMemberPress(item);
           }
         }}
-        activeOpacity={
-          isDisabled ? 1 : onSelectMember || onMemberPress ? 0.7 : 1
-        }
+        activeOpacity={isDisabled ? 1 : onMemberPress ? 0.7 : 1}
         disabled={isDisabled} // Visually disable the touchable
       >
         {/* Display Profile Picture */}
@@ -112,11 +107,16 @@ const MemberList: React.FC<MemberListProps> = ({
         </View>
         {/* Only show selection icon if member is available */}
         {onSelectMember && !isDisabled && (
-          <Ionicons
-            name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
-            size={24}
-            color="#1e90ff"
-          />
+          <TouchableOpacity
+            onPress={() => onSelectMember(item.uid)}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
+              size={24}
+              color="#1e90ff"
+            />
+          </TouchableOpacity>
         )}
       </TouchableOpacity>
     );
