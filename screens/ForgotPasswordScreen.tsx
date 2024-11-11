@@ -1,5 +1,4 @@
 // screens/ForgotPasswordScreen.tsx
-
 import React, { useState } from 'react';
 import {
   StyleSheet,
@@ -14,8 +13,7 @@ import { NavParamList } from '../navigation/AppNavigator';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
 import CustomButton from '../components/CustomButton';
-import CustomTextInput from '../components/CustomTextInput'; // Import the CustomTextInput
-import { LinearGradient } from 'expo-linear-gradient';
+import CustomTextInput from '../components/CustomTextInput';
 
 type ForgotPasswordProps = NativeStackScreenProps<
   NavParamList,
@@ -30,16 +28,13 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordProps> = ({
   const [error, setError] = useState<string>('');
 
   const handlePasswordReset = async () => {
-    // Reset error
     setError('');
 
-    // Basic validation
     if (!email.trim()) {
       setError('Please enter your email address.');
       return;
     }
 
-    // Email format validation
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email.trim())) {
       setError('Please enter a valid email address.');
@@ -69,8 +64,8 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordProps> = ({
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <LinearGradient colors={['#4e488c', '#2575fc']} style={styles.gradient}>
-        <View style={styles.container}>
+      <View style={styles.container}>
+        <View style={styles.formContainer}>
           <Text style={styles.instructions}>
             Enter your email address below to receive a password reset link:
           </Text>
@@ -78,7 +73,7 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordProps> = ({
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <CustomTextInput
-            iconName="mail-outline" // Optional: Specify the icon
+            iconName="mail-outline"
             placeholder="Email address"
             placeholderTextColor="#666"
             value={email}
@@ -89,20 +84,20 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordProps> = ({
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
-            textContentType="username" // Important for AutoFill
-            importantForAutofill="yes" // Ensures AutoFill is active
+            textContentType="username"
+            importantForAutofill="yes"
           />
 
           <CustomButton
             title="Send reset link"
             onPress={handlePasswordReset}
-            variant="primary" // Assuming 'primary' is styled appropriately in CustomButton
-            loading={loading} // Show loading indicator when sending email
+            variant="primary"
+            loading={loading}
             accessibilityLabel="Send Password Reset Link"
             accessibilityHint="Press to send a password reset link to your email"
           />
         </View>
-      </LinearGradient>
+      </View>
     </TouchableWithoutFeedback>
   );
 };
@@ -110,17 +105,14 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordProps> = ({
 export default ForgotPasswordScreen;
 
 const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#6497b1',
     justifyContent: 'center',
   },
   instructions: {
     fontSize: 18,
-    color: '#fff',
+    color: '#333',
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -129,5 +121,11 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: 'center',
     fontSize: 14,
+  },
+  formContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: 15,
+    padding: 20,
+    marginHorizontal: 20,
   },
 });

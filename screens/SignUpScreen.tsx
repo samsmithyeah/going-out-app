@@ -23,9 +23,8 @@ import {
 import { addUserToFirestore } from '../helpers/AddUserToFirestore';
 import { useUser } from '../context/UserContext';
 import CustomButton from '../components/CustomButton';
-import CustomTextInput from '../components/CustomTextInput'; // Import the CustomTextInput
-import { LinearGradient } from 'expo-linear-gradient';
-import zxcvbn from 'zxcvbn'; // Password strength library
+import CustomTextInput from '../components/CustomTextInput';
+import zxcvbn from 'zxcvbn';
 
 type NavParamList = {
   SignUp: undefined;
@@ -49,12 +48,11 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const [formError, setFormError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const { setUser } = useUser();
-
   const [passwordStrength, setPasswordStrength] = useState<number>(0);
 
   const evaluatePasswordStrength = (pass: string) => {
     const evaluation = zxcvbn(pass);
-    setPasswordStrength(evaluation.score); // Score ranges from 0 to 4
+    setPasswordStrength(evaluation.score);
   };
 
   const getPasswordStrengthLabel = () => {
@@ -74,23 +72,19 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleSignUp = async () => {
-    // Reset form error
     setFormError('');
 
-    // Basic validation
     if (!email.trim() || !password || !firstName.trim() || !lastName.trim()) {
       setFormError('Please fill in all fields.');
       return;
     }
 
-    // Email format validation
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email.trim())) {
       setFormError('Please enter a valid email address.');
       return;
     }
 
-    // Password strength validation (minimum 6 characters)
     if (password.length < 6) {
       setFormError('Password must be at least 6 characters long.');
       return;
@@ -135,14 +129,14 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <LinearGradient colors={['#4e488c', '#2575fc']} style={styles.gradient}>
+      <View style={styles.container}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.container}
         >
           <View style={styles.logoContainer}>
             <Image
-              source={require('../assets/images/icon.png')} // Replace with your logo
+              source={require('../assets/images/icon.png')}
               style={styles.logo}
               resizeMode="contain"
             />
@@ -164,8 +158,8 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
-              textContentType="username" // Important for AutoFill
-              importantForAutofill="yes" // Ensures AutoFill is active
+              textContentType="username"
+              importantForAutofill="yes"
             />
 
             <CustomTextInput
@@ -204,16 +198,15 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={(text) => {
                 setPassword(text);
                 if (formError) setFormError('');
-                evaluatePasswordStrength(text); // Evaluate strength on change
+                evaluatePasswordStrength(text);
               }}
               secureTextEntry
               autoCapitalize="none"
               autoComplete="password"
-              textContentType="password" // Important for AutoFill
-              importantForAutofill="yes" // Ensures AutoFill is active
+              textContentType="password"
+              importantForAutofill="yes"
             />
 
-            {/* Password Strength Indicator */}
             {password.length > 0 && (
               <View style={styles.passwordStrengthContainer}>
                 <View style={styles.passwordStrengthBarContainer}>
@@ -255,28 +248,25 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
 
             <TouchableOpacity
               style={styles.loginContainer}
-              onPress={() => navigation.navigate('Login')} // Assuming you have a Login screen
+              onPress={() => navigation.navigate('Login')}
             >
               <Text style={styles.loginText}>Already have an account? </Text>
               <Text style={styles.loginLink}>Login</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
-      </LinearGradient>
+      </View>
     </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
   container: {
     flex: 1,
-    padding: 16,
-    justifyContent: 'center',
+    backgroundColor: '#6497b1',
   },
   logoContainer: {
+    marginTop: 70,
     alignItems: 'center',
     marginBottom: 30,
   },
@@ -291,9 +281,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   formContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 15,
     padding: 20,
+    marginHorizontal: 20,
   },
   passwordStrengthContainer: {
     marginBottom: 15,

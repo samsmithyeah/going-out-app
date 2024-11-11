@@ -19,7 +19,6 @@ import { NavParamList } from '../navigation/AppNavigator';
 import { useUser } from '../context/UserContext';
 import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';
-import { LinearGradient } from 'expo-linear-gradient';
 
 type LoginScreenProps = NativeStackScreenProps<NavParamList, 'Login'>;
 
@@ -40,16 +39,13 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   }, [user]);
 
   const handleEmailLogin = async () => {
-    // Reset form error
     setFormError('');
 
-    // Basic validation
     if (!email.trim() || !password) {
       setFormError('Please enter both email and password.');
       return;
     }
 
-    // Email format validation
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email.trim())) {
       setFormError('Please enter a valid email address.');
@@ -59,10 +55,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      // iOS should automatically offer to save the password upon successful login
     } catch (error: any) {
       console.error('Login Error:', error);
-      // Map Firebase error codes to user-friendly messages
       switch (error.code) {
         case 'auth/user-not-found':
           setFormError('No account found for this email.');
@@ -83,10 +77,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <LinearGradient colors={['#4e488c', '#2575fc']} style={styles.gradient}>
+      <View style={styles.container}>
         <View style={styles.logoContainer}>
           <Image
-            source={require('../assets/images/icon.png')} // Replace with your logo
+            source={require('../assets/images/icon.png')}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -108,8 +102,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
-            textContentType="username" // Important for AutoFill
-            importantForAutofill="yes" // Ensures AutoFill is active
+            textContentType="username"
+            importantForAutofill="yes"
           />
 
           <CustomTextInput
@@ -124,11 +118,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             secureTextEntry
             autoCapitalize="none"
             autoComplete="password"
-            textContentType="password" // Important for AutoFill
-            importantForAutofill="yes" // Ensures AutoFill is active
+            textContentType="password"
+            importantForAutofill="yes"
           />
 
-          {/* "Forgot Password?" Link */}
           <TouchableOpacity
             style={styles.forgotPasswordContainer}
             onPress={() => navigation.navigate('ForgotPassword')}
@@ -139,7 +132,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
           <CustomButton
             title="Login"
             onPress={handleEmailLogin}
-            variant="primary" // Assuming 'primary' is defined in CustomButton
+            variant="primary"
             accessibilityLabel="Login"
             accessibilityHint="Press to log into your account"
             loading={loading}
@@ -161,14 +154,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             <Text style={styles.signupLink}>Sign Up</Text>
           </TouchableOpacity>
         </View>
-      </LinearGradient>
+      </View>
     </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
-  gradient: {
+  container: {
     flex: 1,
+    backgroundColor: '#6497b1',
   },
   logoContainer: {
     marginTop: 70,
@@ -186,7 +180,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   formContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 15,
     padding: 20,
     marginHorizontal: 20,
