@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  FlatList,
+  TouchableOpacity,
 } from 'react-native';
 import {
   collection,
@@ -19,145 +21,94 @@ import {
   Timestamp,
   writeBatch,
 } from 'firebase/firestore';
-import { db } from '../firebase';
-import { useUser } from '../context/UserContext';
+import { db } from '../firebase'; // Ensure Firebase is initialized in this file
+import { useUser } from '../context/UserContext'; // Custom hook to access user context
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useFocusEffect } from '@react-navigation/native';
-import CustomButton from '../components/CustomButton';
-import { Calendar, LocaleConfig } from 'react-native-calendars';
 import moment from 'moment';
 
-// Configure locale for react-native-calendars if needed
-LocaleConfig.locales['en'] = {
-  monthNames: [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ],
-  monthNamesShort: [
-    'Jan.',
-    'Feb.',
-    'Mar.',
-    'Apr.',
-    'May',
-    'Jun.',
-    'Jul.',
-    'Aug.',
-    'Sep.',
-    'Oct.',
-    'Nov.',
-    'Dec.',
-  ],
-  dayNames: [
-    'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-  ],
-  dayNamesShort: ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.'],
-};
-LocaleConfig.defaultLocale = 'en';
-
-// Utility function to generate an array of date strings between two dates
-const generateDateRange = (startDate: Date, endDate: Date): string[] => {
-  const dates = [];
-  let currentDate = moment(startDate);
-  const lastDate = moment(endDate);
-
-  while (currentDate.isSameOrBefore(lastDate, 'day')) {
-    dates.push(currentDate.format('YYYY-MM-DD'));
-    currentDate = currentDate.add(1, 'day');
+const generateWeekDates = (): string[] => {
+  const dates: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    dates.push(moment().add(i, 'days').format('YYYY-MM-DD'));
   }
-
   return dates;
 };
 
-const HomeScreen: React.FC = () => {
-  const { user } = useUser();
-  const [loading, setLoading] = useState<boolean>(true);
-  const [markedDates, setMarkedDates] = useState<{ [key: string]: any }>({});
-  const [selectedDate, setSelectedDate] = useState<string>(
-    moment().format('YYYY-MM-DD'),
-  );
-  const [dateCounts, setDateCounts] = useState<{ [key: string]: number }>({});
+const getDotColor = (count: number, total: number): string => {
+  if (count === total && total > 0) return '#32CD32'; // Green
+  if (count > 0 && count < total) return '#FFA500'; // Orange
+  return '#D3D3D3'; // Grey
+};
 
-  // Define the date range for the heatmap (e.g., past 30 days)
-  const dateRange = useMemo(() => {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - 29); // Past 30 days including today
-    return generateDateRange(startDate, endDate);
+// Maximum number of operations per batch to comply with Firestore limits
+const MAX_BATCH_SIZE = 10;
+
+const HomeScreen: React.FC = () => {
+  const { user } = useUser(); // Access the authenticated user
+  const [loading, setLoading] = useState<boolean>(true); // Loading state
+  const [weekDates, setWeekDates] = useState<string[]>([]); // Array of next 7 dates
+  const [dateCounts, setDateCounts] = useState<{ [key: string]: number }>({}); // Count of "up" statuses per date
+  const [crewIds, setCrewIds] = useState<string[]>([]); // Crews the user is member of
+
+  // Define the week date range (today + next 6 days)
+  useEffect(() => {
+    setWeekDates(generateWeekDates());
   }, []);
 
-  // Fetch the user's up statuses across all crews within the date range
-  const fetchUpStatuses = async () => {
-    if (!user?.uid) {
-      Alert.alert('Error', 'User not authenticated');
-      setLoading(false);
-      return;
-    }
+  // Fetch crews where the user is a member
+  const fetchUserCrews = async (): Promise<string[]> => {
+    if (!user?.uid) return [];
+
+    const crewsRef = collection(db, 'crews');
+    const userCrewsQuery = query(
+      crewsRef,
+      where('memberIds', 'array-contains', user.uid),
+    );
+    const crewsSnapshot = await getDocs(userCrewsQuery);
+    return crewsSnapshot.docs.map(doc => doc.id);
+  };
+
+  // Fetch the user's up statuses across all crews within the week
+  const fetchUpStatuses = async (crewIds: string[], weekDates: string[]) => {
+    const counts: { [key: string]: number } = {};
+
+    // Initialize counts for each date
+    weekDates.forEach((date) => {
+      counts[date] = 0;
+    });
+
+    // Prepare all status document references
+    const statusDocRefs = crewIds.flatMap((crewId) =>
+      weekDates.map((date) =>
+        doc(
+          db,
+          'crews',
+          crewId,
+          'statuses',
+          date,
+          'userStatuses',
+          user?.uid || '',
+        ),
+      ),
+    );
 
     try {
-      const crewsRef = collection(db, 'crews');
-      const userCrewsQuery = query(
-        crewsRef,
-        where('memberIds', 'array-contains', user.uid),
-      );
-      const crewsSnapshot = await getDocs(userCrewsQuery);
-
-      if (crewsSnapshot.empty) {
-        setMarkedDates({});
-        setDateCounts({});
-        setLoading(false);
-        return;
-      }
-
-      const counts: { [key: string]: number } = {};
-
-      // Initialize counts for each date
-      dateRange.forEach((date) => {
-        counts[date] = 0;
-      });
-
-      // Prepare all status document references
-      const statusDocRefs = crewsSnapshot.docs.flatMap((crewDoc) =>
-        dateRange.map((date) =>
-          doc(
-            db,
-            'crews',
-            crewDoc.id,
-            'statuses',
-            date,
-            'userStatuses',
-            user.uid,
-          ),
-        ),
-      );
-
       // Fetch all status documents concurrently
       const statusSnapshots = await Promise.all(
         statusDocRefs.map((ref) => getDoc(ref)),
       );
 
       // Aggregate counts
-      statusSnapshots.forEach((statusSnap, index) => {
+      statusSnapshots.forEach((statusSnap) => {
         if (statusSnap.exists()) {
           const statusData = statusSnap.data();
-          if (typeof statusData.upForGoingOutTonight === 'boolean') {
-            if (statusData.upForGoingOutTonight) {
-              const date = dateRange[index % dateRange.length];
+          if (
+            typeof statusData.upForGoingOutTonight === 'boolean' &&
+            statusData.upForGoingOutTonight
+          ) {
+            const date = statusSnap.ref.parent.parent?.id;
+            if (date && counts[date] !== undefined) {
               counts[date] += 1;
             }
           }
@@ -165,246 +116,55 @@ const HomeScreen: React.FC = () => {
       });
 
       setDateCounts(counts);
-
-      // Map counts to markedDates with appropriate colors and disable past dates
-      const newMarkedDates: { [key: string]: any } = {};
-
-      Object.keys(counts).forEach((date) => {
-        const count = counts[date];
-        const isPastDate = moment(date).isBefore(moment(), 'day'); // Check if date is before today
-
-        newMarkedDates[date] = {
-          ...(count > 0 && {
-            dots: [
-              {
-                key: 'up',
-                color: getHeatmapColor(count),
-              },
-            ],
-          }),
-          ...(isPastDate && {
-            disabled: true, // Disable past dates
-            disableTouchEvent: true, // Optional: further disable touch events
-          }),
-        };
-      });
-
-      // Highlight the selected date
-      newMarkedDates[selectedDate] = {
-        ...(newMarkedDates[selectedDate] || {}),
-        selected: true,
-        selectedColor: '#1E90FF',
-      };
-
-      setMarkedDates(newMarkedDates);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching up statuses:', error);
-      Alert.alert('Error', 'There was an issue fetching your up statuses.');
-    } finally {
-      setLoading(false);
+      if (error.code === 'permission-denied') {
+        Alert.alert(
+          'Permission Denied',
+          'You do not have permission to perform this action. Please contact support if the issue persists.',
+        );
+      } else {
+        Alert.alert('Error', 'There was an issue fetching your up statuses.');
+      }
     }
   };
 
-  // Helper function to determine color based on count
-  const getHeatmapColor = (count: number): string => {
-    if (count >= 5) return '#FF0000'; // Red for high count
-    if (count >= 3) return '#FFA500'; // Orange for medium count
-    return '#32CD32'; // Green for low count
-  };
-
+  // Fetch crews and statuses when the screen is focused
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
-      fetchUpStatuses();
-    }, [user?.uid, dateRange]), // Removed 'selectedDate' from dependencies
-  );
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          const fetchedCrewIds = await fetchUserCrews();
+          setCrewIds(fetchedCrewIds);
 
-  // Update markedDates whenever data or selectedDate changes
-  useEffect(() => {
-    if (dateCounts && Object.keys(dateCounts).length > 0) {
-      const newMarkedDates: { [key: string]: any } = {};
-
-      Object.keys(dateCounts).forEach((date) => {
-        const count = dateCounts[date];
-        const isPastDate = moment(date).isBefore(moment(), 'day');
-
-        newMarkedDates[date] = {
-          ...(count > 0 && {
-            dots: [
-              {
-                key: 'up',
-                color: getHeatmapColor(count),
-              },
-            ],
-          }),
-          ...(isPastDate && {
-            disabled: true,
-            disableTouchEvent: true, // Ensures disabled dates are not touchable
-          }),
-        };
-      });
-
-      // Highlight the selected date
-      newMarkedDates[selectedDate] = {
-        ...(newMarkedDates[selectedDate] || {}),
-        selected: true,
-        selectedColor: '#1E90FF',
+          if (fetchedCrewIds.length > 0 && weekDates.length > 0) {
+            await fetchUpStatuses(fetchedCrewIds, weekDates);
+          } else {
+            setDateCounts({});
+          }
+        } catch (error: any) {
+          console.error('Error during data fetch:', error);
+          Alert.alert('Error', 'There was an issue fetching your data.');
+        } finally {
+          setLoading(false);
+        }
       };
 
-      setMarkedDates(newMarkedDates);
-    }
-  }, [dateCounts, selectedDate]);
+      fetchData();
+    }, [user?.uid, weekDates]),
+  );
 
-  // Handle date selection to show more details if needed
-  const onDayPress = (day: any) => {
-    setSelectedDate(day.dateString);
-
-    // Update the markedDates for the newly selected date
-    const updatedMarkedDates = { ...markedDates };
-
-    // Remove 'selected' from the previous date
-    Object.keys(updatedMarkedDates).forEach((date) => {
-      if (updatedMarkedDates[date].selected) {
-        updatedMarkedDates[date].selected = false;
-        updatedMarkedDates[date].selectedColor = undefined;
-      }
-    });
-
-    // Highlight the new selected date
-    updatedMarkedDates[day.dateString] = {
-      ...(updatedMarkedDates[day.dateString] || {}),
-      selected: true,
-      selectedColor: '#1E90FF',
-    };
-
-    setMarkedDates(updatedMarkedDates);
-  };
-
-  // Function to toggle user's status for the selected date across all crews
-  const toggleStatusForSelectedDate = async () => {
+  // Function to toggle user's status for a specific date across all crews
+  const toggleStatusForDate = async (date: string, toggleTo: boolean) => {
     if (!user?.uid) {
       Alert.alert('Error', 'User not authenticated');
       return;
     }
 
-    setLoading(true);
-
-    try {
-      const crewsRef = collection(db, 'crews');
-      const userCrewsQuery = query(
-        crewsRef,
-        where('memberIds', 'array-contains', user.uid),
-      );
-      const crewsSnapshot = await getDocs(userCrewsQuery);
-
-      if (crewsSnapshot.empty) {
-        Alert.alert('Info', 'You are not part of any crews.');
-        setLoading(false);
-        return;
-      }
-
-      const batch = writeBatch(db);
-      const selectedDateStr = selectedDate; // e.g., '2023-09-15'
-
-      // Determine the new status based on current status
-      let currentStatus = false;
-      if (dateCounts[selectedDateStr] > 0) {
-        currentStatus = true;
-      }
-
-      const newStatus = !currentStatus;
-
-      crewsSnapshot.forEach((crewDoc) => {
-        const crewId = crewDoc.id;
-        const userStatusRef = doc(
-          db,
-          'crews',
-          crewId,
-          'statuses',
-          selectedDateStr,
-          'userStatuses',
-          user.uid,
-        );
-
-        batch.set(
-          userStatusRef,
-          {
-            upForGoingOutTonight: newStatus,
-            timestamp: Timestamp.fromDate(new Date()),
-          },
-          { merge: true },
-        );
-      });
-
-      await batch.commit();
-
-      Alert.alert(
-        'Success',
-        `You have been marked as ${newStatus ? 'up' : 'not up'} for it on ${moment(
-          selectedDateStr,
-        ).format('MMMM Do, YYYY')}.`,
-      );
-
-      // Update the cached dateCounts
-      setDateCounts((prevCounts) => ({
-        ...prevCounts,
-        [selectedDateStr]: newStatus
-          ? prevCounts[selectedDateStr] + 1
-          : Math.max(prevCounts[selectedDateStr] - 1, 0),
-      }));
-
-      // Update the markedDates for the selected date
-      const updatedMarkedDates = { ...markedDates };
-      if (newStatus) {
-        if (updatedMarkedDates[selectedDateStr]) {
-          updatedMarkedDates[selectedDateStr].dots[0].color = getHeatmapColor(
-            dateCounts[selectedDateStr] + 1,
-          );
-        } else {
-          updatedMarkedDates[selectedDateStr] = {
-            dots: [
-              {
-                key: 'up',
-                color: getHeatmapColor(1),
-              },
-            ],
-          };
-        }
-      } else {
-        if (dateCounts[selectedDateStr] - 1 > 0) {
-          updatedMarkedDates[selectedDateStr].dots[0].color = getHeatmapColor(
-            dateCounts[selectedDateStr] - 1,
-          );
-        } else {
-          delete updatedMarkedDates[selectedDateStr];
-        }
-      }
-
-      // Ensure the selected date remains highlighted
-      updatedMarkedDates[selectedDateStr] = {
-        ...(updatedMarkedDates[selectedDateStr] || {}),
-        selected: true,
-        selectedColor: '#1E90FF',
-      };
-
-      setMarkedDates(updatedMarkedDates);
-    } catch (error) {
-      console.error('Error toggling status:', error);
-      Alert.alert('Error', 'There was an issue updating your status.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Function to handle confirmation before toggling status
-  const handleToggleStatus = () => {
-    const action =
-      dateCounts[selectedDate] > 0
-        ? 'mark yourself as not up for it in all your crews on this day'
-        : 'mark yourself as up for it in all your crews on this day';
     Alert.alert(
-      'Confirm Status Change',
-      `Are you sure you want to ${action}?`,
+      'Confirm status change',
+      `Are you sure you want to ${toggleTo ? 'mark yourself as up for seeing any of your crews on this day' : 'mark yourself as not up for seeing any of your crews on this day'}?`,
       [
         {
           text: 'Cancel',
@@ -412,11 +172,170 @@ const HomeScreen: React.FC = () => {
         },
         {
           text: 'Confirm',
-          onPress: toggleStatusForSelectedDate,
+          onPress: async () => {
+            setLoading(true);
+            try {
+              if (crewIds.length === 0) {
+                Alert.alert('Info', 'You are not part of any crews.');
+                setLoading(false);
+                return;
+              }
+
+              const selectedDateStr = date;
+              const newStatus = toggleTo;
+
+              // Split crewIds into batches of MAX_BATCH_SIZE
+              const batches: string[][] = [];
+              for (let i = 0; i < crewIds.length; i += MAX_BATCH_SIZE) {
+                batches.push(crewIds.slice(i, i + MAX_BATCH_SIZE));
+              }
+
+              // Perform each batch sequentially
+              for (const batchCrewIds of batches) {
+                const batch = writeBatch(db);
+
+                batchCrewIds.forEach((crewId) => {
+                  const userStatusRef = doc(
+                    db,
+                    'crews',
+                    crewId,
+                    'statuses',
+                    selectedDateStr,
+                    'userStatuses',
+                    user.uid,
+                  );
+
+                  batch.set(
+                    userStatusRef,
+                    {
+                      upForGoingOutTonight: newStatus,
+                      timestamp: Timestamp.fromDate(new Date()),
+                    },
+                    { merge: true },
+                  );
+                });
+
+                await batch.commit();
+              }
+
+              Alert.alert(
+                'Success',
+                `You have been marked as ${newStatus ? 'up' : 'not up'} for it on ${moment(
+                  selectedDateStr,
+                ).format('MMMM Do, YYYY')}.`,
+              );
+
+              // Update the cached dateCounts accurately
+              setDateCounts((prevCounts) => ({
+                ...prevCounts,
+                [selectedDateStr]: newStatus ? crewIds.length : 0,
+              }));
+            } catch (error: any) {
+              console.error('Error toggling status:', error);
+              if (error.code === 'permission-denied') {
+                Alert.alert(
+                  'Permission Denied',
+                  'You do not have permission to perform this action. Please contact support if the issue persists.',
+                );
+              } else {
+                Alert.alert('Error', 'There was an issue updating your status.');
+              }
+            } finally {
+              setLoading(false);
+            }
+          },
           style: 'destructive',
         },
       ],
       { cancelable: true },
+    );
+  };
+
+  // Render a single day item
+  const renderDayItem = ({ item }: { item: string }) => {
+    const count = dateCounts[item] || 0;
+    const total = crewIds.length;
+    const isDisabled = moment(item).isBefore(moment(), 'day');
+    const statusColor = getDotColor(count, total);
+    const statusText = `Up for seeing ${count} of ${total} crew${total !== 1 ? 's' : ''}`;
+    const isFullyUp = count === total;
+    const isNotUp = count === 0;
+
+    return (
+      <View
+        style={[
+          styles.dayContainer,
+          isDisabled && styles.disabledDayContainer,
+        ]}
+      >
+        <View style={styles.dayHeader}>
+          <Text style={[styles.dayText, isDisabled && styles.disabledDayText]}>
+            {moment(item).format('dddd, MMMM Do')}
+          </Text>
+        </View>
+        <View style={styles.statusRow}>
+          <View style={styles.statusInfo}>
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: statusColor },
+              ]}
+            />
+            <Text
+              style={[
+                styles.statusText,
+                isDisabled && styles.disabledDayText,
+              ]}
+            >
+              {statusText}
+            </Text>
+          </View>
+          {!isDisabled && (
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                onPress={() => toggleStatusForDate(item, true)}
+                disabled={isFullyUp}
+                style={[
+                  styles.iconButton,
+                  isFullyUp && styles.disabledButton,
+                ]}
+                accessibilityLabel={`Mark as up for ${moment(item).format('dddd, MMMM Do')}`}
+                accessibilityHint={
+                  isFullyUp
+                    ? `You are already marked as up for all crews on ${moment(item).format('MMMM Do, YYYY')}.`
+                    : `Tap to mark yourself as up for all crews on ${moment(item).format('MMMM Do, YYYY')}.`
+                }
+              >
+                <Icon
+                  name="check-circle"
+                  size={24}
+                  color={isFullyUp ? '#A9A9A9' : '#32CD32'} // Grey if disabled, Green otherwise
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => toggleStatusForDate(item, false)}
+                disabled={isNotUp}
+                style={[
+                  styles.iconButton,
+                  isNotUp && styles.disabledButton,
+                ]}
+                accessibilityLabel={`Mark as not up for ${moment(item).format('dddd, MMMM Do')}`}
+                accessibilityHint={
+                  isNotUp
+                    ? `You are already marked as not up for any crews on ${moment(item).format('MMMM Do, YYYY')}.`
+                    : `Tap to mark yourself as not up for any crews on ${moment(item).format('MMMM Do, YYYY')}.`
+                }
+              >
+                <Icon
+                  name="cancel"
+                  size={24}
+                  color={isNotUp ? '#A9A9A9' : '#FF6347'} // Grey if disabled, Tomato otherwise
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </View>
     );
   };
 
@@ -433,80 +352,18 @@ const HomeScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Profile Section */}
       <View style={styles.profileContainer}>
-        <Text style={styles.greeting}>Hi {user?.displayName}!</Text>
+        <Text style={styles.greeting}>Hi {user?.displayName}! 👋</Text>
       </View>
 
-      {/* Calendar Heatmap */}
-      <View style={styles.calendarContainer}>
-        <Calendar
-          current={selectedDate}
-          onDayPress={onDayPress}
-          markingType={'multi-dot'}
-          markedDates={markedDates}
-          disableAllTouchEventsForDisabledDays={true} // Prevent interaction with disabled dates
-          theme={{
-            selectedDayBackgroundColor: '#1E90FF',
-            todayTextColor: '#1E90FF',
-            arrowColor: '#1E90FF',
-            dotColor: '#1E90FF',
-            selectedDotColor: '#ffffff',
-            disabledArrowColor: '#d9e1e8', // Optional: change arrow color when disabled
-            disabledDayTextColor: '#d9e1e8', // Optional: change text color for disabled dates
-          }}
-        />
-      </View>
-
-      {/* Status Summary */}
-      <View style={styles.statusSummaryCard}>
-        <Icon
-          name={dateCounts[selectedDate] > 0 ? 'check-circle' : 'highlight-off'}
-          size={30}
-          color={
-            dateCounts[selectedDate] > 0
-              ? '#32CD32' // Green
-              : '#FF6347' // Tomato
-          }
-          style={styles.statusIcon}
-        />
-        <View style={styles.statusTextContainer}>
-          <Text style={styles.statusSummaryText}>
-            {dateCounts[selectedDate] > 0
-              ? `You are up for ${dateCounts[selectedDate]} crew(s) on ${moment(
-                  selectedDate,
-                ).format('MMMM Do, YYYY')}.`
-              : `You are not up for any crews on ${moment(selectedDate).format(
-                  'MMMM Do, YYYY',
-                )}.`}
-          </Text>
-        </View>
-      </View>
-
-      {/* Toggle Status Button */}
-      <View style={styles.toggleButtonContainer}>
-        <CustomButton
-          title={
-            dateCounts[selectedDate] > 0
-              ? "I'm no longer up for seeing any of my crews on this day"
-              : "I'm up for seeing any of my crews on this day!"
-          }
-          onPress={handleToggleStatus}
-          variant={dateCounts[selectedDate] > 0 ? 'danger' : 'primary'}
-          icon={{
-            name:
-              dateCounts[selectedDate] > 0
-                ? 'remove-circle-outline'
-                : 'checkmark-circle-outline',
-            size: 24,
-            library: 'Ionicons',
-          }}
-          accessibilityLabel="Toggle Status"
-          accessibilityHint={
-            dateCounts[selectedDate] > 0
-              ? 'Mark yourself as not up for it in all your crews for this day'
-              : 'Mark yourself as up for it in all your crews for this day'
-          }
-        />
-      </View>
+      {/* Weekly Status List */}
+      <FlatList
+        data={weekDates}
+        renderItem={renderDayItem}
+        keyExtractor={(item) => item}
+        horizontal={false}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.weekListContainer}
+      />
     </View>
   );
 };
@@ -523,48 +380,68 @@ const styles = StyleSheet.create({
   },
   profileContainer: {
     alignItems: 'center',
-    marginTop: 20,
     marginBottom: 20,
   },
   greeting: {
-    fontSize: 24,
+    fontSize: 20, // Reduced font size
     color: '#333333', // Dark text for readability
     fontWeight: '700',
-    marginTop: 15,
-    marginBottom: 10,
   },
-  calendarContainer: {
-    width: '100%',
-    marginBottom: 20,
+  weekListContainer: {
+    alignItems: 'center',
   },
-  statusSummaryCard: {
+  dayContainer: {
+    width: width * 0.90, // Slightly wider for better readability
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12, // Reduced vertical padding
+    paddingHorizontal: 16,
+    borderRadius: 10, // Slightly smaller border radius
+    marginBottom: 12, // Reduced margin between cards
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+
+  },
+  disabledDayContainer: {
+    backgroundColor: '#E0E0E0',
+  },
+  dayHeader: {
+    marginBottom: 6, // Reduced margin
+  },
+  dayText: {
+    fontSize: 16, // Reduced font size
+    color: '#333333',
+    fontWeight: '600',
+  },
+  disabledDayText: {
+    color: '#A9A9A9',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 15,
-    width: width * 0.9,
-    borderWidth: 2,
-    borderColor: '#F0F0F0',
-    marginBottom: 20,
   },
-  statusIcon: {
-    marginRight: 15,
+  statusDot: {
+    width: 10, // Smaller dot
+    height: 10,
+    borderRadius: 5,
+    marginRight: 6, // Reduced margin
   },
-  statusTextContainer: {
-    flex: 1,
-  },
-  statusSummaryText: {
-    fontSize: 18,
+  statusText: {
+    fontSize: 14, // Reduced font size
     color: '#333333',
-    fontWeight: '500',
-    flexWrap: 'wrap',
   },
-  toggleButtonContainer: {
-    width: '100%',
-    paddingHorizontal: 16,
-    position: 'absolute',
-    bottom: 20,
+  buttonRow: {
+    flexDirection: 'row',
+  },
+  iconButton: {
+    marginLeft: 8,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   loaderContainer: {
     flex: 1,
