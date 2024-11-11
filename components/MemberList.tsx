@@ -11,6 +11,7 @@ import {
 import ProfilePicturePicker from './ProfilePicturePicker';
 import SkeletonUserItem from './SkeletonUserItem'; // Ensure this component exists
 import { User } from '../types/User';
+import { Ionicons } from '@expo/vector-icons';
 
 interface MemberListProps {
   members: User[];
@@ -19,6 +20,8 @@ interface MemberListProps {
   isLoading?: boolean;
   emptyMessage?: string;
   adminIds?: string[];
+  selectedMemberIds?: string[]; // New prop for selected members
+  onSelectMember?: (memberId: string) => void; // New prop for selection handler
 }
 
 const MemberList: React.FC<MemberListProps> = ({
@@ -28,6 +31,8 @@ const MemberList: React.FC<MemberListProps> = ({
   isLoading = false,
   emptyMessage = 'No members found.',
   adminIds = [],
+  selectedMemberIds = [],
+  onSelectMember,
 }) => {
   // Memoize the sorted members to avoid unnecessary re-sorting on each render
   const sortedMembers = useMemo(() => {
@@ -47,37 +52,55 @@ const MemberList: React.FC<MemberListProps> = ({
     return membersCopy;
   }, [members]);
 
-  const renderItem = ({ item }: { item: User }) => (
-    <TouchableOpacity
-      style={styles.memberItem}
-      onPress={() => onMemberPress && onMemberPress(item)}
-      activeOpacity={onMemberPress ? 0.7 : 1}
-    >
-      {/* Display Profile Picture */}
-      <ProfilePicturePicker
-        imageUrl={item.photoURL || null}
-        onImageUpdate={() => {}}
-        editable={false}
-        storagePath={`users/${item.uid}/profile.jpg`}
-        size={40}
-      />
-      <View style={styles.memberInfo}>
-        <Text style={styles.memberText}>
-          {item.displayName || 'Unnamed Member'}{' '}
-          {item.uid === currentUserId && (
-            <Text style={styles.youText}>(You)</Text>
+  const renderItem = ({ item }: { item: User }) => {
+    const isSelected = selectedMemberIds.includes(item.uid);
+
+    return (
+      <TouchableOpacity
+        style={styles.memberItem}
+        onPress={() => {
+          if (onSelectMember) {
+            onSelectMember(item.uid);
+          }
+          if (onMemberPress) {
+            onMemberPress(item);
+          }
+        }}
+        activeOpacity={onSelectMember || onMemberPress ? 0.7 : 1}
+      >
+        {/* Display Profile Picture */}
+        <ProfilePicturePicker
+          imageUrl={item.photoURL || null}
+          onImageUpdate={() => {}}
+          editable={false}
+          storagePath={`users/${item.uid}/profile.jpg`}
+          size={40}
+        />
+        <View style={styles.memberInfo}>
+          <Text style={styles.memberText}>
+            {item.displayName || 'Unnamed Member'}{' '}
+            {item.uid === currentUserId && (
+              <Text style={styles.youText}>(You)</Text>
+            )}
+          </Text>
+          {adminIds.includes(item.uid) && (
+            <>
+              <View style={styles.adminIndicator}>
+                <Text style={styles.adminText}>Admin</Text>
+              </View>
+            </>
           )}
-        </Text>
-        {adminIds.includes(item.uid) && (
-          <>
-            <View style={styles.adminIndicator}>
-              <Text style={styles.adminText}>Admin</Text>
-            </View>
-          </>
+        </View>
+        {onSelectMember && (
+          <Ionicons
+            name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
+            size={24}
+            color="#1e90ff"
+          />
         )}
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   if (isLoading) {
     // Display Skeletons or Loading Indicators

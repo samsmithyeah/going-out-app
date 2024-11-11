@@ -6,6 +6,7 @@ import CrewsListScreen from '../screens/CrewsListScreen';
 import CrewScreen from '../screens/CrewScreen';
 import CrewSettingsScreen from '../screens/CrewSettingsScreen';
 import { NavParamList } from './AppNavigator';
+import AddMembersScreen from '../screens/AddMembersScreen';
 
 const Stack = createStackNavigator<NavParamList>();
 
@@ -30,6 +31,15 @@ const CrewsStackNavigator: React.FC = () => {
         name="CrewSettings"
         component={CrewSettingsScreen}
         options={{ headerBackTitleVisible: false, headerStatusBarHeight: 0 }}
+      />
+      <Stack.Screen
+        name="AddMembers"
+        component={AddMembersScreen}
+        options={{
+          headerBackTitleVisible: false,
+          headerStatusBarHeight: 0,
+          title: 'Add members',
+        }}
       />
     </Stack.Navigator>
   );

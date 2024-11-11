@@ -27,60 +27,70 @@ const CrewList: React.FC<CrewListProps> = ({
   navigation,
 }) => {
   return (
-    <FlatList
-      data={crews}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => {
-        const memberNames = item.memberIds
-          .map(
-            (uid) =>
-              usersCache[uid]?.displayName ||
-              usersCache[uid]?.firstName ||
-              'Unknown',
-          )
-          .filter((name) => name) // Remove any undefined or empty names
-          .reduce((acc, name, index, array) => {
-            if (index === 0) {
-              return name;
-            } else if (index === array.length - 1) {
-              return `${acc} and ${name}`;
-            } else {
-              return `${acc}, ${name}`;
-            }
-          }, '');
+    <View style={styles.container}>
+      <FlatList
+        data={crews}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => {
+          const memberNames = item.memberIds
+            .map(
+              (uid) =>
+                usersCache[uid]?.displayName ||
+                usersCache[uid]?.firstName ||
+                'Unknown',
+            )
+            .filter((name) => name) // Remove any undefined or empty names
+            .reduce((acc, name, index, array) => {
+              if (index === 0) {
+                return name;
+              } else if (index === array.length - 1) {
+                return `${acc} and ${name}`;
+              } else {
+                return `${acc}, ${name}`;
+              }
+            }, '');
 
-        return (
-          <TouchableOpacity
-            style={styles.crewItem}
-            onPress={() => navigation.navigate('Crew', { crewId: item.id })}
-          >
-            {/* Crew Image */}
-            {item.iconUrl ? (
-              <Image source={{ uri: item.iconUrl }} style={styles.crewImage} />
-            ) : (
-              <View style={styles.placeholderImage}>
-                <Ionicons name="people-outline" size={24} color="#888" />
+          return (
+            <TouchableOpacity
+              style={styles.crewItem}
+              onPress={() => navigation.navigate('Crew', { crewId: item.id })}
+            >
+              {/* Crew Image */}
+              {item.iconUrl ? (
+                <Image
+                  source={{ uri: item.iconUrl }}
+                  style={styles.crewImage}
+                />
+              ) : (
+                <View style={styles.placeholderImage}>
+                  <Ionicons name="people-outline" size={24} color="#888" />
+                </View>
+              )}
+              {/* Crew Details */}
+              <View style={styles.crewDetails}>
+                {/* Crew Name */}
+                <Text style={styles.crewText}>{item.name}</Text>
+                {/* Member Names */}
+                <Text style={styles.memberText}>{memberNames}</Text>
               </View>
-            )}
-            {/* Crew Details */}
-            <View style={styles.crewDetails}>
-              {/* Crew Name */}
-              <Text style={styles.crewText}>{item.name}</Text>
-              {/* Member Names */}
-              <Text style={styles.memberText}>{memberNames}</Text>
-            </View>
-          </TouchableOpacity>
-        );
-      }}
-      ListEmptyComponent={<Text style={styles.emptyText}>No crews found</Text>}
-      contentContainerStyle={crews.length === 0 && styles.emptyContainer}
-    />
+            </TouchableOpacity>
+          );
+        }}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No crews found</Text>
+        }
+        contentContainerStyle={crews.length === 0 && styles.emptyContainer}
+      />
+    </View>
   );
 };
 
 export default CrewList;
 
 const styles = StyleSheet.create({
+  container: {
+    marginTop: 18,
+  },
   crewItem: {
     flexDirection: 'row', // Arrange image and text horizontally
     alignItems: 'center', // Vertically center items

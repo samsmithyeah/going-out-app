@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   text: {
-    width: '60%',
+    width: '80%',
     height: 20,
     backgroundColor: '#e0e0e0',
     borderRadius: 4,

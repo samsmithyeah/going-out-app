@@ -21,6 +21,7 @@ export type NavParamList = {
   EditUserProfile: undefined;
   Invitations: undefined;
   ForgotPassword: undefined;
+  AddMembers: { crewId: string };
 };
 
 const Stack = createStackNavigator<NavParamList>();
