@@ -1,7 +1,14 @@
 // screens/AddMembersScreen.tsx
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import {
   collection,
@@ -21,11 +28,11 @@ import MemberList from '../components/MemberList';
 import CustomSearchInput from '../components/CustomSearchInput';
 import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';
+import CustomModal from '../components/CustomModal'; // Ensure this component exists
 import { NavParamList } from '../navigation/AppNavigator';
 
-// Define the new interface
 interface MemberWithStatus extends User {
-  status: 'member' | 'invited' | 'available';
+  status?: 'member' | 'invited' | 'available';
 }
 
 type AddMembersScreenRouteProp = RouteProp<NavParamList, 'AddMembers'>;
@@ -43,7 +50,7 @@ const AddMembersScreen: React.FC = () => {
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [emailToAdd, setEmailToAdd] = useState<string>('');
-  const [addingByEmail, setAddingByEmail] = useState<boolean>(false);
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
   // Fetch all members from all of the user's crews and assign status
   useEffect(() => {
@@ -144,6 +151,30 @@ const AddMembersScreen: React.FC = () => {
     fetchPotentialMembers();
   }, [crewId, user]);
 
+  // Set up the navigation header with an "Add" button
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={handleAddSelectedMembers}
+          disabled={selectedMemberIds.length === 0}
+          accessibilityLabel="Add Selected Members to Crew"
+          accessibilityHint="Adds the selected members to the crew"
+          style={{ marginRight: 16 }}
+        >
+          <Text
+            style={{
+              color: selectedMemberIds.length === 0 ? '#999' : '#1e90ff',
+              fontSize: 16,
+            }}
+          >
+            Add
+          </Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, selectedMemberIds, allPotentialMembers]);
+
   // Handle selection toggling
   const handleSelectMember = (memberId: string) => {
     setSelectedMemberIds((prevSelected) => {
@@ -212,22 +243,22 @@ const AddMembersScreen: React.FC = () => {
     }
   };
 
-  const getSelectedMemberText = () => {
-    if (selectedMemberIds.length === 0) {
-      return 'Add members';
-    }
-
-    return `Add ${selectedMemberIds.length} member${selectedMemberIds.length > 1 ? 's' : ''}`;
+  // Handle opening and closing the email invitation modal
+  const openEmailModal = () => {
+    setIsModalVisible(true);
   };
 
-  // Handle adding a member by email
+  const closeEmailModal = () => {
+    setIsModalVisible(false);
+    setEmailToAdd('');
+  };
+
+  // Handle adding a member by email from the modal
   const handleAddByEmail = async () => {
     if (!emailToAdd.trim()) {
       Alert.alert('Error', 'Please enter an email address');
       return;
     }
-
-    setAddingByEmail(true);
 
     try {
       // Normalize the email to lowercase
@@ -294,13 +325,11 @@ const AddMembersScreen: React.FC = () => {
       });
 
       Alert.alert('Success', 'Invitation sent');
-      setEmailToAdd('');
+      closeEmailModal();
       navigation.goBack();
     } catch (error) {
       console.error('Error adding member by email:', error);
       Alert.alert('Error', 'Could not add member by email');
-    } finally {
-      setAddingByEmail(false);
     }
   };
 
@@ -355,22 +384,26 @@ const AddMembersScreen: React.FC = () => {
         adminIds={[]} // Adjust if there are admins to highlight
       />
 
-      {/* Add Selected Members Button */}
+      <Text style={styles.addViaEmailText}>Or invite via email address:</Text>
+      {/* Button to Open Email Invitation Modal */}
       <CustomButton
-        title={getSelectedMemberText()}
-        onPress={handleAddSelectedMembers}
-        disabled={selectedMemberIds.length === 0}
-        accessibilityLabel="Add Selected Members to Crew"
-        accessibilityHint="Adds the selected members to the crew"
-        variant="primary"
+        title="Invite via email"
+        onPress={openEmailModal}
+        accessibilityLabel="Invite Member via Email"
+        accessibilityHint="Opens a modal to invite a member by their email address"
+        variant="secondary"
       />
 
-      {/* Divider */}
-      <View style={styles.divider} />
-
-      {/* Add by Email Section */}
-      <Text style={styles.sectionTitle}>Or via email address:</Text>
-      <View>
+      {/* Invitation Modal */}
+      <CustomModal
+        isVisible={isModalVisible}
+        onClose={closeEmailModal}
+        title="Invite via email"
+        buttons={[
+          { label: 'Invite', onPress: handleAddByEmail, variant: 'primary' },
+          { label: 'Cancel', onPress: closeEmailModal, variant: 'secondary' },
+        ]}
+      >
         <CustomTextInput
           placeholder="Email address"
           value={emailToAdd}
@@ -378,17 +411,9 @@ const AddMembersScreen: React.FC = () => {
           keyboardType="email-address"
           autoCapitalize="none"
           hasBorder={true}
+          iconName="mail-outline"
         />
-        <CustomButton
-          title="Add member"
-          onPress={handleAddByEmail}
-          loading={addingByEmail}
-          accessibilityLabel="Add Member by Email"
-          accessibilityHint="Adds a member to the crew by their email address"
-          variant="primary"
-          disabled={!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToAdd)}
-        />
-      </View>
+      </CustomModal>
     </View>
   );
 };
@@ -400,18 +425,14 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  sectionTitle: {
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#ddd',
-    marginVertical: 20,
-  },
   loaderContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  addViaEmailText: {
+    marginTop: 14,
+    marginBottom: 8,
+    fontSize: 16,
   },
 });
