@@ -87,14 +87,13 @@ export const addUserToFirestore = async (user: User) => {
       lastName: user.lastName,
       photoURL: user.photoURL,
     };
-
+    await registerForPushNotificationsAsync(user);
     const userExists = (await getDoc(userDocRef)).exists();
     if (userExists) {
       console.log('User document already exists in Firestore.');
       return;
     }
     await setDoc(userDocRef, userData, { merge: true });
-    await registerForPushNotificationsAsync(user);
     console.log('User document added to Firestore.');
   } catch (err: any) {
     console.error('Error adding user document:', err);
