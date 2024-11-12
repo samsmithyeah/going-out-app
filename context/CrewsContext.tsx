@@ -20,6 +20,8 @@ import {
   writeBatch,
   onSnapshot,
   Unsubscribe,
+  setDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase'; // Ensure this points to your Firebase initialization
 import { useUser } from './UserContext'; // Custom hook to access user data
@@ -32,7 +34,15 @@ interface CrewsContextProps {
   crews: Crew[];
   dateCounts: { [key: string]: number };
   usersCache: { [key: string]: User };
-  toggleStatusForDate: (date: string, toggleTo: boolean) => Promise<void>;
+  toggleStatusForCrew: (
+    crewId: string,
+    date: string,
+    toggleTo: boolean,
+  ) => Promise<void>;
+  toggleStatusForDateAllCrews: (
+    date: string,
+    toggleTo: boolean,
+  ) => Promise<void>;
   setUsersCache: React.Dispatch<React.SetStateAction<{ [key: string]: User }>>;
   loadingCrews: boolean; // New loading state
   loadingStatuses: boolean; // New loading state
@@ -43,11 +53,11 @@ const CrewsContext = createContext<CrewsContextProps | undefined>(undefined);
 export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { user } = useUser(); // Assumes you have a UserContext that provides user data
+  const { user } = useUser();
   const [crewIds, setCrewIds] = useState<string[]>([]);
   const [crews, setCrews] = useState<Crew[]>([]);
   const [dateCounts, setDateCounts] = useState<{ [key: string]: number }>({});
-  const [usersCache, setUsersCache] = useState<{ [key: string]: User }>({}); // Moved to context
+  const [usersCache, setUsersCache] = useState<{ [key: string]: User }>({});
 
   // Loading states
   const [loadingCrews, setLoadingCrews] = useState<boolean>(true);
@@ -149,8 +159,65 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  // Function to toggle status for a specific crew and date
+  const toggleStatusForCrew = async (
+    crewId: string,
+    selectedDate: string,
+    toggleTo: boolean,
+  ) => {
+    try {
+      if (!user?.uid) {
+        throw new Error('User not authenticated');
+      }
+      const userStatusRef = doc(
+        db,
+        'crews',
+        crewId,
+        'statuses',
+        selectedDate,
+        'userStatuses',
+        user.uid,
+      );
+      const statusSnap = await getDoc(userStatusRef);
+      if (statusSnap.exists()) {
+        const currentStatus = statusSnap.data().upForGoingOutTonight || false;
+        await updateDoc(userStatusRef, {
+          upForGoingOutTonight: !currentStatus,
+          timestamp: Timestamp.fromDate(new Date()),
+        });
+        console.log(
+          `Updated Status for User ${user.uid} on ${selectedDate}: ${!currentStatus}`,
+        );
+      } else {
+        // If no status exists for the selected date, create it with true
+        await setDoc(userStatusRef, {
+          date: selectedDate,
+          upForGoingOutTonight: true,
+          timestamp: Timestamp.fromDate(new Date()),
+        });
+        console.log(
+          `Created Status for User ${user.uid} on ${selectedDate}: true`,
+        );
+      }
+
+      // Update local dateCounts
+      setDateCounts((prevCounts) => ({
+        ...prevCounts,
+        [selectedDate]: toggleTo
+          ? prevCounts[selectedDate] + 1
+          : prevCounts[selectedDate] - 1,
+      }));
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      Alert.alert('Error', 'Could not update your status');
+    }
+  };
+
   // Function to toggle status for a specific date across all crews
-  const toggleStatusForDate = async (date: string, toggleTo: boolean) => {
+  const toggleStatusForDateAllCrews = async (
+    date: string,
+    toggleTo: boolean,
+  ) => {
     if (!user?.uid) {
       Alert.alert('Error', 'User not authenticated');
       return;
@@ -303,7 +370,8 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
         crews,
         dateCounts,
         usersCache,
-        toggleStatusForDate,
+        toggleStatusForCrew,
+        toggleStatusForDateAllCrews,
         setUsersCache,
         loadingCrews,
         loadingStatuses,

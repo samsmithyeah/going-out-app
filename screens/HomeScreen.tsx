@@ -27,7 +27,7 @@ const HomeScreen: React.FC = () => {
   const {
     crewIds,
     dateCounts,
-    toggleStatusForDate,
+    toggleStatusForDateAllCrews,
     loadingCrews,
     loadingStatuses,
   } = useCrews();
@@ -59,7 +59,7 @@ const HomeScreen: React.FC = () => {
           text: 'OK',
           onPress: async () => {
             setIsLoadingUsers(true); // Start loading
-            await toggleStatusForDate(date, toggleTo);
+            await toggleStatusForDateAllCrews(date, toggleTo);
             setIsLoadingUsers(false); // End loading
           },
         },
