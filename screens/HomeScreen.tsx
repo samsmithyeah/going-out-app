@@ -19,9 +19,11 @@ const HomeScreen: React.FC = () => {
   const {
     crewIds,
     dateCounts,
+    dateMatches, // Added
     toggleStatusForDateAllCrews,
     loadingCrews,
     loadingStatuses,
+    loadingMatches, // Added
   } = useCrews();
   const [isLoadingUsers, setIsLoadingUsers] = React.useState<boolean>(false);
 
@@ -47,6 +49,7 @@ const HomeScreen: React.FC = () => {
   // Render a single day item using DateCard component
   const renderDayItem = ({ item }: { item: string }) => {
     const count = dateCounts[item] || 0;
+    const matches = dateMatches[item] || 0; // Get matches for the date
     const total = crewIds.length;
     const isDisabled = moment(item).isBefore(moment(), 'day');
     const statusColor = getDotColor(count, total);
@@ -55,6 +58,7 @@ const HomeScreen: React.FC = () => {
       <DateCard
         date={item}
         count={count}
+        matches={matches}
         total={total}
         isDisabled={isDisabled}
         statusColor={statusColor}

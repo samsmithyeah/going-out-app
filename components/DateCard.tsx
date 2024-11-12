@@ -9,6 +9,7 @@ import { Dimensions } from 'react-native';
 interface DateCardProps {
   date: string;
   count: number;
+  matches: number;
   total: number;
   isDisabled: boolean;
   statusColor: string;
@@ -19,6 +20,7 @@ interface DateCardProps {
 const DateCard: React.FC<DateCardProps> = ({
   date,
   count,
+  matches, // Destructure matches
   total,
   isDisabled,
   statusColor,
@@ -32,9 +34,7 @@ const DateCard: React.FC<DateCardProps> = ({
   const handleToggle = (toggleTo: boolean) => {
     Alert.alert(
       'Confirm update',
-      `Are you sure you want to mark yourself ${
-        toggleTo ? 'available' : 'unavailable'
-      } across all your crews on ${moment(date).format('MMMM Do, YYYY')}?`,
+      `Are you sure you want to mark yourself ${toggleTo ? 'available' : 'unavailable'} across all your crews on ${moment(date).format('MMMM Do, YYYY')}?`,
       [
         {
           text: 'Cancel',
@@ -124,6 +124,14 @@ const DateCard: React.FC<DateCardProps> = ({
           </View>
         )}
       </View>
+      {/* Display Matches */}
+      {matches > 0 && (
+        <View style={styles.matchesContainer}>
+          <Text style={styles.matchesText}>
+            {matches === 1 ? '🎉 1 match' : `🎉 ${matches} matches`}
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -173,6 +181,19 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 14,
     color: '#333333',
+  },
+  matchesContainer: {
+    marginTop: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#1E90FF',
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  matchesText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '500',
   },
   buttonRow: {
     flexDirection: 'row',
