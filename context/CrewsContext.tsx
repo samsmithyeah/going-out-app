@@ -403,14 +403,20 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
           const unsubscribeStatus = onSnapshot(userStatusesRef, (snapshot) => {
             // Update usersCache
             snapshot.forEach((docSnap) => {
-              setUsersCache((prevCache) => ({
-                ...prevCache,
-                [docSnap.id]: {
-                  ...prevCache[docSnap.id],
-                  upForGoingOutTonight:
-                    docSnap.data().upForGoingOutTonight ?? false,
-                },
-              }));
+              setUsersCache((prevCache) => {
+                if (!prevCache[docSnap.id]) {
+                  // User not in cache; skip updating
+                  return prevCache;
+                }
+                return {
+                  ...prevCache,
+                  [docSnap.id]: {
+                    ...prevCache[docSnap.id],
+                    upForGoingOutTonight:
+                      docSnap.data().upForGoingOutTonight ?? false,
+                  },
+                };
+              });
             });
 
             // Recompute matches
