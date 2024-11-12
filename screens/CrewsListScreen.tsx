@@ -10,142 +10,33 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-  doc,
-  getDoc,
-} from 'firebase/firestore';
-import { db } from '../firebase';
-import { useUser } from '../context/UserContext';
+import { useCrews } from '../context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator';
 import ScreenTitle from '../components/ScreenTitle';
 import CrewList from '../components/CrewList';
 import CreateCrewModal from '../components/CreateCrewModal';
+import SpinLoader from '../components/SpinLoader';
 import { Crew } from '../types/Crew';
 import { User } from '../types/User';
 import CustomSearchInput from '../components/CustomSearchInput';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
 const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
-  const { user } = useUser();
-  const [crews, setCrews] = useState<Crew[]>([]);
+  const { crews, usersCache, setUsersCache, loadingCrews, loadingStatuses } =
+    useCrews(); // Consuming crews data and usersCache from CrewsContext
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState<string>(''); // New state for search
-  const [filteredCrews, setFilteredCrews] = useState<Crew[]>([]); // New state for filtered crews
+  const [searchQuery, setSearchQuery] = useState<string>(''); // State for search
+  const [filteredCrews, setFilteredCrews] = useState<Crew[]>([]); // State for filtered crews
+  const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(false); // Loading state for user data
 
-  // User cache: { [uid: string]: User }
-  const [usersCache, setUsersCache] = useState<{ [key: string]: User }>({});
+  // Determine if overall loading is needed
+  const isLoading = loadingCrews || loadingStatuses || isLoadingUsers;
 
-  // Track loading state for user data
-  const [usersLoading, setUsersLoading] = useState<boolean>(false);
-
-  // Fetch crews where the user is a member, ordered by name ascending
-  useEffect(() => {
-    if (!user?.uid) {
-      setLoading(false);
-      return;
-    }
-
-    // Reference to the crews collection
-    const crewsRef = collection(db, 'crews');
-
-    // Query to get crews where the user is a member, ordered by name ascending
-    const q = query(
-      crewsRef,
-      where('memberIds', 'array-contains', user.uid),
-      orderBy('name', 'asc'),
-    );
-
-    // Real-time listener
-    const unsubscribe = onSnapshot(
-      q,
-      async (snapshot) => {
-        const crewsList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...(doc.data() as Omit<Crew, 'id'>),
-        }));
-        setCrews(crewsList);
-        setLoading(false);
-
-        // Filter crews based on search query
-        if (searchQuery.trim() !== '') {
-          const filtered = crewsList.filter((crew) =>
-            crew.name.toLowerCase().includes(searchQuery.toLowerCase()),
-          );
-          setFilteredCrews(filtered);
-        } else {
-          setFilteredCrews(crewsList);
-        }
-
-        // Collect all unique memberIds from the crews
-        const allMemberIds = crewsList.reduce<string[]>(
-          (acc, crew) => acc.concat(crew.memberIds),
-          [],
-        );
-        const uniqueMemberIds = Array.from(new Set(allMemberIds));
-
-        // Determine which memberIds are not in the cache
-        const memberIdsToFetch = uniqueMemberIds.filter(
-          (uid) => !usersCache[uid],
-        );
-
-        if (memberIdsToFetch.length > 0) {
-          setUsersLoading(true);
-          try {
-            // Fetch user data for memberIdsToFetch
-            const userPromises = memberIdsToFetch.map((uid) =>
-              getDoc(doc(db, 'users', uid)).then((userDoc) => {
-                if (userDoc.exists()) {
-                  return { ...userDoc.data(), uid: userDoc.id } as User;
-                } else {
-                  // Handle case where user document doesn't exist
-                  return {
-                    uid,
-                    displayName: 'Unknown User',
-                    email: '',
-                    firstName: 'Unknown', // Assuming these fields
-                    lastName: '',
-                    photoURL: '',
-                  } as User;
-                }
-              }),
-            );
-
-            const usersData = await Promise.all(userPromises);
-
-            // Update the users cache
-            setUsersCache((prevCache) => {
-              const newCache = { ...prevCache };
-              usersData.forEach((userData) => {
-                newCache[userData.uid] = userData;
-              });
-              return newCache;
-            });
-          } catch (error) {
-            console.error('Error fetching user data:', error);
-            Alert.alert('Error', 'Could not fetch crew members data');
-          } finally {
-            setUsersLoading(false);
-          }
-        }
-      },
-      (error) => {
-        console.error('Error fetching crews:', error);
-        setLoading(false);
-      },
-    );
-
-    return () => unsubscribe();
-  }, [user?.uid, searchQuery, usersCache]);
-
-  // Effect to handle search query changes
+  // Filter crews based on search query
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setFilteredCrews(crews);
@@ -157,19 +48,75 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     }
   }, [searchQuery, crews]);
 
+  // Fetch user data for crew members
+  useEffect(() => {
+    if (!crews || crews.length === 0) return;
+
+    // Collect all unique memberIds from the crews
+    const allMemberIds = crews.reduce<string[]>(
+      (acc, crew) => acc.concat(crew.memberIds),
+      [],
+    );
+    const uniqueMemberIds = Array.from(new Set(allMemberIds));
+
+    // Determine which memberIds are not in the cache
+    const memberIdsToFetch = uniqueMemberIds.filter((uid) => !usersCache[uid]);
+
+    if (memberIdsToFetch.length > 0) {
+      setIsLoadingUsers(true);
+      const fetchUsers = async () => {
+        try {
+          const userPromises = memberIdsToFetch.map(async (uid) => {
+            const userDoc = await getDoc(doc(db, 'users', uid));
+            if (userDoc.exists()) {
+              return {
+                uid: userDoc.id,
+                ...(userDoc.data() as Omit<User, 'uid'>),
+              } as User;
+            } else {
+              // Handle case where user document doesn't exist
+              return {
+                uid,
+                displayName: 'Unknown User',
+                email: '',
+                firstName: 'Unknown', // Assuming these fields
+                lastName: '',
+                photoURL: '',
+              } as User;
+            }
+          });
+
+          const usersData = await Promise.all(userPromises);
+
+          // Update the users cache
+          setUsersCache((prevCache) => {
+            const newCache = { ...prevCache };
+            usersData.forEach((userData) => {
+              newCache[userData.uid] = userData;
+            });
+            return newCache;
+          });
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          Alert.alert('Error', 'Could not fetch crew members data');
+        } finally {
+          setIsLoadingUsers(false);
+        }
+      };
+
+      fetchUsers();
+    }
+  }, [crews, usersCache, setUsersCache]);
+
   const handleCrewCreated = (crewId: string) => {
     console.log('Crew created:', crewId);
     setIsModalVisible(false);
     navigation.navigate('Crew', { crewId });
   };
 
-  if (loading || usersLoading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1e90ff" />
-        {usersLoading && <Text>Loading crew members...</Text>}
-      </View>
-    );
+  // Show loading spinner if data is still being fetched
+  if (isLoading) {
+    return <SpinLoader />;
   }
 
   return (
@@ -211,6 +158,14 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
         }}
         onCrewCreated={handleCrewCreated}
       />
+
+      {/* Loading Indicator for User Data */}
+      {isLoadingUsers && (
+        <View style={styles.usersLoaderContainer}>
+          <ActivityIndicator size="small" color="#1e90ff" />
+          <Text>Loading crew members...</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -221,12 +176,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f9f9f9', // Light background color
+    backgroundColor: '#f9f9f9',
   },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  usersLoaderContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: '50%',
+    transform: [{ translateX: -50 }],
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#ffffffcc',
+    padding: 8,
+    borderRadius: 8,
   },
   headerContainer: {
     flexDirection: 'row',

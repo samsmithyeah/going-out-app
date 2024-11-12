@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  ActivityIndicator,
   Dimensions,
 } from 'react-native';
 import {
@@ -21,21 +20,21 @@ import {
   getDoc,
   collection,
   onSnapshot,
-  updateDoc,
-  setDoc,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
 import { User } from '../types/User';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Ensure Ionicons is imported
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { NavParamList } from '../navigation/AppNavigator';
-import MemberList from '../components/MemberList'; // Import the new MemberList component
-import DateTimePickerModal from 'react-native-modal-datetime-picker'; // Import date picker
-import moment from 'moment'; // For date formatting
+import MemberList from '../components/MemberList';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import moment from 'moment';
 import { Crew } from '../types/Crew';
-import CustomButton from '../components/CustomButton'; // Import CustomButton
-import CrewHeader from '../components/CrewHeader'; // Import the new CrewHeader component
+import CustomButton from '../components/CustomButton';
+import CrewHeader from '../components/CrewHeader';
+import SpinLoader from '../components/SpinLoader';
+import { useCrews } from '../context/CrewsContext'; // Import the context
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
 
@@ -47,6 +46,7 @@ interface Status {
 
 const CrewScreen: React.FC = () => {
   const { user } = useUser();
+  const { toggleStatusForCrew } = useCrews();
   const route = useRoute<CrewScreenRouteProp>();
   const { crewId } = route.params;
   const navigation = useNavigation<NavigationProp<NavParamList>>();
@@ -189,45 +189,9 @@ const CrewScreen: React.FC = () => {
       return;
     }
 
-    const userStatusRef = doc(
-      db,
-      'crews',
-      crewId,
-      'statuses',
-      selectedDate,
-      'userStatuses',
-      user.uid,
-    );
-
-    const confirmToggle = async () => {
-      try {
-        const statusSnap = await getDoc(userStatusRef);
-        if (statusSnap.exists()) {
-          const currentStatus = statusSnap.data().upForGoingOutTonight || false;
-          await updateDoc(userStatusRef, {
-            upForGoingOutTonight: !currentStatus,
-            timestamp: Timestamp.fromDate(new Date()),
-          });
-          console.log(
-            `Updated Status for User ${user.uid} on ${selectedDate}: ${!currentStatus}`,
-          );
-        } else {
-          // If no status exists for the selected date, create it with true
-          await setDoc(userStatusRef, {
-            date: selectedDate,
-            upForGoingOutTonight: true,
-            timestamp: Timestamp.fromDate(new Date()),
-          });
-          console.log(
-            `Created Status for User ${user.uid} on ${selectedDate}: true`,
-          );
-        }
-
-        // The onSnapshot listener will automatically update the local state
-      } catch (error) {
-        console.error('Error toggling status:', error);
-        Alert.alert('Error', 'Could not update your status');
-      }
+    const confirmToggle = () => {
+      const newStatus = !currentUserStatus;
+      toggleStatusForCrew(crewId, selectedDate, newStatus);
     };
 
     Alert.alert(
@@ -326,11 +290,7 @@ const CrewScreen: React.FC = () => {
   };
 
   if (loading || !crew) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1e90ff" />
-      </View>
-    );
+    return <SpinLoader />;
   }
 
   return (
@@ -448,11 +408,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     alignSelf: 'center',
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   skeletonContainer: {
     position: 'relative',

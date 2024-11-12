@@ -35,9 +35,6 @@ service cloud.firestore {
         // Temporary rule to allow all authenticated users to read all statuses
         allow read: if request.auth != null;
 
-        // Allow crew members to create, update, and delete statuses
-        allow create, update, delete: if isCrewMember(crewId);
-
         // Subcollection: userStatuses
         match /userStatuses/{userId} {
           // Temporary rule to allow all authenticated users to read all userStatuses
