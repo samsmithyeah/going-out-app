@@ -1,14 +1,7 @@
 // screens/AddMembersScreen.tsx
 
 import React, { useEffect, useState, useMemo, useLayoutEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import {
   collection,
@@ -29,6 +22,7 @@ import CustomSearchInput from '../components/CustomSearchInput';
 import CustomButton from '../components/CustomButton';
 import CustomModal from '../components/CustomModal';
 import CustomTextInput from '../components/CustomTextInput';
+import SpinLoader from '../components/SpinLoader';
 import { NavParamList } from '../navigation/AppNavigator';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -374,11 +368,7 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
   }, [allPotentialMembers, searchQuery]);
 
   if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1e90ff" />
-      </View>
-    );
+    return <SpinLoader />;
   }
 
   return (
@@ -446,11 +436,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   addViaEmailText: {
     marginTop: 14,

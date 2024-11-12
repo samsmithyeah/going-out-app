@@ -47,8 +47,6 @@ const InvitationsScreen: React.FC = () => {
           data={invitations}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
       )}
     </View>
@@ -77,11 +75,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 18,
     color: '#666',
-  },
-  listContent: {
-    paddingBottom: 20,
-  },
-  separator: {
-    height: 16,
   },
 });

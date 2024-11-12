@@ -1,17 +1,18 @@
 // screens/HomeScreen.tsx
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ActivityIndicator,
   Dimensions,
   FlatList,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useCrews } from '../context/CrewsContext';
 import { useUser } from '../context/UserContext';
+import SpinLoader from '../components/SpinLoader';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import moment from 'moment';
 
@@ -23,8 +24,14 @@ const getDotColor = (count: number, total: number): string => {
 
 const HomeScreen: React.FC = () => {
   const { user } = useUser();
-  const { crewIds, dateCounts, toggleStatusForDate } = useCrews();
-  const [loading, setLoading] = useState<boolean>(false);
+  const {
+    crewIds,
+    dateCounts,
+    toggleStatusForDate,
+    loadingCrews,
+    loadingStatuses,
+  } = useCrews();
+  const [isLoadingUsers, setIsLoadingUsers] = React.useState<boolean>(false);
 
   // Generate week dates
   const weekDates = React.useMemo(() => {
@@ -34,6 +41,32 @@ const HomeScreen: React.FC = () => {
     }
     return dates;
   }, []);
+
+  // Determine if overall loading is needed
+  const isLoading = loadingCrews || loadingStatuses || isLoadingUsers;
+
+  // Handle toggle actions with loading state
+  const handleToggle = async (date: string, toggleTo: boolean) => {
+    Alert.alert(
+      'Confirm update',
+      `Are you sure you want to mark yourself ${toggleTo ? 'available' : 'unavailable'} across all your crews on ${moment(date).format('MMMM Do, YYYY')}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'OK',
+          onPress: async () => {
+            setIsLoadingUsers(true); // Start loading
+            await toggleStatusForDate(date, toggleTo);
+            setIsLoadingUsers(false); // End loading
+          },
+        },
+      ],
+      { cancelable: false },
+    );
+  };
 
   // Render a single day item
   const renderDayItem = ({ item }: { item: string }) => {
@@ -69,10 +102,10 @@ const HomeScreen: React.FC = () => {
             <View style={styles.buttonRow}>
               <TouchableOpacity
                 onPress={() => handleToggle(item, true)}
-                disabled={isFullyUp || loading}
+                disabled={isFullyUp || isLoading}
                 style={[
                   styles.iconButton,
-                  (isFullyUp || loading) && styles.disabledButton,
+                  (isFullyUp || isLoading) && styles.disabledButton,
                 ]}
                 accessibilityLabel={`Mark as up for ${moment(item).format('dddd, MMMM Do')}`}
                 accessibilityHint={
@@ -89,10 +122,10 @@ const HomeScreen: React.FC = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleToggle(item, false)}
-                disabled={isNotUp || loading}
+                disabled={isNotUp || isLoading}
                 style={[
                   styles.iconButton,
-                  (isNotUp || loading) && styles.disabledButton,
+                  (isNotUp || isLoading) && styles.disabledButton,
                 ]}
                 accessibilityLabel={`Mark as not up for ${moment(item).format('dddd, MMMM Do')}`}
                 accessibilityHint={
@@ -114,20 +147,9 @@ const HomeScreen: React.FC = () => {
     );
   };
 
-  // Handle toggle actions with loading state
-  const handleToggle = async (date: string, toggleTo: boolean) => {
-    setLoading(true);
-    await toggleStatusForDate(date, toggleTo);
-    setLoading(false);
-  };
-
-  // Render loading indicator while performing actions
-  if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1E90FF" />
-      </View>
-    );
+  // Render loading indicator while fetching data
+  if (isLoading) {
+    return <SpinLoader />;
   }
 
   return (
@@ -175,12 +197,12 @@ const styles = StyleSheet.create({
   dayContainer: {
     width: width * 0.9, // Slightly wider for better readability
     backgroundColor: '#FFFFFF',
-    paddingVertical: 12, // Reduced vertical padding
+    paddingVertical: 12, // Adjust for compactness
     paddingHorizontal: 16,
     borderRadius: 10, // Slightly smaller border radius
     marginBottom: 12, // Reduced margin between cards
-    borderWidth: 1,
     borderColor: '#E0E0E0',
+    borderWidth: 1,
   },
   disabledDayContainer: {
     backgroundColor: '#E0E0E0',
@@ -223,11 +245,6 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 

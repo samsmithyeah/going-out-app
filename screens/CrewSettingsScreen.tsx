@@ -6,7 +6,6 @@ import {
   Text,
   Alert,
   StyleSheet,
-  ActivityIndicator,
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
@@ -28,6 +27,8 @@ import { Crew } from '../types/Crew';
 import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';
 import CustomModal from '../components/CustomModal';
+import SpinLoader from '../components/SpinLoader';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 type CrewSettingsScreenRouteProp = RouteProp<NavParamList, 'CrewSettings'>;
 
@@ -323,11 +324,7 @@ const CrewSettingsScreen: React.FC = () => {
   };
 
   if (loading || !crew) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1e90ff" />
-      </View>
-    );
+    return <SpinLoader />;
   }
 
   return (
@@ -337,16 +334,7 @@ const CrewSettingsScreen: React.FC = () => {
     >
       {/* Loading Overlay */}
       {(isDeleting || isUpdatingName || isUpdatingActivity) && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.loadingText}>
-            {isDeleting
-              ? 'Deleting Crew...'
-              : isUpdatingName
-                ? 'Updating Crew Name...'
-                : 'Updating Activity...'}
-          </Text>
-        </View>
+        <LoadingOverlay />
       )}
 
       {/* Crew Header */}
@@ -597,26 +585,5 @@ const styles = StyleSheet.create({
     color: 'red',
     alignSelf: 'flex-start',
     marginBottom: 10,
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)', // Semi-transparent background
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000, // Ensure it's on top of other elements
-  },
-  loadingText: {
-    color: '#fff',
-    marginTop: 10,
-    fontSize: 18,
   },
 });

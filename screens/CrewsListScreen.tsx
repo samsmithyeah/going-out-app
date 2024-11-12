@@ -11,12 +11,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCrews } from '../context/CrewsContext';
-import { useUser } from '../context/UserContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator';
 import ScreenTitle from '../components/ScreenTitle';
 import CrewList from '../components/CrewList';
 import CreateCrewModal from '../components/CreateCrewModal';
+import SpinLoader from '../components/SpinLoader';
 import { Crew } from '../types/Crew';
 import { User } from '../types/User';
 import CustomSearchInput from '../components/CustomSearchInput';
@@ -26,12 +26,15 @@ import { db } from '../firebase';
 type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
 const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
-  const { user } = useUser();
-  const { crews, usersCache, setUsersCache } = useCrews(); // Consuming crews data and usersCache from CrewsContext
+  const { crews, usersCache, setUsersCache, loadingCrews, loadingStatuses } =
+    useCrews(); // Consuming crews data and usersCache from CrewsContext
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>(''); // State for search
   const [filteredCrews, setFilteredCrews] = useState<Crew[]>([]); // State for filtered crews
-  const [usersLoading, setUsersLoading] = useState<boolean>(false); // Loading state for user data
+  const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(false); // Loading state for user data
+
+  // Determine if overall loading is needed
+  const isLoading = loadingCrews || loadingStatuses || isLoadingUsers;
 
   // Filter crews based on search query
   useEffect(() => {
@@ -60,7 +63,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     const memberIdsToFetch = uniqueMemberIds.filter((uid) => !usersCache[uid]);
 
     if (memberIdsToFetch.length > 0) {
-      setUsersLoading(true);
+      setIsLoadingUsers(true);
       const fetchUsers = async () => {
         try {
           const userPromises = memberIdsToFetch.map(async (uid) => {
@@ -97,7 +100,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
           console.error('Error fetching user data:', error);
           Alert.alert('Error', 'Could not fetch crew members data');
         } finally {
-          setUsersLoading(false);
+          setIsLoadingUsers(false);
         }
       };
 
@@ -111,14 +114,9 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     navigation.navigate('Crew', { crewId });
   };
 
-  // Show loading spinner if user data is not yet available
-  if (!user) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1e90ff" />
-        <Text>Loading user data...</Text>
-      </View>
-    );
+  // Show loading spinner if data is still being fetched
+  if (isLoading) {
+    return <SpinLoader />;
   }
 
   return (
@@ -162,7 +160,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
       />
 
       {/* Loading Indicator for User Data */}
-      {usersLoading && (
+      {isLoadingUsers && (
         <View style={styles.usersLoaderContainer}>
           <ActivityIndicator size="small" color="#1e90ff" />
           <Text>Loading crew members...</Text>
@@ -178,12 +176,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f9f9f9', // Light background color
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#f9f9f9',
   },
   usersLoaderContainer: {
     position: 'absolute',

@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  ActivityIndicator,
   Dimensions,
 } from 'react-native';
 import {
@@ -28,14 +27,15 @@ import {
 import { db } from '../firebase';
 import { useUser } from '../context/UserContext';
 import { User } from '../types/User';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons'; // Ensure Ionicons is imported
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { NavParamList } from '../navigation/AppNavigator';
-import MemberList from '../components/MemberList'; // Import the new MemberList component
-import DateTimePickerModal from 'react-native-modal-datetime-picker'; // Import date picker
-import moment from 'moment'; // For date formatting
+import MemberList from '../components/MemberList';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import moment from 'moment';
 import { Crew } from '../types/Crew';
-import CustomButton from '../components/CustomButton'; // Import CustomButton
-import CrewHeader from '../components/CrewHeader'; // Import the new CrewHeader component
+import CustomButton from '../components/CustomButton';
+import CrewHeader from '../components/CrewHeader';
+import SpinLoader from '../components/SpinLoader';
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
 
@@ -326,11 +326,7 @@ const CrewScreen: React.FC = () => {
   };
 
   if (loading || !crew) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#1e90ff" />
-      </View>
-    );
+    return <SpinLoader />;
   }
 
   return (
@@ -448,11 +444,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     alignSelf: 'center',
-  },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   skeletonContainer: {
     position: 'relative',
