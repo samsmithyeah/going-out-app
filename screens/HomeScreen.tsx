@@ -73,7 +73,7 @@ const HomeScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Profile Section */}
       <View style={styles.profileContainer}>
-        <Text style={styles.greeting}>Hi {user?.displayName}!</Text>
+        <Text style={styles.greeting}>Hi {user?.displayName}! 👋</Text>
       </View>
 
       {/* Weekly Status List */}
