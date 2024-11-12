@@ -6,10 +6,10 @@ import {
   TouchableOpacity,
   Text,
   View,
-  Image,
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import FastImage from 'react-native-fast-image';
 import { Crew } from '../types/Crew'; // Assuming you have a Crew type
 import { User } from '../types/User';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -57,7 +57,7 @@ const CrewList: React.FC<CrewListProps> = ({
             >
               {/* Crew Image */}
               {item.iconUrl ? (
-                <Image
+                <FastImage
                   source={{ uri: item.iconUrl }}
                   style={styles.crewImage}
                 />

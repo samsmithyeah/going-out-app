@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import {
   View,
-  Image,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
@@ -18,6 +17,7 @@ import {
   getDownloadURL,
   deleteObject,
 } from 'firebase/storage';
+import FastImage from 'react-native-fast-image';
 import { storage } from '../firebase';
 
 interface ProfilePicturePickerProps {
@@ -158,12 +158,10 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
         ]}
       >
         {imageUrl ? (
-          <Image
+          <FastImage
             source={{ uri: imageUrl }}
-            style={[
-              styles.image,
-              { width: size, height: size, borderRadius: size / 2 },
-            ]}
+            style={{ width: size, height: size, borderRadius: size / 2 }}
+            resizeMode={FastImage.resizeMode.cover}
           />
         ) : (
           <Ionicons name={iconName} size={size * 0.5} color={iconColor} />
@@ -211,9 +209,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-  },
-  image: {
-    resizeMode: 'cover',
   },
   editIconContainer: {
     position: 'absolute',

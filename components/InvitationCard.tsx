@@ -1,8 +1,9 @@
 // components/InvitationCard.tsx
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import FastImage from 'react-native-fast-image';
 import { InvitationWithDetails } from '../types/Invitation';
 
 interface InvitationCardProps {
@@ -19,7 +20,7 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
   return (
     <View style={styles.card}>
       {invitation.crew?.iconUrl ? (
-        <Image
+        <FastImage
           source={{ uri: invitation.crew.iconUrl }}
           style={styles.crewImage}
         />

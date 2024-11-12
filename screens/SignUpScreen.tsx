@@ -5,7 +5,6 @@ import {
   StyleSheet,
   View,
   Text,
-  Image,
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
@@ -14,6 +13,7 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
+import FastImage from 'react-native-fast-image';
 import {
   auth,
   updateProfile,
@@ -135,7 +135,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.container}
         >
           <View style={styles.logoContainer}>
-            <Image
+            <FastImage
               source={require('../assets/images/icon.png')}
               style={styles.logo}
               resizeMode="contain"
