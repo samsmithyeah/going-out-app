@@ -1,12 +1,7 @@
 // screens/HomeScreen.tsx
 
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { useCrews } from '../context/CrewsContext';
 import { useUser } from '../context/UserContext';
 import SpinLoader from '../components/SpinLoader';

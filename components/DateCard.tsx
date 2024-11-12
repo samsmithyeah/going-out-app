@@ -1,13 +1,7 @@
 // components/DateCard.tsx
 
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import moment from 'moment';
 import { Dimensions } from 'react-native';
@@ -66,9 +60,7 @@ const DateCard: React.FC<DateCardProps> = ({
       </View>
       <View style={styles.statusRow}>
         <View style={styles.statusInfo}>
-          <View
-            style={[styles.statusDot, { backgroundColor: statusColor }]}
-          />
+          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
           <Text
             style={[styles.statusText, isDisabled && styles.disabledDayText]}
           >
@@ -147,7 +139,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderColor: '#E0E0E0',
     borderWidth: 1,
-     width: width * 0.9
+    width: width * 0.9,
   },
   disabledDayContainer: {
     backgroundColor: '#E0E0E0',
