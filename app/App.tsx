@@ -24,8 +24,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (!user) return;
-    //registerForPushNotificationsAsync();
-
     // Listen to incoming notifications while the app is foregrounded
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {

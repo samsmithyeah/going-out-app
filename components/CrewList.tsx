@@ -12,20 +12,15 @@ import { Ionicons } from '@expo/vector-icons';
 import FastImage from 'react-native-fast-image';
 import { Crew } from '../types/Crew'; // Assuming you have a Crew type
 import { User } from '../types/User';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { NavParamList } from '../navigation/AppNavigator';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 
 type CrewListProps = {
   crews: Crew[];
   usersCache: { [key: string]: User };
-  navigation: NativeStackNavigationProp<NavParamList, 'CrewsList'>;
 };
 
-const CrewList: React.FC<CrewListProps> = ({
-  crews,
-  usersCache,
-  navigation,
-}) => {
+const CrewList: React.FC<CrewListProps> = ({ crews, usersCache }) => {
+  const navigation = useNavigation<NavigationProp<any>>();
   return (
     <View style={styles.container}>
       <FlatList
@@ -53,7 +48,13 @@ const CrewList: React.FC<CrewListProps> = ({
           return (
             <TouchableOpacity
               style={styles.crewItem}
-              onPress={() => navigation.navigate('Crew', { crewId: item.id })}
+              onPress={() =>
+                navigation.navigate('CrewsStack', {
+                  screen: 'Crew',
+                  params: { crewId: item.id },
+                  initial: false,
+                })
+              }
             >
               {/* Crew Image */}
               {item.iconUrl ? (

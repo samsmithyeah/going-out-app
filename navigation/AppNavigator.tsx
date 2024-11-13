@@ -8,6 +8,7 @@ import TabNavigator from './TabNavigator';
 import LoginStackNavigator from './LoginStackNavigator';
 
 export type NavParamList = {
+  Home: undefined;
   SignUp: undefined;
   Login: undefined;
   LoginStack: undefined;
@@ -23,6 +24,7 @@ export type NavParamList = {
   ForgotPassword: undefined;
   AddMembers: { crewId: string };
   OtherUserProfile: { userId: string };
+  MatchesList: { date: string };
 };
 
 const Stack = createStackNavigator<NavParamList>();

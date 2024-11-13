@@ -3,14 +3,14 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import HomeScreen from '../screens/HomeScreen';
 import InvitationsScreen from '../screens/InvitationsScreen';
 import UserProfileStackNavigator from './UserProfileStackNavigator';
+import DashboardStackNavigator from './DashboardStackNavigator';
 import CrewsStackNavigator from './CrewsStackNavigator';
 import { useInvitations } from '../context/InvitationsContext';
 
 export type TabsParamList = {
-  Home: undefined;
+  DashboardStack: undefined;
   CrewsStack: { screen: string; params: { crewId: string } };
   Invitations: undefined;
   UserProfileStack: undefined;
@@ -23,12 +23,12 @@ const TabNavigator: React.FC = () => {
 
   return (
     <Tab.Navigator
-      initialRouteName="Home"
+      initialRouteName="DashboardStack"
       screenOptions={{ headerShown: false, headerStatusBarHeight: 0 }}
     >
       <Tab.Screen
-        name="Home"
-        component={HomeScreen}
+        name="DashboardStack"
+        component={DashboardStackNavigator}
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ color, size }) => (
@@ -44,7 +44,6 @@ const TabNavigator: React.FC = () => {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people-outline" size={size} color={color} />
           ),
-          unmountOnBlur: true,
         }}
       />
       <Tab.Screen

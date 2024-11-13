@@ -15,17 +15,19 @@ interface DateCardProps {
   statusColor: string;
   isLoading: boolean;
   onToggle: (date: string, toggleTo: boolean) => void;
+  onPressMatches: (date: string) => void; // New Prop
 }
 
 const DateCard: React.FC<DateCardProps> = ({
   date,
   count,
-  matches, // Destructure matches
+  matches,
   total,
   isDisabled,
   statusColor,
   isLoading,
   onToggle,
+  onPressMatches, // Destructure the new prop
 }) => {
   const statusText = `Up for seeing ${count} of ${total} crew${total !== 1 ? 's' : ''}`;
   const isFullyUp = count === total;
@@ -126,11 +128,16 @@ const DateCard: React.FC<DateCardProps> = ({
       </View>
       {/* Display Matches */}
       {matches > 0 && (
-        <View style={styles.matchesContainer}>
+        <TouchableOpacity
+          style={styles.matchesContainer}
+          onPress={() => onPressMatches(date)} // Handle press
+          accessibilityLabel={`${matches} matches`}
+          accessibilityHint={`Tap to view your matching crews on ${moment(date).format('MMMM Do, YYYY')}`}
+        >
           <Text style={styles.matchesText}>
             {matches === 1 ? '🎉 1 match' : `🎉 ${matches} matches`}
           </Text>
-        </View>
+        </TouchableOpacity>
       )}
     </View>
   );
