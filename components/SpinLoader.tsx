@@ -1,4 +1,4 @@
-// components/SkeletonUserItem.tsx
+// components/SpinLoader.tsx
 
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';

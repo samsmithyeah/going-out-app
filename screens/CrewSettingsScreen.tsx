@@ -36,8 +36,7 @@ const CrewSettingsScreen: React.FC = () => {
   const { user } = useUser();
   const route = useRoute<CrewSettingsScreenRouteProp>();
   const { crewId } = route.params;
-  const navigation = useNavigation<NavigationProp<any>>();
-
+  const navigation = useNavigation<NavigationProp<NavParamList>>();
   const [crew, setCrew] = useState<Crew | null>(null);
   const [members, setMembers] = useState<User[]>([]);
   const [isEditNameModalVisible, setIsEditNameModalVisible] = useState(false);
@@ -332,206 +331,212 @@ const CrewSettingsScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: 30 }}
-    >
-      {/* Loading Overlay */}
-      {(isDeleting || isUpdatingName || isUpdatingActivity) && (
-        <LoadingOverlay />
+    <>
+      {isDeleting && (
+        <View style={styles.overlayContainer}>
+          <LoadingOverlay />
+        </View>
       )}
+      <ScrollView style={styles.container}>
+        {/* Crew Header */}
+        <View style={styles.groupInfo}>
+          <ProfilePicturePicker
+            imageUrl={crew.iconUrl ?? null}
+            onImageUpdate={async (newUrl) => {
+              // Update local state
+              setCrew({ ...crew, iconUrl: newUrl });
 
-      {/* Crew Header */}
-      <View style={styles.groupInfo}>
-        <ProfilePicturePicker
-          imageUrl={crew.iconUrl ?? null}
-          onImageUpdate={async (newUrl) => {
-            // Update local state
-            setCrew({ ...crew, iconUrl: newUrl });
-
-            // Update Firestore
-            if (crewId) {
-              try {
-                const crewRef = doc(db, 'crews', crewId);
-                await updateDoc(crewRef, { iconUrl: newUrl });
-                console.log(
-                  'iconUrl successfully updated in Firestore:',
-                  newUrl,
-                );
-              } catch (error) {
-                console.error('Error updating iconUrl in Firestore:', error);
-                Alert.alert('Error', 'Could not update crew profile picture');
+              // Update Firestore
+              if (crewId) {
+                try {
+                  const crewRef = doc(db, 'crews', crewId);
+                  await updateDoc(crewRef, { iconUrl: newUrl });
+                  console.log(
+                    'iconUrl successfully updated in Firestore:',
+                    newUrl,
+                  );
+                } catch (error) {
+                  console.error('Error updating iconUrl in Firestore:', error);
+                  Alert.alert('Error', 'Could not update crew profile picture');
+                }
               }
-            }
-          }}
-          editable={user?.uid === crew.ownerId}
-          storagePath={`crews/${crewId}/icon.jpg`}
-          size={120}
-        />
-        <View style={styles.groupNameContainer}>
-          <Text style={styles.groupName}>{crew.name}</Text>
-          {user?.uid === crew.ownerId && (
+            }}
+            editable={user?.uid === crew.ownerId}
+            storagePath={`crews/${crewId}/icon.jpg`}
+            size={120}
+          />
+          <View style={styles.groupNameContainer}>
+            <Text style={styles.groupName}>{crew.name}</Text>
+            {user?.uid === crew.ownerId && (
+              <TouchableOpacity
+                onPress={() => setIsEditNameModalVisible(true)}
+                style={styles.editButton}
+                accessibilityLabel="Edit Crew Name"
+              >
+                <Ionicons name="pencil" size={20} color="#1e90ff" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Crew Activity Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Crew activity:</Text>
+          <View style={styles.activityDisplayContainer}>
+            <Text style={styles.activityText}>
+              {crew.activity || 'going out'}
+            </Text>
             <TouchableOpacity
-              onPress={() => setIsEditNameModalVisible(true)}
-              style={styles.editButton}
-              accessibilityLabel="Edit Crew Name"
+              onPress={() => setIsEditActivityModalVisible(true)}
+              style={styles.editActivityButton}
+              accessibilityLabel="Edit Crew Activity"
             >
               <Ionicons name="pencil" size={20} color="#1e90ff" />
             </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Crew Activity Section */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Crew activity:</Text>
-        <View style={styles.activityDisplayContainer}>
-          <Text style={styles.activityText}>
-            {crew.activity || 'going out'}
-          </Text>
-          <TouchableOpacity
-            onPress={() => setIsEditActivityModalVisible(true)}
-            style={styles.editActivityButton}
-            accessibilityLabel="Edit Crew Activity"
-          >
-            <Ionicons name="pencil" size={20} color="#1e90ff" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Members List Header with Add Button */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.membersListHeader}>
-          <Text
-            style={styles.sectionTitle}
-          >{`${members.length} member${members.length !== 1 ? 's' : ''}:`}</Text>
-          <TouchableOpacity
-            style={styles.addButtonInline}
-            onPress={() =>
-              navigation.navigate('AddMembers', { crewId: crewId })
-            }
-            accessibilityLabel="Add Member"
-          >
-            <Ionicons name="add-circle" size={30} color="#1e90ff" />
-          </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Members List */}
-        <MemberList
-          members={members}
-          currentUserId={user?.uid || null}
-          isLoading={loading}
-          emptyMessage="No members in this crew."
-          adminIds={[crew.ownerId]}
-          onMemberPress={navigateToUserProfile}
-        />
-      </View>
+        {/* Members List Header with Add Button */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.membersListHeader}>
+            <Text
+              style={styles.sectionTitle}
+            >{`${members.length} member${members.length !== 1 ? 's' : ''}:`}</Text>
+            <TouchableOpacity
+              style={styles.addButtonInline}
+              onPress={() =>
+                navigation.navigate('AddMembers', { crewId: crewId })
+              }
+              accessibilityLabel="Add Member"
+            >
+              <Ionicons name="add-circle" size={30} color="#1e90ff" />
+            </TouchableOpacity>
+          </View>
 
-      {/* Leave Crew Button */}
-      <View style={styles.leaveButton}>
-        <CustomButton
-          title="Leave crew"
-          onPress={handleLeaveCrew}
-          variant="secondaryDanger" // Red variant indicating a destructive action
-          accessibilityLabel="Leave Crew"
-          accessibilityHint="Leave the current crew"
-        />
-      </View>
+          {/* Members List */}
+          <MemberList
+            members={members}
+            currentUserId={user?.uid || null}
+            isLoading={loading}
+            emptyMessage="No members in this crew."
+            adminIds={[crew.ownerId]}
+            onMemberPress={navigateToUserProfile}
+          />
+        </View>
 
-      {/* Delete Crew Button (Visible to Owner Only) */}
-      {user?.uid === crew.ownerId && (
-        <CustomButton
-          title="Delete crew"
-          onPress={handleDeleteCrew}
-          variant="danger" // Red variant indicating a destructive action
-          accessibilityLabel="Delete Crew"
-          accessibilityHint="Permanently delete this crew"
-          loading={isDeleting} // Show loading indicator when deleting
-        />
-      )}
+        {/* Leave Crew Button */}
+        <View style={styles.leaveButton}>
+          <CustomButton
+            title="Leave crew"
+            onPress={handleLeaveCrew}
+            variant="secondaryDanger" // Red variant indicating a destructive action
+            accessibilityLabel="Leave Crew"
+            accessibilityHint="Leave the current crew"
+          />
+        </View>
 
-      {/* Modal for Editing Crew Name */}
-      <CustomModal
-        isVisible={isEditNameModalVisible}
-        onClose={() => {
-          setIsEditNameModalVisible(false);
-          setNewCrewName('');
-        }}
-        title="Edit crew name"
-        buttons={[
-          {
-            label: 'Update',
-            onPress: handleUpdateCrewName,
-            variant: 'primary',
-            disabled: isUpdatingName || isUpdatingActivity,
-          },
-          {
-            label: 'Cancel',
-            onPress: () => {
-              setIsEditNameModalVisible(false);
-              setNewCrewName('');
+        {/* Delete Crew Button (Visible to Owner Only) */}
+        {user?.uid === crew.ownerId && (
+          <CustomButton
+            title="Delete crew"
+            onPress={handleDeleteCrew}
+            variant="danger" // Red variant indicating a destructive action
+            accessibilityLabel="Delete Crew"
+            accessibilityHint="Permanently delete this crew"
+            loading={isDeleting} // Show loading indicator when deleting
+          />
+        )}
+
+        {/* Modal for Editing Crew Name */}
+        <CustomModal
+          isVisible={isEditNameModalVisible}
+          onClose={() => {
+            setIsEditNameModalVisible(false);
+            setNewCrewName('');
+          }}
+          title="Edit crew name"
+          buttons={[
+            {
+              label: 'Update',
+              onPress: handleUpdateCrewName,
+              variant: 'primary',
+              disabled: isUpdatingName || isUpdatingActivity,
             },
-            variant: 'secondary',
-            disabled: isUpdatingName || isUpdatingActivity,
-          },
-        ]}
-        loading={isUpdatingName}
-      >
-        <CustomTextInput
-          placeholder="New crew name"
-          value={newCrewName}
-          onChangeText={setNewCrewName}
-          autoCapitalize="words"
-          hasBorder={true}
-        />
-      </CustomModal>
-
-      {/* Modal for Editing Crew Activity */}
-      <CustomModal
-        isVisible={isEditActivityModalVisible}
-        onClose={() => {
-          setIsEditActivityModalVisible(false);
-          setNewActivity('');
-          setActivityError('');
-        }}
-        title="Edit crew activity"
-        buttons={[
-          {
-            label: 'Update',
-            onPress: handleUpdateActivity,
-            variant: 'primary',
-            disabled: isUpdatingActivity,
-          },
-          {
-            label: 'Cancel',
-            onPress: () => {
-              setIsEditActivityModalVisible(false);
-              setNewActivity(crew.activity || 'going out');
-              setActivityError('');
+            {
+              label: 'Cancel',
+              onPress: () => {
+                setIsEditNameModalVisible(false);
+                setNewCrewName('');
+              },
+              variant: 'secondary',
+              disabled: isUpdatingName || isUpdatingActivity,
             },
-            variant: 'secondary',
-            disabled: isUpdatingActivity,
-          },
-        ]}
-        loading={isUpdatingActivity}
-      >
-        <CustomTextInput
-          placeholder="Enter crew activity"
-          value={newActivity}
-          onChangeText={setNewActivity}
-          hasBorder={true}
-        />
-        {activityError ? (
-          <Text style={styles.errorText}>{activityError}</Text>
-        ) : null}
-      </CustomModal>
-    </ScrollView>
+          ]}
+          loading={isUpdatingName}
+        >
+          <CustomTextInput
+            placeholder="New crew name"
+            value={newCrewName}
+            onChangeText={setNewCrewName}
+            autoCapitalize="words"
+            hasBorder={true}
+          />
+        </CustomModal>
+
+        {/* Modal for Editing Crew Activity */}
+        <CustomModal
+          isVisible={isEditActivityModalVisible}
+          onClose={() => {
+            setIsEditActivityModalVisible(false);
+            setNewActivity('');
+            setActivityError('');
+          }}
+          title="Edit crew activity"
+          buttons={[
+            {
+              label: 'Update',
+              onPress: handleUpdateActivity,
+              variant: 'primary',
+              disabled: isUpdatingActivity,
+            },
+            {
+              label: 'Cancel',
+              onPress: () => {
+                setIsEditActivityModalVisible(false);
+                setNewActivity(crew.activity || 'going out');
+                setActivityError('');
+              },
+              variant: 'secondary',
+              disabled: isUpdatingActivity,
+            },
+          ]}
+          loading={isUpdatingActivity}
+        >
+          <CustomTextInput
+            placeholder="Enter crew activity"
+            value={newActivity}
+            onChangeText={setNewActivity}
+            hasBorder={true}
+          />
+          {activityError ? (
+            <Text style={styles.errorText}>{activityError}</Text>
+          ) : null}
+        </CustomModal>
+      </ScrollView>
+    </>
   );
 };
 
 export default CrewSettingsScreen;
 
 const styles = StyleSheet.create({
+  overlayContainer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 1,
+  },
   container: {
     flex: 1,
     padding: 16,

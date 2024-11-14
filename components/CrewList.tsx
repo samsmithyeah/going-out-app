@@ -13,6 +13,7 @@ import FastImage from 'react-native-fast-image';
 import { Crew } from '../types/Crew'; // Assuming you have a Crew type
 import { User } from '../types/User';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { NavParamList } from '../navigation/AppNavigator';
 
 type CrewListProps = {
   crews: Crew[];
@@ -25,7 +26,7 @@ const CrewList: React.FC<CrewListProps> = ({
   usersCache,
   currentDate,
 }) => {
-  const navigation = useNavigation<NavigationProp<any>>();
+  const navigation = useNavigation<NavigationProp<NavParamList>>();
 
   useEffect(() => {
     console.log('currentDate in CrewList:', currentDate);

@@ -36,7 +36,11 @@ const App: React.FC = () => {
         console.log('Notification Response:', response);
         const { screen, crewId } = response.notification.request.content.data;
         if (screen === 'Crew' && crewId) {
-          navigation.navigate('CrewsStack', { screen, params: { crewId } });
+          navigation.navigate('CrewsStack', {
+            screen,
+            params: { crewId },
+            initial: false,
+          });
         } else if (screen) {
           navigation.navigate(screen);
         } else {

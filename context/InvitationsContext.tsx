@@ -186,9 +186,10 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
         return;
       }
 
-      // Update the crew's memberIds
+      // Update the crew's memberIds and include the invitationId
       await updateDoc(crewRef, {
         memberIds: arrayUnion(user.uid),
+        invitationId: invitation.id,
       });
 
       // Update the invitation status
@@ -202,6 +203,7 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
       navigation.navigate('CrewsStack', {
         screen: 'Crew',
         params: { crewId: invitation.crewId },
+        initial: false,
       });
     } catch (error) {
       console.error('Error accepting invitation:', error);
