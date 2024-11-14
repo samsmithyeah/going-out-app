@@ -1,4 +1,4 @@
-// screens/HomeScreen.tsx
+// screens/DashboardScreen.tsx
 
 import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
@@ -7,6 +7,9 @@ import { useUser } from '../context/UserContext';
 import SpinLoader from '../components/SpinLoader';
 import DateCard from '../components/DateCard';
 import moment from 'moment';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NavParamList } from '../navigation/AppNavigator'; // Adjust the path as necessary
+import { useNavigation } from '@react-navigation/native'; // Hook for navigation
 
 const getDotColor = (count: number, total: number): string => {
   if (count === total && total > 0) return '#32CD32'; // Green
@@ -14,18 +17,25 @@ const getDotColor = (count: number, total: number): string => {
   return '#D3D3D3'; // Grey
 };
 
-const HomeScreen: React.FC = () => {
+type DashboardScreenNavigationProp = NativeStackNavigationProp<
+  NavParamList,
+  'Home'
+>;
+
+const DashboardScreen: React.FC = () => {
   const { user } = useUser();
   const {
     crewIds,
     dateCounts,
-    dateMatches, // Added
+    dateMatches,
+    dateMatchingCrews,
     toggleStatusForDateAllCrews,
     loadingCrews,
     loadingStatuses,
-    loadingMatches, // Added
   } = useCrews();
   const [isLoadingUsers, setIsLoadingUsers] = React.useState<boolean>(false);
+
+  const navigation = useNavigation<DashboardScreenNavigationProp>();
 
   // Generate week dates
   const weekDates = React.useMemo(() => {
@@ -46,10 +56,15 @@ const HomeScreen: React.FC = () => {
     setIsLoadingUsers(false); // End loading
   };
 
+  // Handle pressing the matches chip
+  const handlePressMatches = (date: string) => {
+    navigation.navigate('MatchesList', { date });
+  };
+
   // Render a single day item using DateCard component
   const renderDayItem = ({ item }: { item: string }) => {
     const count = dateCounts[item] || 0;
-    const matches = dateMatches[item] || 0; // Get matches for the date
+    const matches = dateMatches[item] || 0;
     const total = crewIds.length;
     const isDisabled = moment(item).isBefore(moment(), 'day');
     const statusColor = getDotColor(count, total);
@@ -64,6 +79,7 @@ const HomeScreen: React.FC = () => {
         statusColor={statusColor}
         isLoading={isLoading}
         onToggle={handleToggle}
+        onPressMatches={handlePressMatches} // Pass the handler
       />
     );
   };
@@ -115,4 +131,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default DashboardScreen;

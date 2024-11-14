@@ -143,11 +143,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
       />
 
       {/* Crew List */}
-      <CrewList
-        crews={filteredCrews}
-        usersCache={usersCache}
-        navigation={navigation}
-      />
+      <CrewList crews={filteredCrews} usersCache={usersCache} />
 
       {/* Create Crew Modal */}
       <CreateCrewModal

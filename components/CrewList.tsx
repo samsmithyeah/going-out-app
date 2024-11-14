@@ -1,6 +1,6 @@
 // components/CrewList.tsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   FlatList,
   TouchableOpacity,
@@ -12,20 +12,25 @@ import { Ionicons } from '@expo/vector-icons';
 import FastImage from 'react-native-fast-image';
 import { Crew } from '../types/Crew'; // Assuming you have a Crew type
 import { User } from '../types/User';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { NavParamList } from '../navigation/AppNavigator';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 
 type CrewListProps = {
   crews: Crew[];
   usersCache: { [key: string]: User };
-  navigation: NativeStackNavigationProp<NavParamList, 'CrewsList'>;
+  currentDate?: string; // Add currentDate as a prop
 };
 
 const CrewList: React.FC<CrewListProps> = ({
   crews,
   usersCache,
-  navigation,
+  currentDate,
 }) => {
+  const navigation = useNavigation<NavigationProp<any>>();
+
+  useEffect(() => {
+    console.log('currentDate in CrewList:', currentDate);
+  }, [currentDate]);
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -53,7 +58,15 @@ const CrewList: React.FC<CrewListProps> = ({
           return (
             <TouchableOpacity
               style={styles.crewItem}
-              onPress={() => navigation.navigate('Crew', { crewId: item.id })}
+              onPress={() =>
+                navigation.navigate('CrewsStack', {
+                  screen: 'Crew',
+                  params: { crewId: item.id, date: currentDate },
+                  initial: false,
+                })
+              }
+              accessibilityLabel={`Navigate to ${item.name} Crew`}
+              accessibilityHint={`Opens the ${item.name} Crew screen for the selected date`}
             >
               {/* Crew Image */}
               {item.iconUrl ? (
