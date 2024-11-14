@@ -19,7 +19,7 @@ export type NavParamList = {
   CrewsList: undefined;
   Crew: { crewId: string; date?: string };
   CrewSettings: { crewId: string };
-  UserProfileStack: undefined;
+  UserProfileStack: { screen: string; params: { userId: string } } | undefined;
   UserProfile: { userId: string };
   EditUserProfile: undefined;
   Invitations: undefined;

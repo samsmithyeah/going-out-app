@@ -36,7 +36,7 @@ const CrewSettingsScreen: React.FC = () => {
   const { user } = useUser();
   const route = useRoute<CrewSettingsScreenRouteProp>();
   const { crewId } = route.params;
-  const navigation = useNavigation<NavigationProp<NavParamList>>();
+  const navigation = useNavigation<NavigationProp<any>>();
 
   const [crew, setCrew] = useState<Crew | null>(null);
   const [members, setMembers] = useState<User[]>([]);
@@ -254,7 +254,11 @@ const CrewSettingsScreen: React.FC = () => {
   // Function to navigate to OtherUserProfileScreen
   const navigateToUserProfile = (selectedUser: User) => {
     if (selectedUser.uid === user?.uid) {
-      navigation.navigate('UserProfile', { userId: user.uid });
+      navigation.navigate('UserProfileStack', {
+        screen: 'UserProfile',
+        params: { userId: user.uid },
+        initial: false,
+      });
       return;
     }
     navigation.navigate('OtherUserProfile', { userId: selectedUser.uid });

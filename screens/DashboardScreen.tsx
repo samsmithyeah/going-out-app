@@ -1,7 +1,7 @@
 // screens/DashboardScreen.tsx
 
 import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 import { useCrews } from '../context/CrewsContext';
 import { useUser } from '../context/UserContext';
 import SpinLoader from '../components/SpinLoader';
@@ -28,10 +28,10 @@ const DashboardScreen: React.FC = () => {
     crewIds,
     dateCounts,
     dateMatches,
-    dateMatchingCrews,
     toggleStatusForDateAllCrews,
     loadingCrews,
     loadingStatuses,
+    loadingMatches,
   } = useCrews();
   const [isLoadingUsers, setIsLoadingUsers] = React.useState<boolean>(false);
 
@@ -52,8 +52,14 @@ const DashboardScreen: React.FC = () => {
   // Handle toggle actions with loading state
   const handleToggle = async (date: string, toggleTo: boolean) => {
     setIsLoadingUsers(true); // Start loading
-    await toggleStatusForDateAllCrews(date, toggleTo);
-    setIsLoadingUsers(false); // End loading
+    try {
+      await toggleStatusForDateAllCrews(date, toggleTo);
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      Alert.alert('Error', 'Failed to update status. Please try again.');
+    } finally {
+      setIsLoadingUsers(false); // End loading
+    }
   };
 
   // Handle pressing the matches chip
@@ -77,17 +83,12 @@ const DashboardScreen: React.FC = () => {
         total={total}
         isDisabled={isDisabled}
         statusColor={statusColor}
-        isLoading={isLoading}
+        isLoading={loadingMatches} // Pass loadingMatches to DateCard
         onToggle={handleToggle}
         onPressMatches={handlePressMatches} // Pass the handler
       />
     );
   };
-
-  // Render loading indicator while fetching data
-  if (isLoading) {
-    return <SpinLoader />;
-  }
 
   return (
     <View style={styles.container}>
@@ -95,6 +96,9 @@ const DashboardScreen: React.FC = () => {
       <View style={styles.profileContainer}>
         <Text style={styles.greeting}>Hi {user?.displayName}! 👋</Text>
       </View>
+
+      {/* Show a global loader if essential data is loading */}
+      {isLoading && <SpinLoader />}
 
       {/* Weekly Status List */}
       <FlatList

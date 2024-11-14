@@ -142,9 +142,6 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
         statusDocRefs.map((ref) => getDoc(ref)),
       );
 
-      // Initialize a new object to store matching crews for each date
-      const matchingCrews: { [date: string]: string[] } = {};
-
       // Aggregate counts and matching crews
       statusSnapshots.forEach((statusSnap) => {
         if (statusSnap.exists()) {
@@ -156,15 +153,6 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
             const date = statusSnap.ref.parent.parent?.id;
             if (date && counts[date] !== undefined) {
               counts[date] += 1;
-
-              // Add the crew ID to the matching crews for the date
-              // if (!matchingCrews[date]) {
-              //   matchingCrews[date] = [];
-              // }
-              // const crewId = statusSnap.ref.parent?.parent?.parent?.parent?.id;
-              // if (crewId) {
-              //   matchingCrews[date].push(crewId);
-              // }
             }
           }
         }
@@ -225,13 +213,13 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
           );
           if (otherMembersUp) {
             matches[date] += 1;
-            matchingCrews[date].push(crewId); // Add crewId to matching crews
+            matchingCrews[date].push(crewId);
           }
         }
       });
 
       setDateMatches(matches);
-      setDateMatchingCrews(matchingCrews); // Update dateMatchingCrews state
+      setDateMatchingCrews(matchingCrews);
     } catch (error: any) {
       console.error('Error fetching matches:', error);
       Alert.alert('Error', 'There was an issue fetching your matches.');
