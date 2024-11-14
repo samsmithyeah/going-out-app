@@ -48,7 +48,7 @@ const CrewScreen: React.FC = () => {
   const { user } = useUser();
   const { toggleStatusForCrew } = useCrews();
   const route = useRoute<CrewScreenRouteProp>();
-  const { crewId } = route.params;
+  const { crewId, date } = route.params;
   const navigation = useNavigation<NavigationProp<NavParamList>>();
   const [crew, setCrew] = useState<Crew | null>(null);
   const [members, setMembers] = useState<User[]>([]);
@@ -57,16 +57,20 @@ const CrewScreen: React.FC = () => {
   }>({});
   const [loading, setLoading] = useState(true);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const [selectedDate, setSelectedDate] =
-    useState<string>(getTodayDateString());
+  const [selectedDate, setSelectedDate] = useState<string>(
+    date || getTodayDateString(),
+  );
+
+  useEffect(() => {
+    if (date) {
+      console.log('Updating selectedDate to:', date);
+      setSelectedDate(date);
+    }
+  }, [date]);
 
   // Utility function to get today's date in 'YYYY-MM-DD' format
   function getTodayDateString(): string {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return moment().format('YYYY-MM-DD');
   }
 
   // Fetch crew data

@@ -109,7 +109,7 @@ const MatchesListScreen: React.FC<MatchesListScreenProps> = ({
 
       fetchUsers();
     }
-  }, [date, dateMatchingCrews, crews]);
+  }, [date, dateMatchingCrews, crews, usersCache, setUsersCache]);
 
   // Determine if loading is needed
   const isLoading = loadingCrews || loadingMatches || isLoadingUsers;
@@ -132,7 +132,11 @@ const MatchesListScreen: React.FC<MatchesListScreenProps> = ({
 
   return (
     <View style={styles.container}>
-      <CrewList crews={matchingCrews} usersCache={usersCache} />
+      <CrewList
+        crews={matchingCrews}
+        usersCache={usersCache}
+        currentDate={date}
+      />
     </View>
   );
 };
