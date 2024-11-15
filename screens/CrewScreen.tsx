@@ -398,23 +398,24 @@ const CrewScreen: React.FC = () => {
         )}
 
         {/* Button to navigate to crew date chat */}
-        <CustomButton
-          title="Chat"
-          onPress={() =>
-            navigation.navigate('ChatsStack', {
-              screen: 'CrewDateChat',
-              params: { crewId, date: selectedDate },
-              initial: false,
-            })
-          }
-          icon={{
-            name: 'chatbubble-ellipses-outline',
-            size: 24,
-            library: 'Ionicons',
-          }}
-          accessibilityLabel="Open Chat"
-          accessibilityHint="Navigate to crew date chat"
-        />
+        {currentUserStatus && (
+          <CustomButton
+            title="Chat"
+            onPress={() =>
+              navigation.navigate('CrewDateChat', {
+                crewId,
+                date: selectedDate,
+              })
+            }
+            icon={{
+              name: 'chatbubble-ellipses-outline',
+              size: 24,
+              library: 'Ionicons',
+            }}
+            accessibilityLabel="Open Chat"
+            accessibilityHint="Navigate to crew date chat"
+          />
+        )}
 
         {/* Toggle Status Button */}
         <View style={styles.statusButton}>

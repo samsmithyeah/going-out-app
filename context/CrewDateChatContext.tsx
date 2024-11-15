@@ -21,7 +21,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from './UserContext';
-import { Crew } from '../types/Crew';
 
 interface Message {
   id: string;

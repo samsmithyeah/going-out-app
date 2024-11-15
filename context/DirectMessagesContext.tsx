@@ -15,35 +15,18 @@ import {
   getDocs,
   addDoc,
   Timestamp,
-  orderBy,
   onSnapshot,
-  Unsubscribe,
-  doc,
-  updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from './UserContext';
 
-interface Message {
-  id: string;
-  senderId: string;
-  text: string;
-  createdAt: Timestamp;
-}
-
-interface Conversation {
-  id: string;
-  participants: string[]; // Array of user UIDs
-  latestMessage?: Message;
+interface DMChat {
+  id: string; // e.g., 'userA_userB'
 }
 
 interface DirectMessagesContextProps {
-  conversations: Conversation[];
-  messages: { [conversationId: string]: Message[] };
-  fetchConversations: () => Promise<void>;
+  dms: DMChat[];
   sendMessage: (conversationId: string, text: string) => Promise<void>;
-  listenToConversations: () => Unsubscribe | null;
-  listenToMessages: (conversationId: string) => Unsubscribe;
 }
 
 const DirectMessagesContext = createContext<
@@ -54,63 +37,60 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { user } = useUser();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<{
-    [conversationId: string]: Message[];
-  }>({});
+  const [dms, setDms] = useState<DMChat[]>([]);
 
-  // Fetch conversations where user is a participant
-  const fetchConversations = async () => {
+  // Fetch direct message conversations where the user is a participant
+  const fetchDMs = async () => {
     if (!user?.uid) return;
 
     try {
       const q = query(
         collection(db, 'direct_messages'),
         where('participants', 'array-contains', user.uid),
-        orderBy('latestMessage.createdAt', 'desc'),
       );
       const querySnapshot = await getDocs(q);
-      const convs: Conversation[] = querySnapshot.docs.map((docSnap) => ({
+      const fetchedDMs: DMChat[] = querySnapshot.docs.map((docSnap) => ({
         id: docSnap.id,
-        participants: docSnap.data().participants,
-        latestMessage: docSnap.data().latestMessage,
       }));
-      setConversations(convs);
+      setDms(fetchedDMs);
     } catch (error) {
-      console.error('Error fetching conversations:', error);
-      Alert.alert('Error', 'Could not fetch conversations.');
+      console.error('Error fetching direct messages:', error);
+      Alert.alert('Error', 'Could not fetch direct messages.');
     }
   };
 
-  // Listen to real-time updates in conversations
-  const listenToConversations = () => {
-    if (!user?.uid) return null;
+  // Listen to real-time updates in direct messages
+  useEffect(() => {
+    if (!user?.uid) return;
 
     const q = query(
       collection(db, 'direct_messages'),
       where('participants', 'array-contains', user.uid),
-      orderBy('latestMessage.createdAt', 'desc'),
     );
 
     const unsubscribe = onSnapshot(
       q,
       (querySnapshot) => {
-        const convs: Conversation[] = querySnapshot.docs.map((docSnap) => ({
+        const fetchedDMs: DMChat[] = querySnapshot.docs.map((docSnap) => ({
           id: docSnap.id,
-          participants: docSnap.data().participants,
-          latestMessage: docSnap.data().latestMessage,
         }));
-        setConversations(convs);
+        setDms(fetchedDMs);
       },
       (error) => {
-        console.error('Error listening to conversations:', error);
+        console.error('Error listening to direct messages:', error);
+        Alert.alert('Error', 'Could not listen to direct messages.');
       },
     );
 
-    return unsubscribe;
-  };
+    // Fetch initial DMs
+    fetchDMs();
 
-  // Send a message in a conversation
+    return () => {
+      unsubscribe();
+    };
+  }, [user?.uid]);
+
+  // Send a message in a direct conversation
   const sendMessage = async (conversationId: string, text: string) => {
     if (!user?.uid) return;
 
@@ -127,69 +107,17 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         createdAt: Timestamp.fromDate(new Date()),
       };
       await addDoc(messagesRef, newMessage);
-
-      // Update latestMessage in conversation
-      const conversationRef = doc(db, 'direct_messages', conversationId);
-      await updateDoc(conversationRef, {
-        latestMessage: newMessage,
-      });
     } catch (error) {
       console.error('Error sending message:', error);
       Alert.alert('Error', 'Could not send message.');
     }
   };
 
-  // Listen to real-time updates in messages of a conversation
-  const listenToMessages = (conversationId: string) => {
-    const messagesRef = collection(
-      db,
-      'direct_messages',
-      conversationId,
-      'messages',
-    );
-    const q = query(messagesRef, orderBy('createdAt', 'asc'));
-
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const msgs: Message[] = querySnapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-          senderId: docSnap.data().senderId,
-          text: docSnap.data().text,
-          createdAt: docSnap.data().createdAt,
-        }));
-        setMessages((prev) => ({
-          ...prev,
-          [conversationId]: msgs,
-        }));
-      },
-      (error) => {
-        console.error('Error listening to messages:', error);
-      },
-    );
-
-    return unsubscribe;
-  };
-
-  useEffect(() => {
-    fetchConversations();
-
-    const unsubscribe = listenToConversations();
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [user?.uid]);
-
   return (
     <DirectMessagesContext.Provider
       value={{
-        conversations,
-        messages,
-        fetchConversations,
+        dms,
         sendMessage,
-        listenToConversations,
-        listenToMessages,
       }}
     >
       {children}

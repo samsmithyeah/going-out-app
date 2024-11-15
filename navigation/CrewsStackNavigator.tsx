@@ -8,7 +8,8 @@ import CrewSettingsScreen from '../screens/CrewSettingsScreen';
 import { NavParamList } from './AppNavigator';
 import AddMembersScreen from '../screens/AddMembersScreen';
 import OtherUserProfileScreen from '../screens/OtherUserProfileScreen';
-import UserProfileScreen from '../screens/UserProfileScreen';
+import CrewDateChatScreen from '../screens/CrewDateChatScreen';
+import DMChatScreen from '../screens/DMChatScreen';
 
 const Stack = createStackNavigator<NavParamList>();
 
@@ -49,9 +50,20 @@ const CrewsStackNavigator: React.FC = () => {
         options={{ headerStatusBarHeight: 0, headerBackTitleVisible: false }}
       />
       <Stack.Screen
-        name="UserProfile"
-        component={UserProfileScreen}
-        options={{ headerStatusBarHeight: 0, headerBackTitleVisible: false }}
+        name="CrewDateChat"
+        component={CrewDateChatScreen}
+        options={{
+          headerBackTitleVisible: false,
+          headerStatusBarHeight: 0,
+        }}
+      />
+      <Stack.Screen
+        name="DMChat"
+        component={DMChatScreen}
+        options={{
+          headerBackTitleVisible: false,
+          headerStatusBarHeight: 0,
+        }}
       />
     </Stack.Navigator>
   );

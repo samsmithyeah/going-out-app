@@ -4,11 +4,17 @@ import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import {
+  RouteProp,
+  useRoute,
+  useNavigation,
+  NavigationProp,
+} from '@react-navigation/native';
 import { User } from '../types/User';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import { NavParamList } from '../navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
+import CustomButton from '../components/CustomButton';
 
 type OtherUserProfileScreenRouteProp = RouteProp<
   NavParamList,
@@ -17,7 +23,7 @@ type OtherUserProfileScreenRouteProp = RouteProp<
 
 const OtherUserProfileScreen: React.FC = () => {
   const route = useRoute<OtherUserProfileScreenRouteProp>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<NavParamList>>();
   const { userId } = route.params;
 
   const [userProfile, setUserProfile] = useState<User | null>(null);
@@ -112,7 +118,21 @@ const OtherUserProfileScreen: React.FC = () => {
         <InfoItem label="Email Address" value={userProfile.email || 'N/A'} />
       </View>
 
-      {/* Optional: Add more actions/buttons here */}
+      <CustomButton
+        title="Chat"
+        onPress={() =>
+          navigation.navigate('DMChat', {
+            otherUserId: userProfile.uid,
+          })
+        }
+        icon={{
+          name: 'chatbubble-ellipses-outline',
+          size: 24,
+          library: 'Ionicons',
+        }}
+        accessibilityLabel="Open Chat"
+        accessibilityHint="Navigate to crew date chat"
+      />
     </View>
   );
 };

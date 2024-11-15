@@ -44,7 +44,7 @@ export type NavParamList = {
         initial: boolean;
       }
     | undefined;
-  DMChat: { conversationId: string; otherUserId: string };
+  DMChat: { otherUserId: string };
   DMConversations: undefined;
   NewDM: undefined;
   CrewDateChatsList: undefined;

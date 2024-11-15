@@ -63,7 +63,7 @@ const TabNavigator: React.FC = () => {
               : undefined,
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="ChatsStack"
         component={ChatsStackNavigator}
         options={{
@@ -72,7 +72,7 @@ const TabNavigator: React.FC = () => {
             <Ionicons name="chatbubbles-outline" size={size} color={color} />
           ),
         }}
-      />
+      /> */}
       <Tab.Screen
         name="UserProfileStack"
         component={UserProfileStackNavigator}
