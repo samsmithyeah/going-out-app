@@ -99,6 +99,7 @@ const CrewScreen: React.FC = () => {
           console.log('Crew Data:', crewData);
         } else {
           console.warn('Crew not found');
+          navigation.navigate('CrewsList');
         }
         setLoading(false);
       },

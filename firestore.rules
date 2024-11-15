@@ -32,13 +32,13 @@ service cloud.firestore {
       // Subcollection: statuses
       match /statuses/{date} {
 
-        // Allow read if the user is a crew member
-        allow read: if isCrewMember(crewId);
+        // Temporary rule to allow all authenticated users to read all statuses
+        allow read: if request.auth != null;
 
         // Subcollection: userStatuses
         match /userStatuses/{userId} {
-          // Allow read if the user is a crew member
-          allow read: if isCrewMember(crewId);
+          // Temporary rule to allow all authenticated users to read all userStatuses
+          allow read: if request.auth != null;
           
           // Allow create, update, delete if the user is a crew member and is modifying their own status
           allow create, update, delete: if isCrewMember(crewId) && request.auth.uid == userId;

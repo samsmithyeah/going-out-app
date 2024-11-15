@@ -2,13 +2,11 @@
 
 import { https } from 'firebase-functions/v2';
 import * as admin from 'firebase-admin';
-import { deleteCollection } from '../utils/deleteCollection';
 
 interface DeleteCrewData {
   crewId: string;
 }
 
-// Corrected Cloud Function
 export const deleteCrew = https.onCall(async (request: https.CallableRequest<DeleteCrewData>) => {
   const { data, auth } = request;
 
@@ -62,11 +60,7 @@ export const deleteCrew = https.onCall(async (request: https.CallableRequest<Del
   }
 
   try {
-    // 2. Delete statuses subcollection
-    await deleteCollection(crewRef, 'statuses');
-
     // 3. Delete invitations
-
     const invitationsRef = admin.firestore().collection('invitations').where('crewId', '==', crewId);
     const invitationsSnapshot = await invitationsRef.get();
 
@@ -77,11 +71,8 @@ export const deleteCrew = https.onCall(async (request: https.CallableRequest<Del
 
     await batch.commit();
 
-    // 4. Delete the crew document
-    await crewRef.delete();
-
-    // 5. Optionally, notify members about the crew deletion via push notifications
-    // (Requires additional implementation)
+    // 4. Recursively delete the crew document
+    await admin.firestore().recursiveDelete(crewRef);
 
     return { success: true };
   } catch (error) {

@@ -27,7 +27,7 @@ type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
 const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   const { crews, usersCache, setUsersCache, loadingCrews, loadingStatuses } =
-    useCrews(); // Consuming crews data and usersCache from CrewsContext
+    useCrews();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>(''); // State for search
   const [filteredCrews, setFilteredCrews] = useState<Crew[]>([]); // State for filtered crews
