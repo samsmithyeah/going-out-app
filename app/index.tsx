@@ -1,6 +1,8 @@
 import { UserProvider } from '../context/UserContext';
 import { CrewsProvider } from '../context/CrewsContext';
 import { InvitationsProvider } from '../context/InvitationsContext';
+import { CrewDateChatProvider } from '../context/CrewDateChatContext';
+import { DirectMessagesProvider } from '../context/DirectMessagesContext';
 import { registerRootComponent } from 'expo';
 import Toast, {
   BaseToast,
@@ -71,7 +73,11 @@ const Root: React.FC = () => {
       <UserProvider>
         <CrewsProvider>
           <InvitationsProvider>
-            <App />
+            <CrewDateChatProvider>
+              <DirectMessagesProvider>
+                <App />
+              </DirectMessagesProvider>
+            </CrewDateChatProvider>
           </InvitationsProvider>
         </CrewsProvider>
       </UserProvider>

@@ -8,11 +8,13 @@ import UserProfileStackNavigator from './UserProfileStackNavigator';
 import DashboardStackNavigator from './DashboardStackNavigator';
 import CrewsStackNavigator from './CrewsStackNavigator';
 import { useInvitations } from '../context/InvitationsContext';
+import ChatsStackNavigator from './ChatsStackNavigator';
 
 export type TabsParamList = {
   DashboardStack: undefined;
   CrewsStack: { screen: string; params: { crewId: string } };
   Invitations: undefined;
+  ChatsStack: undefined;
   UserProfileStack: undefined;
 };
 
@@ -59,6 +61,16 @@ const TabNavigator: React.FC = () => {
                 ? '99+'
                 : pendingCount
               : undefined,
+        }}
+      />
+      <Tab.Screen
+        name="ChatsStack"
+        component={ChatsStackNavigator}
+        options={{
+          title: 'Chats',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubbles-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tab.Screen
