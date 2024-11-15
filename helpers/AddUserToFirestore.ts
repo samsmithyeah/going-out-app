@@ -1,10 +1,11 @@
 import { isDevice } from 'expo-device';
 import Constants from 'expo-constants';
 import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { db } from '../firebase';
 import { User } from '../types/User';
+import Toast from 'react-native-toast-message';
 
 const registerForPushNotificationsAsync = async (user: User) => {
   let token;
@@ -21,7 +22,11 @@ const registerForPushNotificationsAsync = async (user: User) => {
       console.log('Permission status:', finalStatus);
     }
     if (finalStatus !== 'granted') {
-      Alert.alert('Failed to get push token for push notification!');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to get push token',
+      });
       return;
     }
     console.log('Getting Expo push token');
@@ -33,12 +38,18 @@ const registerForPushNotificationsAsync = async (user: User) => {
       token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
     } catch (error) {
       if (error instanceof Error) {
-        Alert.alert('Error getting Expo push token:', error.message);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: `Error getting Expo push token: ${error.message}`,
+        });
         console.error('Error getting Expo push token:', error);
       } else {
-        Alert.alert(
-          'Error getting Expo push token, contact developer for details',
-        );
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Error getting Expo push token',
+        });
         console.error('Error getting Expo push token:', error);
       }
     }

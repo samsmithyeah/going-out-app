@@ -6,7 +6,6 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
@@ -18,6 +17,7 @@ import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { UserProfileStackParamList } from '../navigation/UserProfileStackNavigator';
 import CustomButton from '../components/CustomButton'; // Assuming CustomButton is a styled button
+import Toast from 'react-native-toast-message';
 
 type UserProfileScreenNavigationProp = StackNavigationProp<
   UserProfileStackParamList,
@@ -48,7 +48,11 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
 
           // Ensure 'uid' exists in the fetched data
           if (!userData.uid) {
-            Alert.alert('Error', 'User UID is missing in the profile.');
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'User profile data is invalid',
+            });
             return;
           }
 
@@ -62,11 +66,19 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
           };
           setUser(updatedUser);
         } else {
-          Alert.alert('Error', 'User profile not found');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'User profile not found',
+          });
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
-        Alert.alert('Error', 'Could not fetch user profile');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not fetch user profile',
+        });
       } finally {
         setLoading(false);
       }
@@ -98,7 +110,11 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
       await logout();
     } catch (error) {
       console.error('Error logging out: ', error);
-      Alert.alert('Logout Error', 'An error occurred while logging out.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to log out',
+      });
     }
   };
 
@@ -127,7 +143,11 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
             console.log('photoURL updated successfully in Firestore', newUrl);
           } catch (error) {
             console.error('Error updating profile picture URL:', error);
-            Alert.alert('Update Error', 'Failed to update profile picture.');
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'Failed to update profile picture',
+            });
           }
         }}
         editable={false}

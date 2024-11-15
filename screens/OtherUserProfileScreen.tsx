@@ -1,13 +1,14 @@
 // screens/OtherUserProfileScreen.tsx
 
 import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { User } from '../types/User';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import { NavParamList } from '../navigation/AppNavigator';
+import Toast from 'react-native-toast-message';
 
 type OtherUserProfileScreenRouteProp = RouteProp<
   NavParamList,
@@ -39,12 +40,20 @@ const OtherUserProfileScreen: React.FC = () => {
           };
           setUserProfile(fetchedUser);
         } else {
-          Alert.alert('Error', 'User profile not found');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'User profile not found',
+          });
           navigation.goBack();
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
-        Alert.alert('Error', 'Could not fetch user profile');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not fetch user profile',
+        });
         navigation.goBack();
       } finally {
         setLoading(false);

@@ -1,11 +1,11 @@
 // components/GoogleLoginButton.tsx
 
 import React, { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import { auth, signInWithCredential, GoogleAuthProvider } from '../firebase';
 import { addUserToFirestore } from '../helpers/AddUserToFirestore';
 import CustomButton from './CustomButton'; // Import CustomButton
+import Toast from 'react-native-toast-message'; // Import Toast
 
 export default function GoogleLoginButton() {
   // State to manage loading indicator
@@ -36,7 +36,11 @@ export default function GoogleLoginButton() {
           await addUserToFirestore(firestoreUser);
         } catch (error: any) {
           console.error('Login Error:', error);
-          Alert.alert('Login Error', error.message);
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: `Could not sign in with Google: ${error.message}`,
+          });
         } finally {
           setLoading(false); // End loading
         }

@@ -11,6 +11,7 @@ import { auth, db } from '../firebase'; // Ensure correct import paths
 import { User } from '../types/User';
 import { Alert } from 'react-native';
 import { doc, getDoc } from 'firebase/firestore'; // Firestore functions
+import Toast from 'react-native-toast-message';
 
 type UserContextType = {
   user: User | null;
@@ -46,7 +47,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           }
         } catch (error) {
           console.error('Error fetching user data from Firestore:', error);
-          Alert.alert('Error', 'There was an issue fetching your profile.');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not fetch user data',
+          });
           setUser(null);
         }
       } else {

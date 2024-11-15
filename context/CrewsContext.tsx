@@ -2,32 +2,32 @@
 
 import React, {
   createContext,
-  useState,
-  useEffect,
-  ReactNode,
   useContext,
+  useEffect,
   useMemo,
+  useState,
+  ReactNode,
 } from 'react';
-import { Alert } from 'react-native';
 import {
   collection,
-  query,
-  where,
-  getDocs,
   doc,
   getDoc,
-  Timestamp,
-  writeBatch,
+  getDocs,
   onSnapshot,
+  query,
+  where,
   Unsubscribe,
-  setDoc,
   updateDoc,
+  setDoc,
+  writeBatch,
+  Timestamp,
 } from 'firebase/firestore';
-import { db } from '../firebase'; // Ensure this points to your Firebase initialization
-import { useUser } from './UserContext'; // Custom hook to access user data
 import moment from 'moment';
+import { db } from '../firebase'; // Adjust the path as necessary
+import { useUser } from './UserContext'; // Assuming there's a UserContext
 import { Crew } from '../types/Crew';
 import { User } from '../types/User';
+import Toast from 'react-native-toast-message';
 
 interface CrewsContextProps {
   crewIds: string[];
@@ -48,7 +48,7 @@ interface CrewsContextProps {
   setUsersCache: React.Dispatch<React.SetStateAction<{ [key: string]: User }>>;
   loadingCrews: boolean;
   loadingStatuses: boolean;
-  loadingMatches: boolean; // Added
+  loadingMatches: boolean;
 }
 
 const CrewsContext = createContext<CrewsContextProps | undefined>(undefined);
@@ -69,7 +69,7 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
   // Loading states
   const [loadingCrews, setLoadingCrews] = useState<boolean>(true);
   const [loadingStatuses, setLoadingStatuses] = useState<boolean>(true);
-  const [loadingMatches, setLoadingMatches] = useState<boolean>(true); // Added
+  const [loadingMatches, setLoadingMatches] = useState<boolean>(true);
 
   // Generate the next 7 dates starting today
   const weekDates = useMemo((): string[] => {
@@ -79,45 +79,6 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
     }
     return dates;
   }, []);
-
-  // Helper function to fetch user's crews
-  const fetchUserCrews = async (uid: string): Promise<string[]> => {
-    const crewsRef = collection(db, 'crews');
-    const userCrewsQuery = query(
-      crewsRef,
-      where('memberIds', 'array-contains', uid),
-    );
-    const crewsSnapshot = await getDocs(userCrewsQuery);
-    return crewsSnapshot.docs.map((doc) => doc.id);
-  };
-
-  // Helper function to fetch crew details
-  const fetchCrewDetails = async (
-    fetchedCrewIds: string[],
-  ): Promise<Crew[]> => {
-    const crewsData: Crew[] = [];
-    const crewPromises = fetchedCrewIds.map(async (crewId) => {
-      const crewDoc = await getDoc(doc(db, 'crews', crewId));
-      if (crewDoc.exists()) {
-        return {
-          id: crewDoc.id,
-          ...(crewDoc.data() as Omit<Crew, 'id'>),
-        } as Crew;
-      } else {
-        // Handle case where crew document doesn't exist
-        return null;
-      }
-    });
-
-    const crewsResults = await Promise.all(crewPromises);
-    crewsResults.forEach((crew) => {
-      if (crew) {
-        crewsData.push(crew);
-      }
-    });
-
-    return crewsData;
-  };
 
   // Helper function to fetch up statuses
   const fetchUpStatuses = async (fetchedCrewIds: string[]) => {
@@ -161,7 +122,11 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
       setDateCounts(counts);
     } catch (error: any) {
       console.error('Error fetching up statuses:', error);
-      Alert.alert('Error', 'There was an issue fetching your up statuses.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not fetch member statuses',
+      });
     } finally {
       setLoadingStatuses(false); // End loading statuses
     }
@@ -222,7 +187,11 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
       setDateMatchingCrews(matchingCrews);
     } catch (error: any) {
       console.error('Error fetching matches:', error);
-      Alert.alert('Error', 'There was an issue fetching your matches.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not fetch matching crews',
+      });
     } finally {
       setLoadingMatches(false);
     }
@@ -288,10 +257,9 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
           }
         } else {
           if (updatedMatchingCrews[selectedDate]) {
-            const index = updatedMatchingCrews[selectedDate].indexOf(crewId);
-            if (index !== -1) {
-              updatedMatchingCrews[selectedDate].splice(index, 1);
-            }
+            updatedMatchingCrews[selectedDate] = updatedMatchingCrews[
+              selectedDate
+            ].filter((id) => id !== crewId);
           }
         }
         return updatedMatchingCrews;
@@ -301,7 +269,11 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
       await fetchMatches(crewIds);
     } catch (error) {
       console.error('Error toggling status:', error);
-      Alert.alert('Error', 'Could not update your status');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not update your status',
+      });
     }
   };
 
@@ -311,13 +283,21 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
     toggleTo: boolean,
   ) => {
     if (!user?.uid) {
-      Alert.alert('Error', 'User not authenticated');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'User not authenticated',
+      });
       return;
     }
 
     try {
       if (crewIds.length === 0) {
-        Alert.alert('Info', 'You are not part of any crews.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'You are not part of any crews',
+        });
         return;
       }
 
@@ -359,12 +339,13 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
         await batch.commit();
       }
 
-      Alert.alert(
-        'Success',
-        `You have been marked as ${newStatus ? 'up' : 'not up'} for it on ${moment(
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: `You have been marked as ${newStatus ? 'up' : 'not up'} for it on ${moment(
           selectedDateStr,
         ).format('MMMM Do, YYYY')}.`,
-      );
+      });
 
       // Update local state
       setDateCounts((prevCounts) => ({
@@ -381,7 +362,11 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
       await fetchMatches(crewIds);
     } catch (error: any) {
       console.error('Error toggling status:', error);
-      Alert.alert('Error', 'There was an issue updating your status.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not update your status',
+      });
     }
   };
 
@@ -394,30 +379,24 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
         const crewRef = doc(db, 'crews', crewId);
         const unsubscribe = onSnapshot(crewRef, (docSnap) => {
           if (docSnap.exists()) {
-            const updatedCrew = {
+            const updatedCrew: Crew = {
               id: docSnap.id,
               ...(docSnap.data() as Omit<Crew, 'id'>),
-            } as Crew;
+            };
             setCrews((prevCrews) => {
-              const crewIndex = prevCrews.findIndex(
-                (c) => c.id === updatedCrew.id,
-              );
+              const crewIndex = prevCrews.findIndex((c) => c.id === crewId);
               if (crewIndex !== -1) {
-                // Update existing crew
                 const updatedCrews = [...prevCrews];
                 updatedCrews[crewIndex] = updatedCrew;
                 return updatedCrews;
               } else {
-                // Add new crew
                 return [...prevCrews, updatedCrew];
               }
             });
           } else {
-            // Crew deleted
+            // If crew is deleted, remove it from state
             setCrews((prevCrews) => prevCrews.filter((c) => c.id !== crewId));
-            setCrewIds((prevCrewIds) =>
-              prevCrewIds.filter((id) => id !== crewId),
-            );
+            setCrewIds((prevIds) => prevIds.filter((id) => id !== crewId));
           }
         });
 
@@ -434,26 +413,10 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
             'userStatuses',
           );
           const unsubscribeStatus = onSnapshot(userStatusesRef, (snapshot) => {
-            // Update usersCache
-            snapshot.forEach((docSnap) => {
-              setUsersCache((prevCache) => {
-                if (!prevCache[docSnap.id]) {
-                  // User not in cache; skip updating
-                  return prevCache;
-                }
-                return {
-                  ...prevCache,
-                  [docSnap.id]: {
-                    ...prevCache[docSnap.id],
-                    upForGoingOutTonight:
-                      docSnap.data().upForGoingOutTonight ?? false,
-                  },
-                };
-              });
-            });
-
-            // Recompute matches
-            fetchMatches(fetchedCrewIds);
+            // Handle real-time updates for user statuses if needed
+            // This can trigger re-fetching matches or updating counts
+            // For simplicity, you might choose to re-fetch matches here
+            fetchMatches(crewIds);
           });
 
           unsubscribeList.push(unsubscribeStatus);
@@ -470,27 +433,64 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       try {
-        const fetchedCrewIds = await fetchUserCrews(user.uid);
-        setCrewIds(fetchedCrewIds);
-        setLoadingCrews(false);
+        // Set up a real-time listener instead of fetching crew IDs manually
+        const crewsQuery = query(
+          collection(db, 'crews'),
+          where('memberIds', 'array-contains', user.uid),
+        );
 
-        if (fetchedCrewIds.length > 0 && weekDates.length > 0) {
-          const fetchedCrews = await fetchCrewDetails(fetchedCrewIds);
-          setCrews(fetchedCrews);
-          await fetchUpStatuses(fetchedCrewIds);
-          await fetchMatches(fetchedCrewIds); // Fetch matches after statuses
-          setupCrewListeners(fetchedCrewIds);
-        } else {
-          setCrews([]);
-          setDateCounts({});
-          setDateMatches({});
-          setDateMatchingCrews({});
-          setLoadingStatuses(false);
-          setLoadingMatches(false);
-        }
+        const unsubscribeCrews = onSnapshot(
+          crewsQuery,
+          async (querySnapshot) => {
+            const fetchedCrewIds: string[] = [];
+            const fetchedCrews: Crew[] = [];
+
+            querySnapshot.forEach((docSnap) => {
+              fetchedCrewIds.push(docSnap.id);
+              fetchedCrews.push({
+                id: docSnap.id,
+                ...(docSnap.data() as Omit<Crew, 'id'>),
+              });
+            });
+
+            setCrewIds(fetchedCrewIds);
+            setCrews(fetchedCrews);
+            setLoadingCrews(false);
+
+            if (fetchedCrewIds.length > 0 && weekDates.length > 0) {
+              await fetchUpStatuses(fetchedCrewIds);
+              await fetchMatches(fetchedCrewIds);
+              setupCrewListeners(fetchedCrewIds);
+            } else {
+              setCrews([]);
+              setDateCounts({});
+              setDateMatches({});
+              setDateMatchingCrews({});
+              setLoadingStatuses(false);
+              setLoadingMatches(false);
+            }
+          },
+          (error) => {
+            console.error('Error listening to crews:', error);
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'Could not fetch your crews',
+            });
+            setLoadingCrews(false);
+            setLoadingStatuses(false);
+            setLoadingMatches(false);
+          },
+        );
+
+        unsubscribeList.push(unsubscribeCrews);
       } catch (error: any) {
         console.error('Error initializing CrewsContext:', error);
-        Alert.alert('Error', 'There was an issue initializing your crews.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not initialize crews',
+        });
         setLoadingCrews(false);
         setLoadingStatuses(false);
         setLoadingMatches(false);
@@ -499,7 +499,7 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
 
     initialize();
 
-    // Cleanup listeners on unmount or when crewIds change
+    // Cleanup listeners on unmount
     return () => {
       unsubscribeList.forEach((unsubscribe) => unsubscribe());
     };
@@ -519,7 +519,7 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
         setUsersCache,
         loadingCrews,
         loadingStatuses,
-        loadingMatches, // Added
+        loadingMatches,
       }}
     >
       {children}

@@ -19,13 +19,13 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from './UserContext';
-import { Alert } from 'react-native';
 import { Crew } from '../types/Crew';
 import { User } from '../types/User';
 import { InvitationWithDetails, Invitation } from '../types/Invitation';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { NavParamList } from '../navigation/AppNavigator';
+import Toast from 'react-native-toast-message';
 
 interface InvitationsContextType {
   invitations: InvitationWithDetails[];
@@ -162,7 +162,11 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
       (error) => {
         console.error('Error fetching invitations:', error);
         setLoading(false);
-        Alert.alert('Error', 'Could not fetch invitations');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not fetch invitations',
+        });
       },
     );
 
@@ -172,7 +176,11 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
   // Function to accept an invitation
   const acceptInvitation = async (invitation: InvitationWithDetails) => {
     if (!user) {
-      Alert.alert('Error', 'User not logged in');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'User not authenticated',
+      });
       return;
     }
 
@@ -182,7 +190,11 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
       const crewSnap = await getDoc(crewRef);
 
       if (!crewSnap.exists()) {
-        Alert.alert('Error', 'Crew does not exist');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Crew not found',
+        });
         return;
       }
 
@@ -198,7 +210,11 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
         status: 'accepted',
       });
 
-      Alert.alert('Success', `You have joined ${invitation.crew?.name}`);
+      Toast.show({
+        type: 'success',
+        text1: 'Invitation accepted',
+        text2: `You have joined ${invitation.crew?.name}`,
+      });
 
       navigation.navigate('CrewsStack', {
         screen: 'Crew',
@@ -207,7 +223,11 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
       });
     } catch (error) {
       console.error('Error accepting invitation:', error);
-      Alert.alert('Error', 'Could not accept invitation');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not accept invitation',
+      });
     }
   };
 
@@ -220,10 +240,18 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
         status: 'declined',
       });
 
-      Alert.alert('Invitation Declined');
+      Toast.show({
+        type: 'info',
+        text1: 'Invitation declined',
+        text2: `You have declined the invitation to ${invitation.crew?.name}`,
+      });
     } catch (error) {
       console.error('Error declining invitation:', error);
-      Alert.alert('Error', 'Could not decline invitation');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not decline invitation',
+      });
     }
   };
 

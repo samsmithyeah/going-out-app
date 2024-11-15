@@ -1,7 +1,7 @@
 // screens/CrewsListScreen.tsx
 
 import React, { useEffect, useState } from 'react';
-import { View, Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCrews } from '../context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -15,6 +15,7 @@ import CustomSearchInput from '../components/CustomSearchInput';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import LoadingOverlay from '../components/LoadingOverlay';
+import Toast from 'react-native-toast-message';
 
 type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
@@ -91,7 +92,11 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
           });
         } catch (error) {
           console.error('Error fetching user data:', error);
-          Alert.alert('Error', 'Could not fetch crew members data');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not fetch user data',
+          });
         } finally {
           setIsLoadingUsers(false);
         }
@@ -104,6 +109,11 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   const handleCrewCreated = (crewId: string) => {
     console.log('Crew created:', crewId);
     setIsModalVisible(false);
+    Toast.show({
+      type: 'success',
+      text1: 'Success',
+      text2: 'Crew created successfully',
+    });
     navigation.navigate('Crew', { crewId });
   };
 

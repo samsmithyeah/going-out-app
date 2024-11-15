@@ -18,6 +18,7 @@ import { useUser } from '../context/UserContext';
 import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';
+import Toast from 'react-native-toast-message';
 
 const EditUserProfileModal: React.FC = () => {
   const { user, setUser } = useUser();
@@ -45,17 +46,29 @@ const EditUserProfileModal: React.FC = () => {
 
     // Validate inputs
     if (!firstName.trim()) {
-      Alert.alert('Validation Error', 'First name cannot be empty.');
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'First name cannot be empty.',
+      });
       return;
     }
 
     if (!lastName.trim()) {
-      Alert.alert('Validation Error', 'Last name cannot be empty.');
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Last name cannot be empty.',
+      });
       return;
     }
 
     if (!displayName.trim()) {
-      Alert.alert('Validation Error', 'Display name cannot be empty.');
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Display name cannot be empty.',
+      });
       return;
     }
 
@@ -79,14 +92,22 @@ const EditUserProfileModal: React.FC = () => {
         photoURL: photoURL.trim(),
       });
 
-      Alert.alert('Success', 'Profile updated successfully.');
+      Toast.show({
+        type: 'success',
+        text1: 'Profile Updated',
+        text2: 'Your profile has been updated successfully.',
+      });
       navigation.goBack(); // Close the modal after saving
 
       // Dismiss the keyboard after saving
       Keyboard.dismiss();
     } catch (error) {
       console.error('Error updating profile:', error);
-      Alert.alert('Update Error', 'Failed to update profile.');
+      Toast.show({
+        type: 'error',
+        text1: 'Update Error',
+        text2: 'Failed to update your profile. Please try again.',
+      });
     } finally {
       setSaving(false);
     }
@@ -138,7 +159,11 @@ const EditUserProfileModal: React.FC = () => {
               console.log('photoURL updated successfully in Firestore', newUrl);
             } catch (error) {
               console.error('Error updating profile picture URL:', error);
-              Alert.alert('Update Error', 'Failed to update profile picture.');
+              Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Failed to update profile picture',
+              });
             }
           }}
           editable={true}
@@ -201,6 +226,12 @@ const EditUserProfileModal: React.FC = () => {
               library: 'Ionicons',
               color: '#FFFFFF', // Icon color
             }}
+            disabled={
+              saving ||
+              !firstName.trim() ||
+              !lastName.trim() ||
+              !displayName.trim()
+            }
             accessibilityLabel="Save Profile"
             accessibilityHint="Save your updated profile information"
           />

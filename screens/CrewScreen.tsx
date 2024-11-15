@@ -35,6 +35,7 @@ import CustomButton from '../components/CustomButton';
 import CrewHeader from '../components/CrewHeader';
 import { useCrews } from '../context/CrewsContext';
 import LoadingOverlay from '../components/LoadingOverlay';
+import Toast from 'react-native-toast-message';
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
 
@@ -76,7 +77,11 @@ const CrewScreen: React.FC = () => {
   // Fetch crew data
   useEffect(() => {
     if (!crewId) {
-      Alert.alert('Error', 'Crew ID is missing');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Crew ID not found',
+      });
       setLoading(false);
       return;
     }
@@ -106,7 +111,11 @@ const CrewScreen: React.FC = () => {
       (error) => {
         if (user) {
           console.error('Error fetching crew:', error);
-          Alert.alert('Error', 'Could not fetch crew data');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not fetch crew data',
+          });
         }
         setLoading(false);
       },
@@ -138,7 +147,11 @@ const CrewScreen: React.FC = () => {
           setMembers(membersList);
         } catch (error) {
           console.error('Error fetching members:', error);
-          Alert.alert('Error', 'Could not fetch member profiles');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not fetch members',
+          });
         }
       } else {
         setMembers([]);
@@ -177,7 +190,11 @@ const CrewScreen: React.FC = () => {
       (error) => {
         if (user) {
           console.error('Error fetching userStatuses:', error);
-          Alert.alert('Error', 'Could not fetch user statuses');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not fetch user statuses',
+          });
         }
       },
     );
@@ -190,7 +207,11 @@ const CrewScreen: React.FC = () => {
   // Function to toggle user's status for the selected date
   const toggleStatus = async () => {
     if (!user?.uid || !crew) {
-      Alert.alert('Error', 'User or Crew data is missing');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'User or crew data not found',
+      });
       return;
     }
 
@@ -290,7 +311,11 @@ const CrewScreen: React.FC = () => {
       const newDate = current.subtract(1, 'days').format('YYYY-MM-DD');
       setSelectedDate(newDate);
     } else {
-      Alert.alert('Invalid Date', 'You cannot select a past date.');
+      Toast.show({
+        type: 'info',
+        text1: 'Info',
+        text2: 'Cannot select a past date',
+      });
     }
   };
 
