@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f9f9f9', // Light background for contrast
+    backgroundColor: '#f5f5f5', // Light background for contrast
   },
   loaderContainer: {
     flex: 1,

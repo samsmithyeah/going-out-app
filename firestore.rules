@@ -23,8 +23,8 @@ service cloud.firestore {
       // Temporary rule to allow all authenticated users to read all crews
       allow read: if request.auth != null;
       
-      // Allow update if the user is a crew member
-      allow update: if isCrewMember(crewId);
+      // Allow update if the user is a crew member or has a pending invitation
+      allow update: if isCrewMember(crewId) || isInvitationRecipientForCrew(crewId);
       
       // Allow delete if the user is the crew owner
       allow delete: if isCrewOwner(crewId);
@@ -40,7 +40,7 @@ service cloud.firestore {
           // Temporary rule to allow all authenticated users to read all userStatuses
           allow read: if request.auth != null;
           
-          // Allow updates only to their own userStatus
+          // Allow create, update, delete if the user is a crew member and is modifying their own status
           allow create, update, delete: if isCrewMember(crewId) && request.auth.uid == userId;
         }
       }
@@ -77,16 +77,6 @@ service cloud.firestore {
              get(/databases/$(database)/documents/crews/$(crewId)).data.ownerId == request.auth.uid;
     }
     
-    // Check if the authenticated user is either the sender or recipient of the invitation
-    function isInvitationParticipant(invitationId) {
-      return request.auth != null &&
-             exists(/databases/$(database)/documents/invitations/$(invitationId)) &&
-             (
-               get(/databases/$(database)/documents/invitations/$(invitationId)).data.toUserId == request.auth.uid ||
-               get(/databases/$(database)/documents/invitations/$(invitationId)).data.fromUserId == request.auth.uid
-             );
-    }
-    
     // Check if the authenticated user is the recipient of the invitation
     function isInvitationRecipient(invitationId) {
       return request.auth != null &&
@@ -99,6 +89,16 @@ service cloud.firestore {
       return request.auth != null &&
              exists(/databases/$(database)/documents/invitations/$(invitationId)) &&
              get(/databases/$(database)/documents/invitations/$(invitationId)).data.fromUserId == request.auth.uid;
+    }
+    
+    // Check if the authenticated user has a pending invitation to the crew
+    function isInvitationRecipientForCrew(crewId) {
+      return request.auth != null &&
+             request.resource.data.invitationId is string &&
+             exists(/databases/$(database)/documents/invitations/$(request.resource.data.invitationId)) &&
+             get(/databases/$(database)/documents/invitations/$(request.resource.data.invitationId)).data.toUserId == request.auth.uid &&
+             get(/databases/$(database)/documents/invitations/$(request.resource.data.invitationId)).data.crewId == crewId &&
+             get(/databases/$(database)/documents/invitations/$(request.resource.data.invitationId)).data.status == 'pending';
     }
   }
 }

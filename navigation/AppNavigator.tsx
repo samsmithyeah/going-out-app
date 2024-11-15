@@ -14,12 +14,22 @@ export type NavParamList = {
   LoginStack: undefined;
   MainTabs: undefined;
   CrewsStack:
-    | { screen: string; params: { crewId: string; date?: string } }
+    | {
+        screen: string;
+        params: { crewId: string; date?: string };
+        initial: boolean;
+      }
     | undefined;
   CrewsList: undefined;
   Crew: { crewId: string; date?: string };
   CrewSettings: { crewId: string };
-  UserProfileStack: undefined;
+  UserProfileStack:
+    | {
+        screen: string;
+        params: { userId: string };
+        initial: boolean;
+      }
+    | undefined;
   UserProfile: { userId: string };
   EditUserProfile: undefined;
   Invitations: undefined;

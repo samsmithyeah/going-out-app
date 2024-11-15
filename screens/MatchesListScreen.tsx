@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { useCrews } from '../context/CrewsContext';
-import SpinLoader from '../components/SpinLoader';
 import CrewList from '../components/CrewList';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator'; // Adjust the path as necessary
@@ -12,6 +11,7 @@ import { User } from '../types/User';
 import moment from 'moment';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 type MatchesListScreenProps = NativeStackScreenProps<
   NavParamList,
@@ -116,7 +116,7 @@ const MatchesListScreen: React.FC<MatchesListScreenProps> = ({
 
   // Render loading indicator while fetching data
   if (isLoading) {
-    return <SpinLoader />;
+    return <LoadingOverlay />;
   }
 
   // Handle case when there are no matching crews
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f5f5f5',
   },
   noMatchesText: {
     fontSize: 16,

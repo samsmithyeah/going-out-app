@@ -1,15 +1,15 @@
 // screens/DashboardScreen.tsx
 
 import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 import { useCrews } from '../context/CrewsContext';
 import { useUser } from '../context/UserContext';
-import SpinLoader from '../components/SpinLoader';
 import DateCard from '../components/DateCard';
 import moment from 'moment';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator'; // Adjust the path as necessary
 import { useNavigation } from '@react-navigation/native'; // Hook for navigation
+import LoadingOverlay from '../components/LoadingOverlay';
 
 const getDotColor = (count: number, total: number): string => {
   if (count === total && total > 0) return '#32CD32'; // Green
@@ -28,10 +28,10 @@ const DashboardScreen: React.FC = () => {
     crewIds,
     dateCounts,
     dateMatches,
-    dateMatchingCrews,
     toggleStatusForDateAllCrews,
     loadingCrews,
     loadingStatuses,
+    loadingMatches,
   } = useCrews();
   const [isLoadingUsers, setIsLoadingUsers] = React.useState<boolean>(false);
 
@@ -52,8 +52,14 @@ const DashboardScreen: React.FC = () => {
   // Handle toggle actions with loading state
   const handleToggle = async (date: string, toggleTo: boolean) => {
     setIsLoadingUsers(true); // Start loading
-    await toggleStatusForDateAllCrews(date, toggleTo);
-    setIsLoadingUsers(false); // End loading
+    try {
+      await toggleStatusForDateAllCrews(date, toggleTo);
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      Alert.alert('Error', 'Failed to update status. Please try again.');
+    } finally {
+      setIsLoadingUsers(false); // End loading
+    }
   };
 
   // Handle pressing the matches chip
@@ -77,42 +83,40 @@ const DashboardScreen: React.FC = () => {
         total={total}
         isDisabled={isDisabled}
         statusColor={statusColor}
-        isLoading={isLoading}
+        isLoading={loadingMatches} // Pass loadingMatches to DateCard
         onToggle={handleToggle}
         onPressMatches={handlePressMatches} // Pass the handler
       />
     );
   };
 
-  // Render loading indicator while fetching data
-  if (isLoading) {
-    return <SpinLoader />;
-  }
-
   return (
-    <View style={styles.container}>
-      {/* Profile Section */}
-      <View style={styles.profileContainer}>
-        <Text style={styles.greeting}>Hi {user?.displayName}! 👋</Text>
-      </View>
+    <>
+      {isLoading && <LoadingOverlay />}
+      <View style={styles.container}>
+        {/* Profile Section */}
+        <View style={styles.profileContainer}>
+          <Text style={styles.greeting}>Hi {user?.displayName}! 👋</Text>
+        </View>
 
-      {/* Weekly Status List */}
-      <FlatList
-        data={weekDates}
-        renderItem={renderDayItem}
-        keyExtractor={(item) => item}
-        horizontal={false}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.weekListContainer}
-      />
-    </View>
+        {/* Weekly Status List */}
+        <FlatList
+          data={weekDates}
+          renderItem={renderDayItem}
+          keyExtractor={(item) => item}
+          horizontal={false}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.weekListContainer}
+        />
+      </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    marginTop: 16,
     backgroundColor: '#F5F5F5', // Solid light background
     alignItems: 'center',
     justifyContent: 'flex-start',
