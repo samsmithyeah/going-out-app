@@ -19,6 +19,7 @@ import {
 } from 'firebase/storage';
 import FastImage from 'react-native-fast-image';
 import { storage } from '../firebase';
+import Toast from 'react-native-toast-message';
 
 interface ProfilePicturePickerProps {
   imageUrl: string | null;
@@ -53,10 +54,11 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
   const requestPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(
-        'Permission Denied',
-        'Permission to access media library is required!',
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Permission Denied',
+        text2: 'Permission to access media library is required!',
+      });
       return false;
     }
     return true;
@@ -83,7 +85,11 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'Could not select image');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not select an image',
+      });
     }
   };
 
@@ -105,10 +111,18 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
 
               // Update the parent component to remove the image URL
               onImageUpdate('');
-              Alert.alert('Success', 'Profile picture removed successfully');
+              Toast.show({
+                type: 'success',
+                text1: 'Success',
+                text2: 'Profile picture removed successfully',
+              });
             } catch (error) {
               console.error('Error removing image:', error);
-              Alert.alert('Error', 'Could not remove image');
+              Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not remove profile picture',
+              });
             }
           },
         },
@@ -137,7 +151,11 @@ const ProfilePicturePicker: React.FC<ProfilePicturePickerProps> = ({
       console.log('Image uploaded successfully:', downloadUrl);
     } catch (error) {
       console.error('Error uploading image:', error);
-      Alert.alert('Error', 'Could not upload image');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not upload profile picture',
+      });
     } finally {
       setIsUploading(false);
     }

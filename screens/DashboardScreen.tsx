@@ -10,6 +10,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator'; // Adjust the path as necessary
 import { useNavigation } from '@react-navigation/native'; // Hook for navigation
 import LoadingOverlay from '../components/LoadingOverlay';
+import Toast from 'react-native-toast-message';
 
 const getDotColor = (count: number, total: number): string => {
   if (count === total && total > 0) return '#32CD32'; // Green
@@ -56,7 +57,11 @@ const DashboardScreen: React.FC = () => {
       await toggleStatusForDateAllCrews(date, toggleTo);
     } catch (error) {
       console.error('Error toggling status:', error);
-      Alert.alert('Error', 'Failed to update status. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to update status',
+      });
     } finally {
       setIsLoadingUsers(false); // End loading
     }

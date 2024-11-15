@@ -28,6 +28,7 @@ import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';
 import CustomModal from '../components/CustomModal';
 import LoadingOverlay from '../components/LoadingOverlay';
+import Toast from 'react-native-toast-message';
 
 type CrewSettingsScreenRouteProp = RouteProp<NavParamList, 'CrewSettings'>;
 
@@ -52,7 +53,11 @@ const CrewSettingsScreen: React.FC = () => {
   // Fetch crew data and listen for real-time updates
   useEffect(() => {
     if (!crewId) {
-      Alert.alert('Error', 'Crew ID is missing');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Crew ID not found',
+      });
       setLoading(false);
       return;
     }
@@ -84,7 +89,11 @@ const CrewSettingsScreen: React.FC = () => {
       (error) => {
         if (user) {
           console.error('Error fetching crew:', error);
-          Alert.alert('Error', 'Could not fetch crew data');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not fetch crew data',
+          });
         }
         setLoading(false);
       },
@@ -115,7 +124,11 @@ const CrewSettingsScreen: React.FC = () => {
           setMembers(membersList);
         } catch (error) {
           console.error('Error fetching members:', error);
-          Alert.alert('Error', 'Could not fetch member profiles');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not fetch members data',
+          });
         }
       } else {
         setMembers([]);
@@ -140,12 +153,20 @@ const CrewSettingsScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             if (!user?.uid || !crew) {
-              Alert.alert('Error', 'User or Crew data is missing');
+              Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'User or Crew data is missing',
+              });
               return;
             }
 
             if (user.uid !== crew.ownerId) {
-              Alert.alert('Error', 'Only the crew owner can delete the crew');
+              Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Only the owner can delete the crew',
+              });
               return;
             }
 
@@ -156,16 +177,21 @@ const CrewSettingsScreen: React.FC = () => {
               const data = result.data as { success: boolean };
               if (data.success) {
                 navigation.navigate('CrewsList');
-                Alert.alert('Success', 'Crew deleted successfully');
+                Toast.show({
+                  type: 'success',
+                  text1: 'Crew deleted',
+                  text2: 'The crew was deleted successfully',
+                });
               } else {
                 throw new Error('Deletion failed');
               }
             } catch (error: any) {
               console.error('Error deleting crew:', error);
-              Alert.alert(
-                'Error',
-                error.message || 'Could not delete the crew',
-              );
+              Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not delete the crew',
+              });
             } finally {
               setIsDeleting(false);
             }
@@ -178,7 +204,11 @@ const CrewSettingsScreen: React.FC = () => {
   // Function to leave the crew
   const handleLeaveCrew = async () => {
     if (!user?.uid || !crew) {
-      Alert.alert('Error', 'User or Crew data is missing');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'User or Crew data is missing',
+      });
       return;
     }
 
@@ -203,7 +233,11 @@ const CrewSettingsScreen: React.FC = () => {
                   // If the user is the only member, delete the crew
                   await deleteCrew(crewId);
                   navigation.navigate('CrewsList');
-                  Alert.alert('Success', 'You have left and deleted the crew');
+                  Toast.show({
+                    type: 'success',
+                    text1: 'You have left the crew',
+                    text2: 'Crew also deleted since you were the only member',
+                  });
                 } else {
                   // Assign a new owner randomly from the remaining members
                   const remainingMembers = crew.memberIds.filter(
@@ -221,10 +255,11 @@ const CrewSettingsScreen: React.FC = () => {
                   });
 
                   navigation.navigate('CrewsList');
-                  Alert.alert(
-                    'Success',
-                    'You have left the crew, and ownership was transferred.',
-                  );
+                  Toast.show({
+                    type: 'success',
+                    text1: 'You have left the crew',
+                    text2: 'Ownership was transferred to another member',
+                  });
                 }
               } else {
                 // If the user is not the owner, simply remove them from the crew
@@ -237,11 +272,18 @@ const CrewSettingsScreen: React.FC = () => {
                 });
 
                 navigation.navigate('CrewsList');
-                Alert.alert('Success', 'You have left the crew');
+                Toast.show({
+                  type: 'success',
+                  text1: 'You have left the crew',
+                });
               }
             } catch (error) {
               console.error('Error leaving crew:', error);
-              Alert.alert('Error', 'Could not leave the crew');
+              Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Could not leave the crew',
+              });
             }
           },
         },
@@ -265,12 +307,20 @@ const CrewSettingsScreen: React.FC = () => {
   // Function to handle crew name update
   const handleUpdateCrewName = async () => {
     if (!newCrewName.trim()) {
-      Alert.alert('Error', 'Crew name cannot be empty');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Crew name cannot be empty',
+      });
       return;
     }
 
     if (newCrewName.trim().length < 3) {
-      Alert.alert('Error', 'Crew name must be at least 3 characters long');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Crew name must be at least 3 characters long',
+      });
       return;
     }
 
@@ -280,10 +330,18 @@ const CrewSettingsScreen: React.FC = () => {
       await updateDoc(doc(db, 'crews', crewId), { name: newCrewName.trim() });
       setCrew((prev) => (prev ? { ...prev, name: newCrewName.trim() } : prev));
       setIsEditNameModalVisible(false);
-      Alert.alert('Success', 'Crew name updated successfully');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Crew name updated successfully',
+      });
     } catch (error) {
       console.error('Error updating crew name:', error);
-      Alert.alert('Error', 'Could not update crew name');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not update crew name',
+      });
     } finally {
       setIsUpdatingName(false);
     }
@@ -292,17 +350,29 @@ const CrewSettingsScreen: React.FC = () => {
   // Function to handle activity update
   const handleUpdateActivity = async () => {
     if (!newActivity.trim()) {
-      Alert.alert('Error', 'Crew activity cannot be empty');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Crew activity cannot be empty',
+      });
       return;
     }
 
     if (newActivity.trim().length < 3) {
-      Alert.alert('Error', 'Crew activity must be at least 3 characters long');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Crew activity must be at least 3 characters long',
+      });
       return;
     }
 
     if (newActivity.trim().length > 50) {
-      Alert.alert('Error', 'Crew activity cannot exceed 50 characters');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Crew activity must be at most 50 characters long',
+      });
       return;
     }
 
@@ -316,10 +386,18 @@ const CrewSettingsScreen: React.FC = () => {
         prev ? { ...prev, activity: newActivity.trim() } : prev,
       );
       setIsEditActivityModalVisible(false);
-      Alert.alert('Success', 'Crew activity updated successfully');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Crew activity updated successfully',
+      });
     } catch (error) {
       console.error('Error updating crew activity:', error);
-      Alert.alert('Error', 'Could not update crew activity');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not update crew activity',
+      });
     } finally {
       setIsUpdatingActivity(false);
     }
@@ -353,7 +431,11 @@ const CrewSettingsScreen: React.FC = () => {
                   );
                 } catch (error) {
                   console.error('Error updating iconUrl in Firestore:', error);
-                  Alert.alert('Error', 'Could not update crew profile picture');
+                  Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'Could not update crew icon',
+                  });
                 }
               }
             }}
@@ -456,7 +538,8 @@ const CrewSettingsScreen: React.FC = () => {
               label: 'Update',
               onPress: handleUpdateCrewName,
               variant: 'primary',
-              disabled: isUpdatingName || isUpdatingActivity,
+              disabled:
+                isUpdatingName || isUpdatingActivity || !newCrewName.trim(),
             },
             {
               label: 'Cancel',
@@ -493,7 +576,7 @@ const CrewSettingsScreen: React.FC = () => {
               label: 'Update',
               onPress: handleUpdateActivity,
               variant: 'primary',
-              disabled: isUpdatingActivity,
+              disabled: isUpdatingActivity || !newActivity.trim(),
             },
             {
               label: 'Cancel',

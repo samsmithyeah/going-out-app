@@ -12,6 +12,7 @@ import moment from 'moment';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 import LoadingOverlay from '../components/LoadingOverlay';
+import Toast from 'react-native-toast-message';
 
 type MatchesListScreenProps = NativeStackScreenProps<
   NavParamList,
@@ -101,7 +102,11 @@ const MatchesListScreen: React.FC<MatchesListScreenProps> = ({
           });
         } catch (error) {
           console.error('Error fetching user data:', error);
-          Alert.alert('Error', 'Could not fetch crew members data');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not fetch user data',
+          });
         } finally {
           setIsLoadingUsers(false);
         }

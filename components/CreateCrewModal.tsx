@@ -7,6 +7,7 @@ import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import CustomModal from './CustomModal';
 import CustomTextInput from './CustomTextInput';
+import Toast from 'react-native-toast-message';
 
 type CreateCrewModalProps = {
   isVisible: boolean;
@@ -25,13 +26,21 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
 
   const createCrew = async () => {
     if (!newCrewName.trim()) {
-      Alert.alert('Error', 'Crew name is required');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Crew name cannot be empty',
+      });
       return;
     }
 
     try {
       if (!user?.uid) {
-        Alert.alert('Error', 'User is not authenticated');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'User not authenticated',
+        });
         return;
       }
 
@@ -55,7 +64,11 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
       onCrewCreated(crewRef.id);
     } catch (error) {
       console.error('Error creating crew:', error);
-      Alert.alert('Error', 'Could not create crew');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to create the crew. Please try again.',
+      });
     } finally {
       setLoading(false);
     }
@@ -75,7 +88,7 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
         {
           label: 'Create',
           onPress: createCrew,
-          disabled: loading,
+          disabled: loading || !newCrewName.trim(),
           variant: 'primary',
         },
         {

@@ -25,6 +25,7 @@ import CustomTextInput from '../components/CustomTextInput';
 import { NavParamList } from '../navigation/AppNavigator';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import LoadingOverlay from '../components/LoadingOverlay';
+import Toast from 'react-native-toast-message';
 
 interface MemberWithStatus extends User {
   status?: 'member' | 'invited' | 'available';
@@ -56,7 +57,11 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
   useEffect(() => {
     const fetchPotentialMembers = async () => {
       if (!user) {
-        Alert.alert('Error', 'User not authenticated');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'User not authenticated',
+        });
         setLoading(false);
         return;
       }
@@ -119,7 +124,11 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
         const currentCrewRef = doc(db, 'crews', crewId);
         const currentCrewSnap = await getDoc(currentCrewRef);
         if (!currentCrewSnap.exists()) {
-          Alert.alert('Error', 'Crew does not exist');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Crew not found',
+          });
           setLoading(false);
           return;
         }
@@ -142,7 +151,11 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
         setAllPotentialMembers(membersWithStatus);
       } catch (error) {
         console.error('Error fetching potential members:', error);
-        Alert.alert('Error', 'Could not fetch potential members');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not fetch potential members',
+        });
       } finally {
         setLoading(false);
       }
@@ -199,7 +212,11 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
   // Handle adding selected members to the crew
   const handleAddSelectedMembers = async () => {
     if (selectedMemberIds.length === 0) {
-      Alert.alert('Info', 'No members selected to add');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'No members selected',
+      });
       return;
     }
 
@@ -245,11 +262,19 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
         return `${selectedMemberIds.length} members invited to the crew`;
       };
 
-      Alert.alert('Success', successMessage());
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: successMessage(),
+      });
       navigation.goBack();
     } catch (error) {
       console.error('Error adding members:', error);
-      Alert.alert('Error', 'Could not add selected members');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not add members to the crew',
+      });
     }
   };
 
@@ -266,7 +291,11 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
   // Handle adding a member by email from the modal
   const handleAddByEmail = async () => {
     if (!emailToAdd.trim()) {
-      Alert.alert('Error', 'Please enter an email address');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Email address cannot be empty',
+      });
       return;
     }
 
@@ -286,7 +315,11 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
       const querySnapshot = await getDocs(emailQuery);
 
       if (querySnapshot.empty) {
-        Alert.alert('Error', 'No user found with that email');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'User not found with that email address',
+        });
         return;
       }
 
@@ -295,7 +328,11 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
 
       // Prevent the user from inviting themselves
       if (inviteeId === user?.uid) {
-        Alert.alert('Error', 'You cannot invite yourself to the crew');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'You cannot invite yourself to the crew',
+        });
         return;
       }
 
@@ -305,7 +342,11 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
       const crewMemberIds: string[] = crewData?.memberIds || [];
 
       if (crewMemberIds.includes(inviteeId)) {
-        Alert.alert('Error', 'User is already a member of the crew');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'User is already a member of the crew',
+        });
         return;
       }
 
@@ -320,10 +361,11 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
       const existingInvitationSnapshot = await getDocs(existingInvitationQuery);
 
       if (!existingInvitationSnapshot.empty) {
-        Alert.alert(
-          'Error',
-          'A pending invitation already exists for this user',
-        );
+        Toast.show({
+          type: 'info',
+          text1: 'Already invited',
+          text2: 'A pending invitation already exists for this user',
+        });
         return;
       }
 
@@ -336,12 +378,20 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
         timestamp: new Date(),
       });
 
-      Alert.alert('Success', 'Invitation sent');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Invitation sent successfully',
+      });
       closeEmailModal();
       navigation.goBack();
     } catch (error) {
       console.error('Error adding member by email:', error);
-      Alert.alert('Error', 'Could not add member by email');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not send invitation',
+      });
     } finally {
       setInvitingEmail(false);
     }
@@ -396,9 +446,9 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
         <Text style={styles.addViaEmailText}>Or invite via email address:</Text>
         {/* Button to Open Email Invitation Modal */}
         <CustomButton
-          title="Invite via email"
+          title="Invite a new member"
           onPress={openEmailModal}
-          accessibilityLabel="Invite Member via Email"
+          accessibilityLabel="Invite member with email address"
           accessibilityHint="Opens a modal to invite a member by their email address"
           variant="secondary"
         />
@@ -407,9 +457,14 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
         <CustomModal
           isVisible={isModalVisible}
           onClose={closeEmailModal}
-          title="Invite via email"
+          title="Invite a new member"
           buttons={[
-            { label: 'Invite', onPress: handleAddByEmail, variant: 'primary' },
+            {
+              label: 'Invite',
+              onPress: handleAddByEmail,
+              variant: 'primary',
+              disabled: !emailToAdd.trim(),
+            },
             { label: 'Cancel', onPress: closeEmailModal, variant: 'secondary' },
           ]}
           loading={invitingEmail}

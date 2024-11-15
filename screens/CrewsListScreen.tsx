@@ -15,6 +15,7 @@ import CustomSearchInput from '../components/CustomSearchInput';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import LoadingOverlay from '../components/LoadingOverlay';
+import Toast from 'react-native-toast-message';
 
 type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
@@ -91,7 +92,11 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
           });
         } catch (error) {
           console.error('Error fetching user data:', error);
-          Alert.alert('Error', 'Could not fetch crew members data');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not fetch user data',
+          });
         } finally {
           setIsLoadingUsers(false);
         }
@@ -104,6 +109,10 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   const handleCrewCreated = (crewId: string) => {
     console.log('Crew created:', crewId);
     setIsModalVisible(false);
+    Toast.show({
+      type: 'success',
+      text1: 'Crew created successfully',
+    });
     navigation.navigate('Crew', { crewId });
   };
 
