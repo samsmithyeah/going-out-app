@@ -3,11 +3,15 @@
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 
-const SpinLoader: React.FC = () => {
+interface SpinLoaderProps {
+  text?: string;
+}
+
+const SpinLoader: React.FC<SpinLoaderProps> = ({ text }) => {
   return (
     <View style={styles.loaderContainer}>
       <ActivityIndicator size="large" color="#1E90FF" />
-      <Text style={styles.loaderText}>Loading...</Text>
+      <Text style={styles.loaderText}>{text ? text : 'Loading...'}</Text>
     </View>
   );
 };

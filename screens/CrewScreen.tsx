@@ -33,8 +33,8 @@ import moment from 'moment';
 import { Crew } from '../types/Crew';
 import CustomButton from '../components/CustomButton';
 import CrewHeader from '../components/CrewHeader';
-import SpinLoader from '../components/SpinLoader';
-import { useCrews } from '../context/CrewsContext'; // Import the context
+import { useCrews } from '../context/CrewsContext';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
 
@@ -294,107 +294,110 @@ const CrewScreen: React.FC = () => {
     }
   };
 
-  if (loading || !crew) {
-    return <SpinLoader />;
-  }
-
   return (
-    <View style={styles.container}>
-      {/* Date Picker with Arrow Buttons */}
-      <View style={styles.datePickerContainer}>
-        {/* Left Arrow Button */}
-        <TouchableOpacity
-          onPress={decrementDate}
-          disabled={selectedDate === getTodayDateString()}
-          accessibilityLabel="Previous Date"
-          accessibilityHint="Select the previous date"
-        >
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color={selectedDate === getTodayDateString() ? '#ccc' : '#1e90ff'}
-          />
-        </TouchableOpacity>
+    <>
+      {(loading || !crew) && <LoadingOverlay />}
+      <View style={styles.container}>
+        {/* Date Picker with Arrow Buttons */}
+        <View style={styles.datePickerContainer}>
+          {/* Left Arrow Button */}
+          <TouchableOpacity
+            onPress={decrementDate}
+            disabled={selectedDate === getTodayDateString()}
+            accessibilityLabel="Previous Date"
+            accessibilityHint="Select the previous date"
+          >
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color={selectedDate === getTodayDateString() ? '#ccc' : '#1e90ff'}
+            />
+          </TouchableOpacity>
 
-        {/* Date Picker Button */}
-        <TouchableOpacity
-          style={styles.datePickerButton}
-          onPress={showDatePicker}
-          accessibilityLabel="Select Date"
-          accessibilityHint="Open date picker to select a date"
-        >
-          <Ionicons name="calendar-outline" size={20} color="#1e90ff" />
-          <Text style={styles.datePickerText}>
-            {selectedDate === getTodayDateString()
-              ? 'Today'
-              : moment(selectedDate).format('MMMM Do, YYYY')}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Right Arrow Button */}
-        <TouchableOpacity
-          onPress={incrementDate}
-          accessibilityLabel="Next Date"
-          accessibilityHint="Select the next date"
-        >
-          <Ionicons name="arrow-forward" size={24} color="#1e90ff" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Date Picker Modal */}
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        onConfirm={handleConfirmDate}
-        onCancel={hideDatePicker}
-        minimumDate={new Date()}
-        date={new Date(selectedDate)}
-      />
-
-      {/* Members up for it on selected date */}
-      <Text style={styles.listTitle}>{`Up for ${getCrewActivity()}:`}</Text>
-      {currentUserStatus ? (
-        <MemberList
-          members={membersUpForGoingOut}
-          currentUserId={user?.uid || null}
-          emptyMessage={"No one's up for it on this date"}
-        />
-      ) : (
-        <View style={styles.skeletonContainer}>
-          {/* Render Skeleton User Items */}
-          <MemberList members={[]} currentUserId={null} isLoading={true} />
-
-          {/* Overlaid Message */}
-          <View style={styles.overlay}>
-            <Text style={styles.overlayText}>
-              You can only see who's up for {getCrewActivity()} on this date if
-              you're up for it too!
+          {/* Date Picker Button */}
+          <TouchableOpacity
+            style={styles.datePickerButton}
+            onPress={showDatePicker}
+            accessibilityLabel="Select Date"
+            accessibilityHint="Open date picker to select a date"
+          >
+            <Ionicons name="calendar-outline" size={20} color="#1e90ff" />
+            <Text style={styles.datePickerText}>
+              {selectedDate === getTodayDateString()
+                ? 'Today'
+                : moment(selectedDate).format('MMMM Do, YYYY')}
             </Text>
-          </View>
-        </View>
-      )}
+          </TouchableOpacity>
 
-      {/* Toggle Status Button */}
-      <View style={styles.statusButton}>
-        <CustomButton
-          title={currentUserStatus ? "I'm no longer up for it" : 'Count me in'}
-          onPress={toggleStatus}
-          loading={false} // Set to true if there's a loading state during toggle
-          variant={currentUserStatus ? 'danger' : 'primary'} // Red for active, Green for inactive
-          icon={{
-            name: currentUserStatus ? 'remove-circle-outline' : 'star-outline',
-            size: 24,
-            library: 'Ionicons',
-          }}
-          accessibilityLabel="Toggle Status"
-          accessibilityHint={
-            currentUserStatus
-              ? `Mark yourself as not up for ${getCrewActivity()} on ${selectedDate}`
-              : `Mark yourself as up for ${getCrewActivity()} on ${selectedDate}`
-          }
+          {/* Right Arrow Button */}
+          <TouchableOpacity
+            onPress={incrementDate}
+            accessibilityLabel="Next Date"
+            accessibilityHint="Select the next date"
+          >
+            <Ionicons name="arrow-forward" size={24} color="#1e90ff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Date Picker Modal */}
+        <DateTimePickerModal
+          isVisible={isDatePickerVisible}
+          mode="date"
+          onConfirm={handleConfirmDate}
+          onCancel={hideDatePicker}
+          minimumDate={new Date()}
+          date={new Date(selectedDate)}
         />
+
+        {/* Members up for it on selected date */}
+        <Text style={styles.listTitle}>{`Up for ${getCrewActivity()}:`}</Text>
+        {currentUserStatus ? (
+          <MemberList
+            members={membersUpForGoingOut}
+            currentUserId={user?.uid || null}
+            emptyMessage={"No one's up for it on this date"}
+          />
+        ) : (
+          <View style={styles.skeletonContainer}>
+            {/* Render Skeleton User Items */}
+            <MemberList members={[]} currentUserId={null} isLoading={true} />
+
+            {/* Overlaid Message */}
+            <View style={styles.overlay}>
+              <Text style={styles.overlayText}>
+                You can only see who's up for {getCrewActivity()} on this date
+                if you're up for it too!
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Toggle Status Button */}
+        <View style={styles.statusButton}>
+          <CustomButton
+            title={
+              currentUserStatus ? "I'm no longer up for it" : 'Count me in'
+            }
+            onPress={toggleStatus}
+            loading={false} // Set to true if there's a loading state during toggle
+            variant={currentUserStatus ? 'danger' : 'primary'} // Red for active, Green for inactive
+            icon={{
+              name: currentUserStatus
+                ? 'remove-circle-outline'
+                : 'star-outline',
+              size: 24,
+              library: 'Ionicons',
+            }}
+            accessibilityLabel="Toggle Status"
+            accessibilityHint={
+              currentUserStatus
+                ? `Mark yourself as not up for ${getCrewActivity()} on ${selectedDate}`
+                : `Mark yourself as up for ${getCrewActivity()} on ${selectedDate}`
+            }
+          />
+        </View>
       </View>
-    </View>
+    </>
   );
 };
 

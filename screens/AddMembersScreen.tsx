@@ -22,9 +22,9 @@ import CustomSearchInput from '../components/CustomSearchInput';
 import CustomButton from '../components/CustomButton';
 import CustomModal from '../components/CustomModal';
 import CustomTextInput from '../components/CustomTextInput';
-import SpinLoader from '../components/SpinLoader';
 import { NavParamList } from '../navigation/AppNavigator';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 interface MemberWithStatus extends User {
   status?: 'member' | 'invited' | 'available';
@@ -367,66 +367,65 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
     });
   }, [allPotentialMembers, searchQuery]);
 
-  if (loading) {
-    return <SpinLoader />;
-  }
-
   return (
-    <View style={styles.container}>
-      {/* Search Input */}
-      <CustomSearchInput
-        searchQuery={searchQuery}
-        onSearchQueryChange={setSearchQuery}
-      />
-
-      {/* Members List */}
-      <MemberList
-        members={filteredMembers}
-        currentUserId={user?.uid || null}
-        selectedMemberIds={selectedMemberIds}
-        onSelectMember={handleSelectMember}
-        isLoading={loading}
-        emptyMessage={
-          searchQuery.trim() !== ''
-            ? 'No members match your search.'
-            : 'No members available to add.'
-        }
-        adminIds={[]} // Adjust if there are admins to highlight
-        onMemberPress={navigateToUserProfile}
-      />
-
-      <Text style={styles.addViaEmailText}>Or invite via email address:</Text>
-      {/* Button to Open Email Invitation Modal */}
-      <CustomButton
-        title="Invite via email"
-        onPress={openEmailModal}
-        accessibilityLabel="Invite Member via Email"
-        accessibilityHint="Opens a modal to invite a member by their email address"
-        variant="secondary"
-      />
-
-      {/* Invitation Modal */}
-      <CustomModal
-        isVisible={isModalVisible}
-        onClose={closeEmailModal}
-        title="Invite via email"
-        buttons={[
-          { label: 'Invite', onPress: handleAddByEmail, variant: 'primary' },
-          { label: 'Cancel', onPress: closeEmailModal, variant: 'secondary' },
-        ]}
-        loading={invitingEmail}
-      >
-        <CustomTextInput
-          placeholder="Email address"
-          value={emailToAdd}
-          onChangeText={setEmailToAdd}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          hasBorder={true}
-          iconName="mail-outline"
+    <>
+      {loading && <LoadingOverlay />}
+      <View style={styles.container}>
+        {/* Search Input */}
+        <CustomSearchInput
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
         />
-      </CustomModal>
-    </View>
+
+        {/* Members List */}
+        <MemberList
+          members={filteredMembers}
+          currentUserId={user?.uid || null}
+          selectedMemberIds={selectedMemberIds}
+          onSelectMember={handleSelectMember}
+          isLoading={loading}
+          emptyMessage={
+            searchQuery.trim() !== ''
+              ? 'No members match your search.'
+              : 'No members available to add.'
+          }
+          adminIds={[]} // Adjust if there are admins to highlight
+          onMemberPress={navigateToUserProfile}
+        />
+
+        <Text style={styles.addViaEmailText}>Or invite via email address:</Text>
+        {/* Button to Open Email Invitation Modal */}
+        <CustomButton
+          title="Invite via email"
+          onPress={openEmailModal}
+          accessibilityLabel="Invite Member via Email"
+          accessibilityHint="Opens a modal to invite a member by their email address"
+          variant="secondary"
+        />
+
+        {/* Invitation Modal */}
+        <CustomModal
+          isVisible={isModalVisible}
+          onClose={closeEmailModal}
+          title="Invite via email"
+          buttons={[
+            { label: 'Invite', onPress: handleAddByEmail, variant: 'primary' },
+            { label: 'Cancel', onPress: closeEmailModal, variant: 'secondary' },
+          ]}
+          loading={invitingEmail}
+        >
+          <CustomTextInput
+            placeholder="Email address"
+            value={emailToAdd}
+            onChangeText={setEmailToAdd}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            hasBorder={true}
+            iconName="mail-outline"
+          />
+        </CustomModal>
+      </View>
+    </>
   );
 };
 

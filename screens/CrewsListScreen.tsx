@@ -1,14 +1,7 @@
 // screens/CrewsListScreen.tsx
 
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  Alert,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCrews } from '../context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -16,12 +9,12 @@ import { NavParamList } from '../navigation/AppNavigator';
 import ScreenTitle from '../components/ScreenTitle';
 import CrewList from '../components/CrewList';
 import CreateCrewModal from '../components/CreateCrewModal';
-import SpinLoader from '../components/SpinLoader';
 import { Crew } from '../types/Crew';
 import { User } from '../types/User';
 import CustomSearchInput from '../components/CustomSearchInput';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
@@ -114,55 +107,45 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     navigation.navigate('Crew', { crewId });
   };
 
-  // Show loading spinner if data is still being fetched
-  if (isLoading) {
-    return <SpinLoader />;
-  }
-
   return (
-    <View style={styles.container}>
-      {/* Header Container */}
-      <View style={styles.headerContainer}>
-        {/* Screen Title */}
-        <ScreenTitle title="Crews" />
+    <>
+      {(isLoading || isLoadingUsers) && <LoadingOverlay />}
+      <View style={styles.container}>
+        {/* Header Container */}
+        <View style={styles.headerContainer}>
+          {/* Screen Title */}
+          <ScreenTitle title="Crews" />
 
-        {/* Add Crew Button */}
-        <TouchableOpacity
-          onPress={() => setIsModalVisible(true)}
-          accessibilityLabel="Add crew"
-          accessibilityHint="Press to create a new crew"
-        >
-          <Ionicons name="add-circle" size={30} color="#1e90ff" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Search Bar */}
-      <CustomSearchInput
-        searchQuery={searchQuery}
-        onSearchQueryChange={setSearchQuery}
-      />
-
-      {/* Crew List */}
-      <CrewList crews={filteredCrews} usersCache={usersCache} />
-
-      {/* Create Crew Modal */}
-      <CreateCrewModal
-        isVisible={isModalVisible}
-        onClose={() => {
-          console.log('Setting isModalVisible to false');
-          setIsModalVisible(false);
-        }}
-        onCrewCreated={handleCrewCreated}
-      />
-
-      {/* Loading Indicator for User Data */}
-      {isLoadingUsers && (
-        <View style={styles.usersLoaderContainer}>
-          <ActivityIndicator size="small" color="#1e90ff" />
-          <Text>Loading crew members...</Text>
+          {/* Add Crew Button */}
+          <TouchableOpacity
+            onPress={() => setIsModalVisible(true)}
+            accessibilityLabel="Add crew"
+            accessibilityHint="Press to create a new crew"
+          >
+            <Ionicons name="add-circle" size={30} color="#1e90ff" />
+          </TouchableOpacity>
         </View>
-      )}
-    </View>
+
+        {/* Search Bar */}
+        <CustomSearchInput
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+        />
+
+        {/* Crew List */}
+        <CrewList crews={filteredCrews} usersCache={usersCache} />
+
+        {/* Create Crew Modal */}
+        <CreateCrewModal
+          isVisible={isModalVisible}
+          onClose={() => {
+            console.log('Setting isModalVisible to false');
+            setIsModalVisible(false);
+          }}
+          onCrewCreated={handleCrewCreated}
+        />
+      </View>
+    </>
   );
 };
 
@@ -173,18 +156,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#f9f9f9',
-    marginBottom: 70,
-  },
-  usersLoaderContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: '50%',
-    transform: [{ translateX: -50 }],
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffffcc',
-    padding: 8,
-    borderRadius: 8,
   },
   headerContainer: {
     flexDirection: 'row',

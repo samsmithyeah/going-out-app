@@ -104,6 +104,7 @@ export default CrewList;
 const styles = StyleSheet.create({
   container: {
     marginTop: 18,
+    height: '100%',
   },
   crewItem: {
     flexDirection: 'row', // Arrange image and text horizontally
@@ -150,7 +151,6 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   emptyContainer: {
-    flexGrow: 1,
     justifyContent: 'center',
   },
 });

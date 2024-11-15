@@ -4,10 +4,14 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import SpinLoader from './SpinLoader';
 
-const LoadingOverlay: React.FC = () => {
+interface LoadingOverlayProps {
+  text?: string;
+}
+
+const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ text }) => {
   return (
     <View style={styles.overlayContainer}>
-      <SpinLoader />
+      <SpinLoader {...(text && { text })} />
     </View>
   );
 };
@@ -19,7 +23,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
     zIndex: 1,
   },
 });
