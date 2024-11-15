@@ -8,7 +8,6 @@ import React, {
   useContext,
   useMemo,
 } from 'react';
-import { Alert } from 'react-native';
 import {
   collection,
   query,
@@ -352,33 +351,35 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
         batches.push(crewIds.slice(i, i + MAX_BATCH_SIZE));
       }
 
-      // Perform each batch sequentially
-      for (const batchCrewIds of batches) {
-        const batch = writeBatch(db);
+      // Perform all batches in parallel using Promise.all
+      await Promise.all(
+        batches.map(async (batchCrewIds) => {
+          const batch = writeBatch(db);
 
-        batchCrewIds.forEach((crewId) => {
-          const userStatusRef = doc(
-            db,
-            'crews',
-            crewId,
-            'statuses',
-            selectedDateStr,
-            'userStatuses',
-            user.uid,
-          );
+          batchCrewIds.forEach((crewId) => {
+            const userStatusRef = doc(
+              db,
+              'crews',
+              crewId,
+              'statuses',
+              selectedDateStr,
+              'userStatuses',
+              user.uid,
+            );
 
-          batch.set(
-            userStatusRef,
-            {
-              upForGoingOutTonight: newStatus,
-              timestamp: Timestamp.fromDate(new Date()),
-            },
-            { merge: true },
-          );
-        });
+            batch.set(
+              userStatusRef,
+              {
+                upForGoingOutTonight: newStatus,
+                timestamp: Timestamp.fromDate(new Date()),
+              },
+              { merge: true },
+            );
+          });
 
-        await batch.commit();
-      }
+          await batch.commit();
+        }),
+      );
 
       Toast.show({
         type: 'success',
