@@ -274,7 +274,8 @@ const CrewSettingsScreen: React.FC = () => {
                 navigation.navigate('CrewsList');
                 Toast.show({
                   type: 'success',
-                  text1: 'You have left the crew',
+                  text1: 'Success',
+                  text2: 'You have left the crew',
                 });
               }
             } catch (error) {

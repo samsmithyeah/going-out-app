@@ -1,7 +1,7 @@
 // screens/MatchesListScreen.tsx
 
 import React, { useEffect, useState, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useCrews } from '../context/CrewsContext';
 import CrewList from '../components/CrewList';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';

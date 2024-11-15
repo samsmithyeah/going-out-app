@@ -1,7 +1,7 @@
 // screens/AddMembersScreen.tsx
 
 import React, { useEffect, useState, useMemo, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import {
   collection,

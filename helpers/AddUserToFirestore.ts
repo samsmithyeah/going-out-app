@@ -1,7 +1,7 @@
 import { isDevice } from 'expo-device';
 import Constants from 'expo-constants';
 import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { db } from '../firebase';
 import { User } from '../types/User';

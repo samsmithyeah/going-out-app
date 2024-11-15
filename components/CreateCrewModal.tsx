@@ -1,7 +1,6 @@
 // components/CreateCrewModal.tsx
 
 import React, { useState } from 'react';
-import { Alert } from 'react-native';
 import { useUser } from '../context/UserContext';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';

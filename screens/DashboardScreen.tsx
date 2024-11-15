@@ -1,7 +1,7 @@
 // screens/DashboardScreen.tsx
 
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { useCrews } from '../context/CrewsContext';
 import { useUser } from '../context/UserContext';
 import DateCard from '../components/DateCard';

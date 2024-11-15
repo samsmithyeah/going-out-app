@@ -1,7 +1,7 @@
 // screens/OtherUserProfileScreen.tsx
 
 import React, { useEffect, useLayoutEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';

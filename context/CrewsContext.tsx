@@ -8,7 +8,6 @@ import React, {
   useState,
   ReactNode,
 } from 'react';
-import { Alert } from 'react-native';
 import {
   collection,
   doc,

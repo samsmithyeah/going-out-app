@@ -1,7 +1,7 @@
 // screens/CrewsListScreen.tsx
 
 import React, { useEffect, useState } from 'react';
-import { View, Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCrews } from '../context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -111,7 +111,8 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     setIsModalVisible(false);
     Toast.show({
       type: 'success',
-      text1: 'Crew created successfully',
+      text1: 'Success',
+      text2: 'Crew created successfully',
     });
     navigation.navigate('Crew', { crewId });
   };

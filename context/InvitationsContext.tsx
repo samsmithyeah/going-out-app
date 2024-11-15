@@ -19,7 +19,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from './UserContext';
-import { Alert } from 'react-native';
 import { Crew } from '../types/Crew';
 import { User } from '../types/User';
 import { InvitationWithDetails, Invitation } from '../types/Invitation';
