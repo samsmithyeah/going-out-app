@@ -8,7 +8,13 @@ import React, {
   useLayoutEffect,
 } from 'react';
 import { View, StyleSheet, Alert, Text } from 'react-native';
-import { GiftedChat, IMessage, Bubble } from 'react-native-gifted-chat';
+import {
+  GiftedChat,
+  IMessage,
+  Bubble,
+  Send,
+  SendProps,
+} from 'react-native-gifted-chat';
 import { useUser } from '../context/UserContext';
 import { useDirectMessages } from '../context/DirectMessagesContext';
 import { useCrews } from '../context/CrewsContext';
@@ -28,6 +34,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import debounce from 'lodash/debounce';
+import { MaterialIcons } from '@expo/vector-icons';
 
 // Define Props
 type DMChatScreenProps = NativeStackScreenProps<NavParamList, 'DMChat'>;
@@ -84,6 +91,7 @@ function reducer(state: IState, action: StateAction): IState {
       return state;
   }
 }
+// screens/DMChatScreen.tsx
 
 const TYPING_TIMEOUT = 5000; // 5 seconds in milliseconds
 
@@ -292,7 +300,8 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
         showUserAvatar
         bottomOffset={80}
         renderUsernameOnMessage
-        onInputTextChanged={handleInputTextChanged}
+        isTyping={state.isTyping} // Using isTyping prop
+        onInputTextChanged={handleInputTextChanged} // Manage typing state
         renderBubble={(props) => (
           <Bubble
             {...props}
@@ -302,6 +311,14 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
               },
             }}
           />
+        )}
+        renderSend={(props: SendProps<IMessage>) => (
+          <Send
+            {...props}
+            containerStyle={{ justifyContent: 'center', paddingHorizontal: 10 }}
+          >
+            <MaterialIcons size={30} color={'tomato'} name={'send'} />
+          </Send>
         )}
         renderFooter={() =>
           isOtherUserTyping ? (
