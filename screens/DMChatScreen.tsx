@@ -111,7 +111,11 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   // Generate conversationId using both user IDs
   const conversationId = useMemo(() => {
     if (!user?.uid || !otherUserId) return '';
-    return generateDMConversationId(user.uid, otherUserId);
+    console.log('user.uid:', user.uid, 'otherUserId:', otherUserId);
+    const generatedId = generateDMConversationId(user.uid, otherUserId);
+    console.log('Generated conversationId:', generatedId);
+    return generatedId;
+    //return generateDMConversationId(user.uid, otherUserId);
   }, [user?.uid, otherUserId]);
 
   // Get Other User Details

@@ -16,12 +16,17 @@ import {
   addDoc,
   Timestamp,
   onSnapshot,
+  getDoc,
+  doc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from './UserContext';
+import { User } from '../types/User';
 
+// Extend the DMChat interface to include participant details
 interface DMChat {
   id: string; // e.g., 'userA_userB'
+  participants: User[];
 }
 
 interface DirectMessagesContextProps {
@@ -39,19 +44,68 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
   const { user } = useUser();
   const [dms, setDms] = useState<DMChat[]>([]);
 
-  // Fetch direct message conversations where the user is a participant
+  // Helper function to fetch user details by UID
+  const fetchUserDetails = async (uid: string): Promise<User> => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        return {
+          uid: userDoc.id,
+          displayName: userData.displayName || 'Unnamed User',
+          email: userData.email || 'no-email@example.com',
+          photoURL: userData.photoURL,
+        };
+      } else {
+        return {
+          uid,
+          displayName: 'Unknown User',
+          email: 'unknown@example.com',
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      return {
+        uid,
+        displayName: 'Error Fetching User',
+        email: 'error@example.com',
+      };
+    }
+  };
+
+  // Fetch direct message conversations with participant details
   const fetchDMs = async () => {
     if (!user?.uid) return;
 
     try {
-      const q = query(
+      const dmQuery = query(
         collection(db, 'direct_messages'),
         where('participants', 'array-contains', user.uid),
       );
-      const querySnapshot = await getDocs(q);
-      const fetchedDMs: DMChat[] = querySnapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-      }));
+      const querySnapshot = await getDocs(dmQuery);
+
+      const fetchedDMs: DMChat[] = await Promise.all(
+        querySnapshot.docs.map(async (docSnap) => {
+          const dmData = docSnap.data();
+          const participantIds: string[] = dmData.participants;
+
+          // Exclude the current user's UID to get other participants
+          const otherParticipantIds = participantIds.filter(
+            (id) => id !== user.uid,
+          );
+
+          // Fetch details for other participants
+          const participants: User[] = await Promise.all(
+            otherParticipantIds.map((uid) => fetchUserDetails(uid)),
+          );
+
+          return {
+            id: docSnap.id,
+            participants,
+          };
+        }),
+      );
+
       setDms(fetchedDMs);
     } catch (error) {
       console.error('Error fetching direct messages:', error);
@@ -59,22 +113,46 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // Listen to real-time updates in direct messages
+  // Listen to real-time updates in direct messages with participant details
   useEffect(() => {
     if (!user?.uid) return;
 
-    const q = query(
+    const dmQuery = query(
       collection(db, 'direct_messages'),
       where('participants', 'array-contains', user.uid),
     );
 
     const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const fetchedDMs: DMChat[] = querySnapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-        }));
-        setDms(fetchedDMs);
+      dmQuery,
+      async (querySnapshot) => {
+        try {
+          const fetchedDMs: DMChat[] = await Promise.all(
+            querySnapshot.docs.map(async (docSnap) => {
+              const dmData = docSnap.data();
+              const participantIds: string[] = dmData.participants;
+
+              // Exclude the current user's UID to get other participants
+              const otherParticipantIds = participantIds.filter(
+                (id) => id !== user.uid,
+              );
+
+              // Fetch details for other participants
+              const participants: User[] = await Promise.all(
+                otherParticipantIds.map((uid) => fetchUserDetails(uid)),
+              );
+
+              return {
+                id: docSnap.id,
+                participants,
+              };
+            }),
+          );
+
+          setDms(fetchedDMs);
+        } catch (error) {
+          console.error('Error processing direct messages snapshot:', error);
+          Alert.alert('Error', 'Could not process direct messages updates.');
+        }
       },
       (error) => {
         console.error('Error listening to direct messages:', error);
@@ -82,7 +160,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
       },
     );
 
-    // Fetch initial DMs
+    // Fetch initial DMs with participant details
     fetchDMs();
 
     return () => {

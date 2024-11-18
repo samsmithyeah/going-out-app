@@ -101,7 +101,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   route,
   navigation,
 }) => {
-  const { crewId, date } = route.params;
+  const { crewId, date, id } = route.params;
   const { sendMessage } = useCrewDateChat();
   const { crews, usersCache } = useCrews();
   const { user } = useUser(); // Current authenticated user
@@ -113,15 +113,34 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     otherUsersTyping: {},
   });
 
+  const getChatId = () => {
+    if (id) {
+      return id;
+    } else if (crewId && date) {
+      return generateChatId(crewId, date);
+    } else {
+      return null;
+    }
+  };
+
+  const getCrewId = () => {
+    if (id) {
+      return id.split('_')[0];
+    } else {
+      return crewId;
+    }
+  };
+
   // Derive chatId from crewId and date
-  const chatId = useMemo(() => generateChatId(crewId, date), [crewId, date]);
+  const chatId = useMemo(() => getChatId(), [crewId, date, id]);
 
   // Get crew details
   const crew = useMemo(
-    () => crews.find((c) => c.id === crewId),
-    [crews, crewId],
+    () => crews.find((c) => c.id === getCrewId()),
+    [crews, getCrewId],
   );
-  const crewName = crew ? crew.name : 'Unknown Crew';
+
+  const crewName = useMemo(() => (crew ? crew.name : 'Unknown Crew'), [crew]);
   const formattedDate = useMemo(
     () => moment(date).format('MMMM Do, YYYY'),
     [date],
@@ -312,7 +331,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     async (messages: IMessage[] = []) => {
       const text = messages[0].text;
       if (text && text.trim() !== '') {
-        await sendMessage(chatId, text.trim());
+        await sendMessage(chatId!, text.trim());
         dispatch({ type: ActionKind.SEND_MESSAGE, payload: messages });
         // Reset typing status after sending
         dispatch({ type: ActionKind.SET_IS_TYPING, payload: false });
