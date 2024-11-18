@@ -273,7 +273,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
       const text = messages[0].text;
       if (text && text.trim() !== '') {
         await sendMessage(conversationId, text.trim());
-        dispatch({ type: ActionKind.SEND_MESSAGE, payload: messages });
+
         // Reset typing status after sending
         dispatch({ type: ActionKind.SET_IS_TYPING, payload: false });
         updateTypingStatus(false);

@@ -332,7 +332,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
       const text = messages[0].text;
       if (text && text.trim() !== '') {
         await sendMessage(chatId!, text.trim());
-        dispatch({ type: ActionKind.SEND_MESSAGE, payload: messages });
         // Reset typing status after sending
         dispatch({ type: ActionKind.SET_IS_TYPING, payload: false });
         updateTypingStatus(false);
