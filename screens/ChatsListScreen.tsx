@@ -317,21 +317,24 @@ const styles = StyleSheet.create({
   },
   chatDetails: {
     flex: 1,
-    justifyContent: 'center',
   },
   chatHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between', // Ensure proper spacing
+  },
+  chatTimestamp: {
+    fontSize: 12,
+    color: '#999',
+    marginLeft: 'auto',
+    textAlign: 'right',
+    position: 'absolute',
+    right: -40,
   },
   chatTitle: {
     fontSize: 16,
     fontWeight: '600',
     maxWidth: '80%',
-  },
-  chatTimestamp: {
-    fontSize: 12,
-    color: '#999',
   },
   chatLastMessage: {
     fontSize: 14,
