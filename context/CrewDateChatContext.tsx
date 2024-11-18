@@ -24,6 +24,9 @@ import {
   DocumentData,
   updateDoc,
   serverTimestamp,
+  arrayUnion,
+  arrayRemove,
+  setDoc, // Imported arrayUnion and arrayRemove
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from './UserContext';
@@ -58,6 +61,8 @@ interface CrewDateChatContextProps {
   updateLastRead: (chatId: string) => Promise<void>;
   listenToChats: () => () => void;
   listenToMessages: (chatId: string) => () => void;
+  addMemberToChat: (chatId: string, uid: string) => Promise<void>; // Added function
+  removeMemberFromChat: (chatId: string, uid: string) => Promise<void>; // Added function
 }
 
 // Create the context
@@ -143,88 +148,58 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     return chats;
   };
 
-  // Fetch crew date chats with member details, crewName, and lastRead
+  // Fetch crew date chats where the user is a member and has at least one message
   const fetchChats = async () => {
     if (!user?.uid) return;
 
     try {
-      // Debugging: Log all crews
-      console.log('All Crews:', crews);
-
-      // Filter crews where the user is a member
-      const userCrews = crews.filter(
-        (crew) => crew.memberIds.includes(user.uid), // Correct field name
+      const chatQuery = query(
+        collection(db, 'crew_date_chats'),
+        where('memberIds', 'array-contains', user.uid),
+        // where('hasMessages', '==', true), // Added condition
       );
-      console.log('User Crews:', userCrews);
 
-      const crewIds = userCrews.map((crew) => crew.id);
-      console.log('Crew IDs:', crewIds);
-
-      if (crewIds.length === 0) {
-        setChats([]);
-        console.log('No crews found for the user.');
-        return;
-      }
-
-      // Firestore 'in' queries can handle a maximum of 10 elements
-      const CHUNK_SIZE = 10;
-      const crewIdChunks = chunkArray(crewIds, CHUNK_SIZE);
-      console.log('Crew ID Chunks:', crewIdChunks);
-
+      const querySnapshot = await getDocs(chatQuery);
       const fetchedChats: CrewDateChat[] = [];
 
-      for (const chunk of crewIdChunks) {
-        // Fetch chats for each crewId in the chunk
-        const chatsPromises = chunk.map((crewId) => fetchChatsForCrew(crewId));
+      for (const docSnap of querySnapshot.docs) {
+        const chatData = docSnap.data();
 
-        const chatsArrays = await Promise.all(chatsPromises);
+        const memberIds: string[] = chatData.memberIds || [];
 
-        // Flatten the array of arrays and map to CrewDateChat
-        for (const chatsData of chatsArrays) {
-          for (const chatData of chatsData) {
-            const memberIds: string[] = chatData.members;
+        // Exclude the current user's UID to get other members
+        const otherMemberIds = memberIds.filter((id) => id !== user.uid);
 
-            // Exclude the current user's UID to get other members
-            const otherMemberIds = memberIds.filter((id) => id !== user.uid);
+        // Fetch details for other members
+        const members: User[] = await Promise.all(
+          otherMemberIds.map((uid) => fetchUserDetails(uid)),
+        );
 
-            // Fetch details for other members
-            const members: User[] = await Promise.all(
-              otherMemberIds.map((uid) => fetchUserDetails(uid)),
-            );
+        // Extract crewId from chatId (document ID)
+        const [crewId] = docSnap.id.split('_');
 
-            // Extract crewId from chatId (document ID)
-            const [crewId] = chatData.id.split('_');
+        // Fetch crewName from crews collection
+        const crew = crews.find((c) => c.id === crewId);
+        const crewName = crew ? crew.name : 'Unknown Crew';
 
-            // Fetch crewName from crews collection
-            const crew = crews.find((c) => c.id === crewId);
-            const crewName = crew ? crew.name : 'Unknown Crew';
+        // Get lastRead timestamp for current user
+        const lastRead: Timestamp | null = chatData.lastRead
+          ? chatData.lastRead[user.uid] || null
+          : null;
 
-            // Get lastRead timestamp for current user
-            const lastRead: Timestamp | null = chatData.lastRead
-              ? chatData.lastRead[user.uid] || null
-              : null;
-
-            fetchedChats.push({
-              id: chatData.id,
-              crewId: crewId,
-              members,
-              crewName,
-              avatarUrl: crew?.iconUrl, // Ensure 'iconUrl' exists in your crew documents
-              lastRead,
-            } as CrewDateChat);
-          }
-        }
+        fetchedChats.push({
+          id: docSnap.id,
+          crewId: crewId,
+          members,
+          crewName,
+          avatarUrl: crew?.iconUrl,
+          lastRead,
+        } as CrewDateChat);
       }
 
-      console.log('Fetched Chats:', fetchedChats);
-      console.log(
-        'Fetched chats crew names:',
-        fetchedChats.map((c) => c.crewName),
-      );
-      console.log(
-        'Fetched chats chat IDs:',
-        fetchedChats.map((c) => c.id),
-      );
+      console.log(`Fetched ${fetchedChats.length} crew date chats`);
+      console.log('Fetched crew date chats:', fetchedChats);
+
       setChats(fetchedChats);
     } catch (error) {
       console.error('Error fetching crew date chats:', error);
@@ -232,55 +207,25 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // Helper function to listen to chats for a single crewId
-  const listenToChatsForCrew = (
-    crewId: string,
-    callback: (chats: DocumentData[]) => void,
-  ): Unsubscribe => {
-    const startId = `${crewId}_`;
-    const endId = `${crewId}_\uf8ff`;
-
-    const chatQuery = query(
-      collection(db, 'crew_date_chats'),
-      where('__name__', '>=', startId),
-      where('__name__', '<=', endId),
-    );
-
-    return onSnapshot(chatQuery, (querySnapshot) => {
-      const chats: DocumentData[] = [];
-      querySnapshot.forEach((doc) => {
-        chats.push({ id: doc.id, ...doc.data() });
-      });
-      callback(chats);
-    });
-  };
-
-  // Listen to real-time updates in crew date chats with member details, crewName, and lastRead
+  // Listen to real-time updates in crew date chats where the user is a member and has at least one message
   const listenToChats = () => {
     if (!user?.uid) return () => {};
 
-    // Filter crews where the user is a member
-    const userCrews = crews.filter(
-      (crew) => crew.memberIds.includes(user.uid), // Correct field name
+    const chatQuery = query(
+      collection(db, 'crew_date_chats'),
+      where('memberIds', 'array-contains', user.uid),
+      //where('hasMessages', '==', true), // Added condition
     );
-    const crewIds = userCrews.map((crew) => crew.id);
 
-    console.log('Listening to Chats for Crew IDs:', crewIds);
+    const unsubscribe = onSnapshot(
+      chatQuery,
+      async (querySnapshot) => {
+        const fetchedChats: CrewDateChat[] = [];
 
-    if (crewIds.length === 0) {
-      setChats([]);
-      console.log('No crews to listen for.');
-      return () => {};
-    }
+        for (const docSnap of querySnapshot.docs) {
+          const chatData = docSnap.data();
 
-    const unsubscribeFunctions: Unsubscribe[] = [];
-
-    crewIds.forEach((crewId) => {
-      const unsubscribe = listenToChatsForCrew(crewId, async (chatsData) => {
-        const chatsBatch: CrewDateChat[] = [];
-
-        for (const chatData of chatsData) {
-          const memberIds: string[] = chatData.members;
+          const memberIds: string[] = chatData.memberIds || [];
 
           // Exclude the current user's UID to get other members
           const otherMemberIds = memberIds.filter((id) => id !== user.uid);
@@ -291,10 +236,10 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           );
 
           // Extract crewId from chatId (document ID)
-          const [extractedCrewId] = chatData.id.split('_');
+          const [crewId] = docSnap.id.split('_');
 
           // Fetch crewName from crews collection
-          const crew = crews.find((c) => c.id === extractedCrewId);
+          const crew = crews.find((c) => c.id === crewId);
           const crewName = crew ? crew.name : 'Unknown Crew';
 
           // Get lastRead timestamp for current user
@@ -302,38 +247,28 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
             ? chatData.lastRead[user.uid] || null
             : null;
 
-          chatsBatch.push({
-            id: chatData.id,
-            crewId: extractedCrewId,
+          fetchedChats.push({
+            id: docSnap.id,
+            crewId: crewId,
             members,
             crewName,
-            avatarUrl: crew?.iconUrl, // Ensure 'iconUrl' exists in your crew documents
+            avatarUrl: crew?.iconUrl,
             lastRead,
           } as CrewDateChat);
         }
 
-        setChats((prevChats) => {
-          // Merge existing chats with the new batch, avoiding duplicates
-          const mergedChats = [...prevChats];
-          chatsBatch.forEach((chat) => {
-            const index = mergedChats.findIndex((c) => c.id === chat.id);
-            if (index !== -1) {
-              mergedChats[index] = chat;
-            } else {
-              mergedChats.push(chat);
-            }
-          });
-          return mergedChats;
-        });
-      });
+        setChats(fetchedChats);
+      },
+      (error) => {
+        console.error('Error listening to chats:', error);
+        Alert.alert('Error', 'Could not listen to chats.');
+      },
+    );
 
-      unsubscribeFunctions.push(unsubscribe);
-    });
-
-    // Cleanup function to unsubscribe all listeners
+    // Cleanup function to unsubscribe listener
     return () => {
-      unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
-      console.log('Unsubscribed from all crew date chat listeners.');
+      unsubscribe();
+      console.log('Unsubscribed from crew date chat listener.');
     };
   };
 
@@ -349,6 +284,12 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         createdAt: Timestamp.fromDate(new Date()),
       };
       await addDoc(messagesRef, newMessage);
+
+      // **Update hasMessages field if not already true**
+      const chatRef = doc(db, 'crew_date_chats', chatId);
+      await updateDoc(chatRef, {
+        hasMessages: true,
+      });
       console.log(`Message sent in chat ${chatId}: "${text}"`);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -374,6 +315,40 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     },
     [user?.uid],
   );
+
+  // Add a member to the chat's memberIds array
+  const addMemberToChat = async (
+    chatId: string,
+    uid: string,
+  ): Promise<void> => {
+    try {
+      const chatRef = doc(db, 'crew_date_chats', chatId);
+      setDoc(chatRef, {
+        memberIds: arrayUnion(uid),
+      });
+      console.log(`Added member ${uid} to chat ${chatId}`);
+    } catch (error) {
+      console.error(`Error adding member ${uid} to chat ${chatId}:`, error);
+      Alert.alert('Error', 'Could not add member to chat.');
+    }
+  };
+
+  // Remove a member from the chat's memberIds array
+  const removeMemberFromChat = async (
+    chatId: string,
+    uid: string,
+  ): Promise<void> => {
+    try {
+      const chatRef = doc(db, 'crew_date_chats', chatId);
+      await updateDoc(chatRef, {
+        memberIds: arrayRemove(uid),
+      });
+      console.log(`Removed member ${uid} from chat ${chatId}`);
+    } catch (error) {
+      console.error(`Error removing member ${uid} from chat ${chatId}:`, error);
+      Alert.alert('Error', 'Could not remove member from chat.');
+    }
+  };
 
   // Listen to real-time updates in messages of a crew date chat with sender names
   const listenToMessages = (chatId: string) => {
@@ -444,6 +419,8 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         updateLastRead,
         listenToChats,
         listenToMessages,
+        addMemberToChat,
+        removeMemberFromChat,
       }}
     >
       {children}

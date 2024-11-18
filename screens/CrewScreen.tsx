@@ -36,6 +36,7 @@ import CrewHeader from '../components/CrewHeader';
 import { useCrews } from '../context/CrewsContext';
 import LoadingOverlay from '../components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
+import { useCrewDateChat } from '../context/CrewDateChatContext';
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
 
@@ -61,6 +62,7 @@ const CrewScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>(
     date || getTodayDateString(),
   );
+  const { addMemberToChat, removeMemberFromChat } = useCrewDateChat();
 
   useEffect(() => {
     if (date) {
@@ -215,9 +217,15 @@ const CrewScreen: React.FC = () => {
       return;
     }
 
-    const confirmToggle = () => {
+    const confirmToggle = async () => {
       const newStatus = !currentUserStatus;
       toggleStatusForCrew(crewId, selectedDate, newStatus);
+      const chatId = `${crewId}_${selectedDate}`;
+      if (newStatus) {
+        await addMemberToChat(chatId, user.uid);
+      } else {
+        await removeMemberFromChat(chatId, user.uid);
+      }
     };
 
     Alert.alert(
