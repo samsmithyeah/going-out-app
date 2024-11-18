@@ -94,7 +94,7 @@ const ChatsListScreen: React.FC = () => {
 
   const getFormattedChatDate = (chatId: string): string => {
     const date = chatId.split('_')[1];
-    const formattedDate = moment(date).format('MMMM Do, YYYY');
+    const formattedDate = moment(date).format('MMM Do');
     return formattedDate;
   };
 
@@ -169,7 +169,7 @@ const ChatsListScreen: React.FC = () => {
       for (const gc of groupChats) {
         const crewName = getCrewName(gc.id);
         const chatDate = getFormattedChatDate(gc.id);
-        const title = `${crewName} - ${chatDate}`;
+        const title = `${crewName} (${chatDate})`;
         const iconUrl = getIconUrlForCrew(gc.id);
 
         const lastMsg = await fetchLastMessage(gc.id, 'group');
@@ -321,15 +321,15 @@ const styles = StyleSheet.create({
   chatHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between', // Ensure proper spacing
+    justifyContent: 'flex-start', // Align title to the left
+    position: 'relative', // Required for absolute positioning
+    paddingRight: 20, // Optional extra padding for the timestamp
   },
   chatTimestamp: {
     fontSize: 12,
     color: '#999',
-    marginLeft: 'auto',
-    textAlign: 'right',
     position: 'absolute',
-    right: -40,
+    right: -30,
   },
   chatTitle: {
     fontSize: 16,
