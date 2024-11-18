@@ -93,7 +93,7 @@ function reducer(state: IState, action: StateAction): IState {
 }
 // screens/DMChatScreen.tsx
 
-const TYPING_TIMEOUT = 5000; // 5 seconds in milliseconds
+const TYPING_TIMEOUT = 3000;
 
 const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   const { otherUserId } = route.params as RouteParams;
