@@ -2,19 +2,19 @@
 
 import React, {
   useEffect,
-  useState,
+  useReducer,
   useCallback,
   useMemo,
   useLayoutEffect,
 } from 'react';
 import { View, StyleSheet, Alert, Text } from 'react-native';
+import { GiftedChat, IMessage, Bubble } from 'react-native-gifted-chat';
+import { useUser } from '../context/UserContext';
 import { useDirectMessages } from '../context/DirectMessagesContext';
 import { useCrews } from '../context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator';
 import LoadingOverlay from '../components/LoadingOverlay';
-import { GiftedChat, IMessage, Bubble } from 'react-native-gifted-chat';
-import { useUser } from '../context/UserContext';
 import { generateDMConversationId } from '../helpers/chatUtils';
 import {
   collection,
@@ -24,26 +24,81 @@ import {
   onSnapshot,
   updateDoc,
   serverTimestamp,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import debounce from 'lodash/debounce';
 
+// Define Props
 type DMChatScreenProps = NativeStackScreenProps<NavParamList, 'DMChat'>;
 
 type RouteParams = {
   otherUserId: string;
 };
 
+// Define State Interface
+interface IState {
+  messages: IMessage[];
+  isTyping: boolean; // Current user typing status
+  otherUserIsTyping: boolean; // Other user typing status
+}
+
+// Define Action Types
+enum ActionKind {
+  SEND_MESSAGE = 'SEND_MESSAGE',
+  SET_MESSAGES = 'SET_MESSAGES',
+  SET_IS_TYPING = 'SET_IS_TYPING',
+  SET_OTHER_USER_IS_TYPING = 'SET_OTHER_USER_IS_TYPING',
+}
+
+// Define Action Interface
+interface StateAction {
+  type: ActionKind;
+  payload?: any;
+}
+
+// Reducer Function
+function reducer(state: IState, action: StateAction): IState {
+  switch (action.type) {
+    case ActionKind.SEND_MESSAGE:
+      return {
+        ...state,
+        messages: GiftedChat.append(state.messages, action.payload),
+      };
+    case ActionKind.SET_MESSAGES:
+      return {
+        ...state,
+        messages: action.payload,
+      };
+    case ActionKind.SET_IS_TYPING:
+      return {
+        ...state,
+        isTyping: action.payload,
+      };
+    case ActionKind.SET_OTHER_USER_IS_TYPING:
+      return {
+        ...state,
+        otherUserIsTyping: action.payload,
+      };
+    default:
+      return state;
+  }
+}
+
 const TYPING_TIMEOUT = 5000; // 5 seconds in milliseconds
 
 const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   const { otherUserId } = route.params as RouteParams;
   const { sendMessage } = useDirectMessages();
-  const { crews, usersCache } = useCrews(); // Assuming crews might be used for avatars or other info
+  const { crews, usersCache } = useCrews();
   const { user } = useUser(); // Current authenticated user
-  const [chatMessages, setChatMessages] = useState<IMessage[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [typingStatus, setTypingStatus] = useState<Record<string, boolean>>({});
+
+  // Initialize Reducer
+  const [state, dispatch] = useReducer(reducer, {
+    messages: [],
+    isTyping: false,
+    otherUserIsTyping: false,
+  });
 
   // Generate conversationId using both user IDs
   const conversationId = useMemo(() => {
@@ -51,6 +106,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     return generateDMConversationId(user.uid, otherUserId);
   }, [user?.uid, otherUserId]);
 
+  // Get Other User Details
   const otherUser = useMemo(() => {
     if (!otherUserId) return { displayName: 'Unknown', photoURL: undefined };
     const otherUserFromCrews = usersCache[otherUserId];
@@ -65,6 +121,9 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
       title: otherUser.displayName,
     });
   }, [navigation, otherUser.displayName]);
+
+  // Typing Timeout Handler
+  let typingTimeout: NodeJS.Timeout;
 
   // Debounced function to update typing status in Firestore
   const updateTypingStatus = useMemo(
@@ -84,20 +143,27 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     [conversationId, user?.uid],
   );
 
-  // Handle typing events
+  // Handle input text changes
   const handleInputTextChanged = useCallback(
     (text: string) => {
       const isTyping = text.length > 0;
-      setTypingStatus((prev) => ({
-        ...prev,
-        [user?.uid!]: isTyping,
-      }));
+      dispatch({ type: ActionKind.SET_IS_TYPING, payload: isTyping });
       updateTypingStatus(isTyping);
+
+      if (isTyping) {
+        if (typingTimeout) clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          dispatch({ type: ActionKind.SET_IS_TYPING, payload: false });
+          updateTypingStatus(false);
+        }, TYPING_TIMEOUT);
+      } else {
+        if (typingTimeout) clearTimeout(typingTimeout);
+      }
     },
-    [updateTypingStatus, user?.uid],
+    [updateTypingStatus],
   );
 
-  // Set up Firestore listener for messages and typing status in this conversation
+  // Set up Firestore listener for messages and typing status
   useEffect(() => {
     if (!conversationId) return;
 
@@ -105,7 +171,8 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     const messagesRef = collection(convoRef, 'messages');
     const q = query(messagesRef, orderBy('createdAt', 'asc'));
 
-    const unsubscribe = onSnapshot(
+    // Listen to messages
+    const unsubscribeMessages = onSnapshot(
       q,
       (querySnapshot) => {
         const msgs: IMessage[] = querySnapshot.docs
@@ -126,7 +193,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
             },
           }))
           .reverse(); // GiftedChat expects newest first
-        setChatMessages(msgs);
+        dispatch({ type: ActionKind.SET_MESSAGES, payload: msgs });
       },
       (error) => {
         console.error('Error listening to messages:', error);
@@ -141,25 +208,24 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
         if (docSnapshot.exists()) {
           const data = docSnapshot.data();
           if (data.typingStatus) {
-            const updatedTypingStatus: Record<string, boolean> = {};
-            const now = Date.now();
+            const otherUserTypingStatus = data.typingStatus[otherUserId];
+            const lastUpdate = data.typingStatus[`${otherUserId}LastUpdate`];
 
-            Object.keys(data.typingStatus).forEach((key) => {
-              if (key.endsWith('LastUpdate')) return; // Skip timestamp fields
-
-              const uid = key;
-              const isTyping = data.typingStatus[uid];
-              const lastUpdate =
-                data.typingStatus[`${uid}LastUpdate`]?.toMillis() || 0;
-
-              if (isTyping && now - lastUpdate < TYPING_TIMEOUT) {
-                updatedTypingStatus[uid] = true;
-              } else {
-                updatedTypingStatus[uid] = false;
+            if (otherUserTypingStatus && lastUpdate) {
+              const now = Date.now();
+              const lastUpdateMillis = (lastUpdate as Timestamp).toMillis();
+              if (now - lastUpdateMillis < TYPING_TIMEOUT) {
+                dispatch({
+                  type: ActionKind.SET_OTHER_USER_IS_TYPING,
+                  payload: true,
+                });
+                return;
               }
+            }
+            dispatch({
+              type: ActionKind.SET_OTHER_USER_IS_TYPING,
+              payload: false,
             });
-
-            setTypingStatus(updatedTypingStatus);
           }
         }
       },
@@ -168,18 +234,19 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
       },
     );
 
-    setLoading(false);
-
-    // Cleanup listener on unmount or when conversationId changes
+    // Cleanup listeners on unmount or when conversationId changes
     return () => {
-      unsubscribe();
+      unsubscribeMessages();
       unsubscribeTyping();
       updateTypingStatus.cancel(); // Cancel any pending debounced calls
+      if (typingTimeout) clearTimeout(typingTimeout);
       // Reset typing status when unmounting
+      dispatch({ type: ActionKind.SET_IS_TYPING, payload: false });
       updateTypingStatus(false);
     };
   }, [
     conversationId,
+    otherUserId,
     user?.uid,
     user?.displayName,
     user?.photoURL,
@@ -188,34 +255,33 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     updateTypingStatus,
   ]);
 
+  // Handle sending messages
   const onSend = useCallback(
-    async (newMessages: IMessage[] = []) => {
-      const text = newMessages[0].text;
+    async (messages: IMessage[] = []) => {
+      const text = messages[0].text;
       if (text && text.trim() !== '') {
         await sendMessage(conversationId, text.trim());
+        dispatch({ type: ActionKind.SEND_MESSAGE, payload: messages });
+        // Reset typing status after sending
+        dispatch({ type: ActionKind.SET_IS_TYPING, payload: false });
+        updateTypingStatus(false);
       }
-      // After sending a message, ensure typing status is false
-      setTypingStatus((prev) => ({
-        ...prev,
-        [user?.uid!]: false,
-      }));
-      updateTypingStatus(false);
     },
-    [conversationId, sendMessage, updateTypingStatus, user?.uid],
+    [conversationId, sendMessage, updateTypingStatus],
   );
 
-  if (loading) {
+  if (!conversationId) {
     return <LoadingOverlay />;
   }
 
   // Determine if the other user is typing
   const isOtherUserTyping =
-    typingStatus[otherUserId] === true && otherUserId !== user?.uid; // Ensure it's not the current user
+    state.otherUserIsTyping && otherUserId !== user?.uid;
 
   return (
     <View style={styles.container}>
       <GiftedChat
-        messages={chatMessages}
+        messages={state.messages}
         onSend={(messages) => onSend(messages)}
         user={{
           _id: user?.uid || '',
@@ -227,18 +293,16 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
         bottomOffset={80}
         renderUsernameOnMessage
         onInputTextChanged={handleInputTextChanged}
-        renderBubble={(props) => {
-          return (
-            <Bubble
-              {...props}
-              wrapperStyle={{
-                left: {
-                  backgroundColor: '#BFF4BE',
-                },
-              }}
-            />
-          );
-        }}
+        renderBubble={(props) => (
+          <Bubble
+            {...props}
+            wrapperStyle={{
+              left: {
+                backgroundColor: '#BFF4BE',
+              },
+            }}
+          />
+        )}
         renderFooter={() =>
           isOtherUserTyping ? (
             <View style={styles.footerContainer}>
