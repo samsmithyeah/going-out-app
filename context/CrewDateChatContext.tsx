@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useContext,
   ReactNode,
+  useCallback,
 } from 'react';
 import { Alert } from 'react-native';
 import {
@@ -21,6 +22,8 @@ import {
   Unsubscribe,
   orderBy,
   DocumentData,
+  updateDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from './UserContext';
@@ -36,13 +39,14 @@ interface Message {
   senderName?: string; // Optional: Include sender's name
 }
 
-// Extend the CrewDateChat interface to include member details and crewName
+// Extend the CrewDateChat interface to include member details, crewName, and lastRead
 interface CrewDateChat {
   id: string; // e.g., 'crew123_2024-04-27'
   crewId: string; // Extracted crewId
   members: User[];
   crewName: string; // Fetched from crews collection
   avatarUrl?: string; // Optional: Include avatar URL
+  lastRead: Timestamp | null; // Last read timestamp for the current user
 }
 
 // Define the context properties
@@ -51,6 +55,7 @@ interface CrewDateChatContextProps {
   messages: { [chatId: string]: Message[] };
   fetchChats: () => Promise<void>;
   sendMessage: (chatId: string, text: string) => Promise<void>;
+  updateLastRead: (chatId: string) => Promise<void>;
   listenToChats: () => () => void;
   listenToMessages: (chatId: string) => () => void;
 }
@@ -82,14 +87,14 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       const userDoc = await getDoc(doc(db, 'users', uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        const user: User = {
+        const fetchedUser: User = {
           uid: userDoc.id,
           displayName: userData.displayName || 'Unnamed User',
           email: userData.email || '',
           photoURL: userData.photoURL,
         };
-        setUsersCache((prev) => ({ ...prev, [uid]: user }));
-        return user;
+        setUsersCache((prev) => ({ ...prev, [uid]: fetchedUser }));
+        return fetchedUser;
       } else {
         // Handle case where user data does not exist
         return {
@@ -138,7 +143,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     return chats;
   };
 
-  // Fetch crew date chats with member details and crewName
+  // Fetch crew date chats with member details, crewName, and lastRead
   const fetchChats = async () => {
     if (!user?.uid) return;
 
@@ -175,8 +180,8 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         const chatsArrays = await Promise.all(chatsPromises);
 
         // Flatten the array of arrays and map to CrewDateChat
-        for (const chats of chatsArrays) {
-          for (const chatData of chats) {
+        for (const chatsData of chatsArrays) {
+          for (const chatData of chatsData) {
             const memberIds: string[] = chatData.members;
 
             // Exclude the current user's UID to get other members
@@ -194,12 +199,18 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
             const crew = crews.find((c) => c.id === crewId);
             const crewName = crew ? crew.name : 'Unknown Crew';
 
+            // Get lastRead timestamp for current user
+            const lastRead: Timestamp | null = chatData.lastRead
+              ? chatData.lastRead[user.uid] || null
+              : null;
+
             fetchedChats.push({
               id: chatData.id,
               crewId: crewId,
               members,
               crewName,
               avatarUrl: crew?.iconUrl, // Ensure 'iconUrl' exists in your crew documents
+              lastRead,
             } as CrewDateChat);
           }
         }
@@ -244,7 +255,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     });
   };
 
-  // Listen to real-time updates in crew date chats with member details and crewName
+  // Listen to real-time updates in crew date chats with member details, crewName, and lastRead
   const listenToChats = () => {
     if (!user?.uid) return () => {};
 
@@ -265,10 +276,10 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     const unsubscribeFunctions: Unsubscribe[] = [];
 
     crewIds.forEach((crewId) => {
-      const unsubscribe = listenToChatsForCrew(crewId, async (chats) => {
+      const unsubscribe = listenToChatsForCrew(crewId, async (chatsData) => {
         const chatsBatch: CrewDateChat[] = [];
 
-        for (const chatData of chats) {
+        for (const chatData of chatsData) {
           const memberIds: string[] = chatData.members;
 
           // Exclude the current user's UID to get other members
@@ -286,12 +297,18 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           const crew = crews.find((c) => c.id === extractedCrewId);
           const crewName = crew ? crew.name : 'Unknown Crew';
 
+          // Get lastRead timestamp for current user
+          const lastRead: Timestamp | null = chatData.lastRead
+            ? chatData.lastRead[user.uid] || null
+            : null;
+
           chatsBatch.push({
             id: chatData.id,
             crewId: extractedCrewId,
             members,
             crewName,
             avatarUrl: crew?.iconUrl, // Ensure 'iconUrl' exists in your crew documents
+            lastRead,
           } as CrewDateChat);
         }
 
@@ -338,6 +355,25 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       Alert.alert('Error', 'Could not send message.');
     }
   };
+
+  // Update lastRead timestamp for a specific chat
+  const updateLastRead = useCallback(
+    async (chatId: string) => {
+      if (!user?.uid) return;
+
+      try {
+        const chatRef = doc(db, 'crew_date_chats', chatId);
+        await updateDoc(chatRef, {
+          [`lastRead.${user.uid}`]: serverTimestamp(),
+        });
+        console.log(`Updated lastRead for chat ${chatId}`);
+      } catch (error) {
+        console.error(`Error updating lastRead for chat ${chatId}:`, error);
+        Alert.alert('Error', 'Could not update last read status.');
+      }
+    },
+    [user?.uid],
+  );
 
   // Listen to real-time updates in messages of a crew date chat with sender names
   const listenToMessages = (chatId: string) => {
@@ -405,6 +441,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         messages,
         fetchChats,
         sendMessage,
+        updateLastRead,
         listenToChats,
         listenToMessages,
       }}

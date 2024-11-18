@@ -39,6 +39,7 @@ import { db } from '../firebase';
 import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
+import { useFocusEffect } from '@react-navigation/native';
 
 // Define Props
 type CrewDateChatScreenProps = NativeStackScreenProps<
@@ -102,7 +103,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   navigation,
 }) => {
   const { crewId, date, id } = route.params;
-  const { sendMessage } = useCrewDateChat();
+  const { sendMessage, updateLastRead } = useCrewDateChat(); // Import updateLastRead
   const { crews, usersCache } = useCrews();
   const { user } = useUser(); // Current authenticated user
 
@@ -335,9 +336,27 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
         // Reset typing status after sending
         dispatch({ type: ActionKind.SET_IS_TYPING, payload: false });
         updateTypingStatus(false);
+        // Update lastRead since the user has viewed the latest message
+        await updateLastRead(chatId!);
       }
     },
-    [chatId, sendMessage, updateTypingStatus],
+    [chatId, sendMessage, updateTypingStatus, updateLastRead],
+  );
+
+  // Update lastRead when the screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      // Update lastRead when the screen is focused
+      if (chatId) {
+        updateLastRead(chatId);
+      }
+
+      // Optionally, handle any other focus-related logic here
+
+      return () => {
+        // Optional: Handle any cleanup when the screen loses focus
+      };
+    }, [chatId, updateLastRead]),
   );
 
   // Conditional return must be after all hooks

@@ -35,6 +35,7 @@ import {
 import { db } from '../firebase';
 import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 
 // Define Props
 type DMChatScreenProps = NativeStackScreenProps<NavParamList, 'DMChat'>;
@@ -91,13 +92,12 @@ function reducer(state: IState, action: StateAction): IState {
       return state;
   }
 }
-// screens/DMChatScreen.tsx
 
 const TYPING_TIMEOUT = 3000;
 
 const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   const { otherUserId } = route.params as RouteParams;
-  const { sendMessage } = useDirectMessages();
+  const { sendMessage, updateLastRead } = useDirectMessages(); // Import updateLastRead
   const { crews, usersCache } = useCrews();
   const { user } = useUser(); // Current authenticated user
 
@@ -115,7 +115,6 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     const generatedId = generateDMConversationId(user.uid, otherUserId);
     console.log('Generated conversationId:', generatedId);
     return generatedId;
-    //return generateDMConversationId(user.uid, otherUserId);
   }, [user?.uid, otherUserId]);
 
   // Get Other User Details
@@ -125,7 +124,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     return (
       otherUserFromCrews || { displayName: 'Unknown', photoURL: undefined }
     );
-  }, [crews, otherUserId]);
+  }, [crews, otherUserId, usersCache]);
 
   // Set navigation title
   useLayoutEffect(() => {
@@ -277,9 +276,28 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
         // Reset typing status after sending
         dispatch({ type: ActionKind.SET_IS_TYPING, payload: false });
         updateTypingStatus(false);
+
+        // Update lastRead since the user has viewed the latest message
+        await updateLastRead(conversationId);
       }
     },
-    [conversationId, sendMessage, updateTypingStatus],
+    [conversationId, sendMessage, updateTypingStatus, updateLastRead],
+  );
+
+  // Update lastRead when the screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      // Update lastRead when the screen is focused
+      if (conversationId) {
+        updateLastRead(conversationId);
+      }
+
+      // Optionally, handle any other focus-related logic here
+
+      return () => {
+        // Optional: Handle any cleanup when the screen loses focus
+      };
+    }, [conversationId, updateLastRead]),
   );
 
   if (!conversationId) {

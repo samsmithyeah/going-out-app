@@ -1,6 +1,6 @@
 // screens/ChatsListScreen.tsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,12 +15,21 @@ import { useCrewDateChat } from '../context/CrewDateChatContext';
 import { useCrews } from '../context/CrewsContext'; // Assumed to exist
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { NavParamList } from '../navigation/AppNavigator'; // Adjust according to your navigation setup
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  where,
+  getCountFromServer,
+  Timestamp,
+} from 'firebase/firestore';
 import { db } from '../firebase';
 import moment from 'moment';
 import { useUser } from '../context/UserContext';
 
-// Define CombinedChat interface
+// Define CombinedChat interface with unreadCount
 interface CombinedChat {
   id: string;
   type: 'direct' | 'group';
@@ -28,9 +37,9 @@ interface CombinedChat {
   iconUrl?: string;
   lastMessage?: string;
   lastMessageTime?: Date;
+  unreadCount: number; // Number of unread messages
 }
 
-// Define Props (if using TypeScript)
 const ChatsListScreen: React.FC = () => {
   const { dms } = useDirectMessages();
   const { chats: groupChats } = useCrewDateChat();
@@ -40,11 +49,6 @@ const ChatsListScreen: React.FC = () => {
 
   const [combinedChats, setCombinedChats] = useState<CombinedChat[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    console.log('Direct Messages:', dms);
-    console.log('Group Chats:', groupChats);
-  }, [dms, groupChats]);
 
   // Helper function to fetch the last message of a chat
   const fetchLastMessage = async (
@@ -98,8 +102,37 @@ const ChatsListScreen: React.FC = () => {
     return crew?.iconUrl;
   };
 
-  // Combine and sort chats
-  const combineChats = async () => {
+  // Helper function to fetch unread count for a chat
+  const fetchUnreadCount = async (
+    chatId: string,
+    chatType: 'direct' | 'group',
+    lastRead: Timestamp | null,
+  ): Promise<number> => {
+    try {
+      const messagesRef =
+        chatType === 'direct'
+          ? collection(db, 'direct_messages', chatId, 'messages')
+          : collection(db, 'crew_date_chats', chatId, 'messages');
+
+      let messagesQuery;
+
+      if (lastRead) {
+        messagesQuery = query(messagesRef, where('createdAt', '>', lastRead));
+      } else {
+        // If no lastRead, count all messages
+        messagesQuery = query(messagesRef);
+      }
+
+      const snapshot = await getCountFromServer(messagesQuery);
+      return snapshot.data().count;
+    } catch (error) {
+      console.error(`Error fetching unread count for chat ${chatId}:`, error);
+      return 0;
+    }
+  };
+
+  // Combine and sort chats with unread counts
+  const combineChats = useCallback(async () => {
     try {
       const combined: CombinedChat[] = [];
 
@@ -113,6 +146,12 @@ const ChatsListScreen: React.FC = () => {
 
         const lastMsg = await fetchLastMessage(dm.id, 'direct');
 
+        const unreadCount = await fetchUnreadCount(
+          dm.id,
+          'direct',
+          dm.lastRead,
+        );
+
         combined.push({
           id: dm.id,
           type: 'direct',
@@ -120,6 +159,7 @@ const ChatsListScreen: React.FC = () => {
           iconUrl,
           lastMessage: lastMsg?.text,
           lastMessageTime: lastMsg?.createdAt,
+          unreadCount,
         });
       }
 
@@ -132,6 +172,8 @@ const ChatsListScreen: React.FC = () => {
 
         const lastMsg = await fetchLastMessage(gc.id, 'group');
 
+        const unreadCount = await fetchUnreadCount(gc.id, 'group', gc.lastRead);
+
         combined.push({
           id: gc.id,
           type: 'group',
@@ -139,6 +181,7 @@ const ChatsListScreen: React.FC = () => {
           iconUrl,
           lastMessage: lastMsg?.text,
           lastMessageTime: lastMsg?.createdAt,
+          unreadCount,
         });
       }
 
@@ -162,7 +205,7 @@ const ChatsListScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dms, groupChats, crews, user?.uid]);
 
   const handleNavigation = (chatId: string, chatType: 'direct' | 'group') => {
     console.log('Navigating to chat:', chatId, chatType);
@@ -185,7 +228,7 @@ const ChatsListScreen: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dms, groupChats, crews]);
 
-  // Render each chat item
+  // Render each chat item with unread count
   const renderItem = ({ item }: { item: CombinedChat }) => {
     return (
       <TouchableOpacity
@@ -206,10 +249,7 @@ const ChatsListScreen: React.FC = () => {
             </Text>
             {item.lastMessageTime && (
               <Text style={styles.chatTimestamp}>
-                {item.lastMessageTime.toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {moment(item.lastMessageTime).fromNow()}
               </Text>
             )}
           </View>
@@ -217,6 +257,15 @@ const ChatsListScreen: React.FC = () => {
             {item.lastMessage || 'No messages yet.'}
           </Text>
         </View>
+
+        {/* Unread Count Badge */}
+        {item.unreadCount > 0 && (
+          <View style={styles.unreadBadge}>
+            <Text style={styles.unreadText}>
+              {item.unreadCount > 99 ? '99+' : item.unreadCount}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -253,6 +302,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 15,
     alignItems: 'center',
+    position: 'relative',
   },
   avatar: {
     width: 55,
@@ -299,6 +349,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  unreadBadge: {
+    backgroundColor: '#0a84ff',
+    borderRadius: 12,
+    minWidth: 24,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  unreadText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
 
