@@ -7,14 +7,13 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
-  Image,
   ActivityIndicator,
 } from 'react-native';
 import { useDirectMessages } from '../context/DirectMessagesContext';
 import { useCrewDateChat } from '../context/CrewDateChatContext';
-import { useCrews } from '../context/CrewsContext'; // Assumed to exist
+import { useCrews } from '../context/CrewsContext';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { NavParamList } from '../navigation/AppNavigator'; // Adjust according to your navigation setup
+import { NavParamList } from '../navigation/AppNavigator';
 import {
   collection,
   query,
@@ -30,8 +29,8 @@ import moment from 'moment';
 import { useUser } from '../context/UserContext';
 import FastImage from 'react-native-fast-image';
 import ScreenTitle from '../components/ScreenTitle';
+import CustomSearchInput from '../components/CustomSearchInput';
 
-// Define CombinedChat interface with unreadCount
 interface CombinedChat {
   id: string;
   type: 'direct' | 'group';
@@ -39,18 +38,20 @@ interface CombinedChat {
   iconUrl?: string;
   lastMessage?: string;
   lastMessageTime?: Date;
-  unreadCount: number; // Number of unread messages
+  unreadCount: number;
 }
 
 const ChatsListScreen: React.FC = () => {
   const { dms } = useDirectMessages();
   const { chats: groupChats } = useCrewDateChat();
-  const { crews } = useCrews(); // Assumed to provide an array of crew objects
+  const { crews } = useCrews();
   const { user } = useUser();
   const navigation = useNavigation<NavigationProp<NavParamList>>();
 
   const [combinedChats, setCombinedChats] = useState<CombinedChat[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
+  const [filteredChats, setFilteredChats] = useState<CombinedChat[]>([]); // State for filtered chats
 
   // Helper function to fetch the last message of a chat
   const fetchLastMessage = async (
@@ -121,7 +122,6 @@ const ChatsListScreen: React.FC = () => {
       if (lastRead) {
         messagesQuery = query(messagesRef, where('createdAt', '>', lastRead));
       } else {
-        // If no lastRead, count all messages
         messagesQuery = query(messagesRef);
       }
 
@@ -207,7 +207,19 @@ const ChatsListScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [dms, groupChats, crews, user?.uid]);
+  }, [dms, groupChats, crews]);
+
+  // Filter chats based on search query
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredChats(combinedChats);
+    } else {
+      const filtered = combinedChats.filter((chat) =>
+        chat.title.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+      setFilteredChats(filtered);
+    }
+  }, [searchQuery, combinedChats]);
 
   const handleNavigation = (chatId: string, chatType: 'direct' | 'group') => {
     console.log('Navigating to chat:', chatId, chatType);
@@ -227,8 +239,7 @@ const ChatsListScreen: React.FC = () => {
 
   useEffect(() => {
     combineChats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dms, groupChats, crews]);
+  }, [dms, groupChats, crews, combineChats]);
 
   // Render each chat item with unread count
   const renderItem = ({ item }: { item: CombinedChat }) => {
@@ -283,8 +294,15 @@ const ChatsListScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ScreenTitle title="Chats" />
+
+      {/* Search Bar */}
+      <CustomSearchInput
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+      />
+
       <FlatList
-        data={combinedChats}
+        data={filteredChats}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -321,15 +339,15 @@ const styles = StyleSheet.create({
   chatHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start', // Align title to the left
-    position: 'relative', // Required for absolute positioning
-    paddingRight: 20, // Optional extra padding for the timestamp
+    justifyContent: 'flex-start',
+    position: 'relative',
+    paddingRight: 20,
   },
   chatTimestamp: {
     fontSize: 12,
     color: '#999',
     position: 'absolute',
-    right: -30,
+    right: 0,
   },
   chatTitle: {
     fontSize: 16,
@@ -344,7 +362,7 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: '#eee',
-    marginLeft: 85, // Align with text
+    marginLeft: 85,
   },
   emptyText: {
     textAlign: 'center',
