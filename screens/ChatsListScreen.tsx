@@ -28,6 +28,8 @@ import {
 import { db } from '../firebase';
 import moment from 'moment';
 import { useUser } from '../context/UserContext';
+import FastImage from 'react-native-fast-image';
+import ScreenTitle from '../components/ScreenTitle';
 
 // Define CombinedChat interface with unreadCount
 interface CombinedChat {
@@ -236,7 +238,7 @@ const ChatsListScreen: React.FC = () => {
         onPress={() => handleNavigation(item.id, item.type)}
       >
         {/* Avatar */}
-        <Image
+        <FastImage
           source={item.iconUrl ? { uri: item.iconUrl } : undefined}
           style={styles.avatar}
         />
@@ -280,6 +282,7 @@ const ChatsListScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <ScreenTitle title="Chats" />
       <FlatList
         data={combinedChats}
         keyExtractor={(item) => item.id}
@@ -296,7 +299,8 @@ const ChatsListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    padding: 16,
+    backgroundColor: '#f9f9f9',
   },
   chatItem: {
     flexDirection: 'row',
@@ -359,6 +363,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 10,
+    marginTop: 20,
   },
   unreadText: {
     color: '#fff',
