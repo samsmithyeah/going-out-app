@@ -1,6 +1,6 @@
 // screens/ChatsListScreen.tsx
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -20,9 +20,8 @@ import {
   orderBy,
   limit,
   getDocs,
-  where,
-  getCountFromServer,
-  Timestamp,
+  getDoc,
+  doc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import moment from 'moment';
@@ -38,6 +37,8 @@ interface CombinedChat {
   iconUrl?: string;
   lastMessage?: string;
   lastMessageTime?: Date;
+  lastMessageSenderId?: string;
+  lastMessageSenderName?: string; // New field for sender's displayName
   unreadCount: number;
 }
 
@@ -54,11 +55,43 @@ const ChatsListScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
   const [filteredChats, setFilteredChats] = useState<CombinedChat[]>([]); // State for filtered chats
 
-  // Helper function to fetch the last message of a chat
+  // Cache to store senderId and displayName
+  const senderNameCache = useRef<{ [senderId: string]: string }>({});
+
+  // Function to fetch sender's displayName with caching
+  const getSenderName = useCallback(
+    async (senderId: string): Promise<string> => {
+      if (senderNameCache.current[senderId]) {
+        return senderNameCache.current[senderId];
+      }
+      try {
+        const senderDoc = await getDoc(doc(db, 'users', senderId));
+        if (senderDoc.exists()) {
+          const senderData = senderDoc.data();
+          const senderName = senderData.displayName || 'Unknown';
+          senderNameCache.current[senderId] = senderName;
+          return senderName;
+        } else {
+          return 'Unknown';
+        }
+      } catch (error) {
+        console.error(`Error fetching sender name for ${senderId}:`, error);
+        return 'Unknown';
+      }
+    },
+    [],
+  );
+
+  // Helper function to fetch the last message along with sender's displayName
   const fetchLastMessage = async (
     chatId: string,
     chatType: 'direct' | 'group',
-  ): Promise<{ text: string; createdAt: Date } | null> => {
+  ): Promise<{
+    text: string;
+    senderId: string;
+    senderName: string;
+    createdAt: Date;
+  } | null> => {
     try {
       const messagesRef =
         chatType === 'direct'
@@ -74,8 +107,13 @@ const ChatsListScreen: React.FC = () => {
       if (!querySnapshot.empty) {
         const docSnap = querySnapshot.docs[0];
         const msgData = docSnap.data();
+        const senderId: string = msgData.senderId;
+        const senderName = await getSenderName(senderId);
+
         return {
           text: msgData.text,
+          senderId,
+          senderName,
           createdAt: msgData.createdAt.toDate(),
         };
       } else {
@@ -106,34 +144,6 @@ const ChatsListScreen: React.FC = () => {
     return crew?.iconUrl;
   };
 
-  // Helper function to fetch unread count for a chat
-  // const fetchUnreadCount = async (
-  //   chatId: string,
-  //   chatType: 'direct' | 'group',
-  //   lastRead: Timestamp | null,
-  // ): Promise<number> => {
-  //   try {
-  //     const messagesRef =
-  //       chatType === 'direct'
-  //         ? collection(db, 'direct_messages', chatId, 'messages')
-  //         : collection(db, 'crew_date_chats', chatId, 'messages');
-
-  //     let messagesQuery;
-
-  //     if (lastRead) {
-  //       messagesQuery = query(messagesRef, where('createdAt', '>', lastRead));
-  //     } else {
-  //       messagesQuery = query(messagesRef);
-  //     }
-
-  //     const snapshot = await getCountFromServer(messagesQuery);
-  //     return snapshot.data().count;
-  //   } catch (error) {
-  //     console.error(`Error fetching unread count for chat ${chatId}:`, error);
-  //     return 0;
-  //   }
-  // };
-
   // Combine and sort chats with unread counts
   const combineChats = useCallback(async () => {
     try {
@@ -149,11 +159,6 @@ const ChatsListScreen: React.FC = () => {
 
         const lastMsg = await fetchLastMessage(dm.id, 'direct');
 
-        // const unreadCount = await fetchUnreadCount(
-        //   dm.id,
-        //   'direct',
-        //   dm.lastRead,
-        // );
         const unreadCount = await fetchDMUnreadCount(dm.id);
 
         combined.push({
@@ -163,6 +168,8 @@ const ChatsListScreen: React.FC = () => {
           iconUrl,
           lastMessage: lastMsg?.text,
           lastMessageTime: lastMsg?.createdAt,
+          lastMessageSenderId: lastMsg?.senderId,
+          lastMessageSenderName: lastMsg?.senderName,
           unreadCount,
         });
       }
@@ -176,7 +183,6 @@ const ChatsListScreen: React.FC = () => {
 
         const lastMsg = await fetchLastMessage(gc.id, 'group');
 
-        //const unreadCount = await fetchUnreadCount(gc.id, 'group', gc.lastRead);
         const unreadCount = await fetchGroupUnreadCount(gc.id);
 
         combined.push({
@@ -186,6 +192,8 @@ const ChatsListScreen: React.FC = () => {
           iconUrl,
           lastMessage: lastMsg?.text,
           lastMessageTime: lastMsg?.createdAt,
+          lastMessageSenderId: lastMsg?.senderId,
+          lastMessageSenderName: lastMsg?.senderName,
           unreadCount,
         });
       }
@@ -210,7 +218,14 @@ const ChatsListScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [dms, groupChats, crews]);
+  }, [
+    dms,
+    groupChats,
+    crews,
+    fetchDMUnreadCount,
+    fetchGroupUnreadCount,
+    getSenderName,
+  ]);
 
   // Filter chats based on search query
   useEffect(() => {
@@ -244,7 +259,7 @@ const ChatsListScreen: React.FC = () => {
     combineChats();
   }, [dms, groupChats, crews, combineChats]);
 
-  // Render each chat item with unread count
+  // Render each chat item with unread count and sender's name
   const renderItem = ({ item }: { item: CombinedChat }) => {
     return (
       <TouchableOpacity
@@ -270,7 +285,20 @@ const ChatsListScreen: React.FC = () => {
             )}
           </View>
           <Text style={styles.chatLastMessage} numberOfLines={1}>
-            {item.lastMessage || 'No messages yet.'}
+            {item.lastMessage ? (
+              item.lastMessageSenderName ? (
+                <>
+                  <Text style={styles.senderName}>
+                    {item.lastMessageSenderName}:{' '}
+                  </Text>
+                  {item.lastMessage}
+                </>
+              ) : (
+                item.lastMessage
+              )
+            ) : (
+              'No messages yet.'
+            )}
           </Text>
         </View>
 
@@ -361,6 +389,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginTop: 4,
+    flexDirection: 'row', // Ensure proper layout with nested Text
+  },
+  senderName: {
+    color: '#555',
   },
   separator: {
     height: 1,

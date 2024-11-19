@@ -375,7 +375,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
           avatar: user?.photoURL || undefined,
         }}
         placeholder="Type your message..."
-        showUserAvatar
         bottomOffset={80}
         renderUsernameOnMessage
         isTyping={state.isTyping} // Current user's typing status
@@ -395,7 +394,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
             {...props}
             containerStyle={{ justifyContent: 'center', paddingHorizontal: 10 }}
           >
-            <MaterialIcons size={30} color={'tomato'} name={'send'} />
+            <MaterialIcons size={30} color={'#1E90FF'} name={'send'} />
           </Send>
         )}
         renderFooter={() =>

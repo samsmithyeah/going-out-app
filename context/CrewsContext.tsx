@@ -7,7 +7,6 @@ import React, {
   ReactNode,
   useContext,
   useMemo,
-  useRef,
 } from 'react';
 import {
   collection,
