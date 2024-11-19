@@ -103,7 +103,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   navigation,
 }) => {
   const { crewId, date, id } = route.params;
-  const { sendMessage, updateLastRead } = useCrewDateChat(); // Import updateLastRead
+  const { sendMessage, updateLastRead } = useCrewDateChat();
   const { crews, usersCache } = useCrews();
   const { user } = useUser(); // Current authenticated user
 

@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   },
   chatItem: {
     flexDirection: 'row',
-    padding: 15,
+    paddingVertical: 15,
     alignItems: 'center',
     position: 'relative',
   },
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginTop: 4,
-    flexDirection: 'row', // Ensure proper layout with nested Text
+    flexDirection: 'row',
   },
   senderName: {
     color: '#555',
@@ -411,6 +411,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   unreadBadge: {
+    position: 'absolute',
+    right: 0,
+    top: 48,
     backgroundColor: '#0a84ff',
     borderRadius: 12,
     minWidth: 24,
@@ -418,8 +421,6 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10,
-    marginTop: 20,
   },
   unreadText: {
     color: '#fff',
