@@ -158,70 +158,67 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           [`lastRead.${user.uid}`]: serverTimestamp(),
         });
         console.log(`Updated lastRead for DM ${dmId}`);
-        await computeTotalUnread(); // Recompute after updating lastRead
+        // Do not call computeTotalUnread here to avoid circular dependency
       } catch (error) {
         console.error(`Error updating lastRead for DM ${dmId}:`, error);
         Alert.alert('Error', 'Could not update last read status.');
       }
     },
-    [user?.uid, computeTotalUnread],
+    [user?.uid],
   );
 
   // Listen to real-time updates in messages of a direct message conversation
-  const listenToDMMessages = useCallback(
-    (dmId: string) => {
-      const messagesRef = collection(db, 'direct_messages', dmId, 'messages');
-      const msgQuery = query(messagesRef, orderBy('createdAt', 'asc'));
+  const listenToDMMessages = useCallback((dmId: string) => {
+    const messagesRef = collection(db, 'direct_messages', dmId, 'messages');
+    const msgQuery = query(messagesRef, orderBy('createdAt', 'asc'));
 
-      const unsubscribe = onSnapshot(
-        msgQuery,
-        async (querySnapshot) => {
-          try {
-            console.log(
-              `Real-time update: Fetched ${querySnapshot.size} messages for DM ${dmId}`,
-            );
+    const unsubscribe = onSnapshot(
+      msgQuery,
+      async (querySnapshot) => {
+        try {
+          console.log(
+            `Real-time update: Fetched ${querySnapshot.size} messages for DM ${dmId}`,
+          );
 
-            const fetchedMessages: Message[] = await Promise.all(
-              querySnapshot.docs.map(async (docSnap) => {
-                const msgData = docSnap.data();
-                const senderId: string = msgData.senderId;
-                const senderDoc = await getDoc(doc(db, 'users', senderId));
-                let senderName = 'Unknown';
-                if (senderDoc.exists()) {
-                  senderName = senderDoc.data().displayName || 'Unknown';
-                }
+          const fetchedMessages: Message[] = await Promise.all(
+            querySnapshot.docs.map(async (docSnap) => {
+              const msgData = docSnap.data();
+              const senderId: string = msgData.senderId;
+              const senderDoc = await getDoc(doc(db, 'users', senderId));
+              let senderName = 'Unknown';
+              if (senderDoc.exists()) {
+                senderName = senderDoc.data().displayName || 'Unknown';
+              }
 
-                return {
-                  id: docSnap.id,
-                  senderId,
-                  text: msgData.text,
-                  createdAt: msgData.createdAt,
-                  senderName, // Include sender's name
-                };
-              }),
-            );
+              return {
+                id: docSnap.id,
+                senderId,
+                text: msgData.text,
+                createdAt: msgData.createdAt,
+                senderName, // Include sender's name
+              };
+            }),
+          );
 
-            setMessages((prev) => ({
-              ...prev,
-              [dmId]: fetchedMessages,
-            }));
+          setMessages((prev) => ({
+            ...prev,
+            [dmId]: fetchedMessages,
+          }));
 
-            await computeTotalUnread(); // Compute total after updating messages
-          } catch (error) {
-            console.error('Error processing messages snapshot:', error);
-            Alert.alert('Error', 'Could not process messages updates.');
-          }
-        },
-        (error) => {
-          console.error('Error listening to DM messages:', error);
-          Alert.alert('Error', 'Could not listen to messages.');
-        },
-      );
+          // Do not call computeTotalUnread here to avoid circular dependency
+        } catch (error) {
+          console.error('Error processing messages snapshot:', error);
+          Alert.alert('Error', 'Could not process messages updates.');
+        }
+      },
+      (error) => {
+        console.error('Error listening to DM messages:', error);
+        Alert.alert('Error', 'Could not listen to messages.');
+      },
+    );
 
-      return unsubscribe;
-    },
-    [computeTotalUnread],
-  );
+    return unsubscribe;
+  }, []);
 
   // Fetch direct messages involving the current user
   const fetchDirectMessages = useCallback(async () => {
@@ -276,12 +273,12 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       setDms(fetchedDMs);
-      await computeTotalUnread(); // Compute total after fetching DMs
+      // Removed computeTotalUnread call to prevent circular dependency
     } catch (error) {
       console.error('Error fetching direct messages:', error);
       Alert.alert('Error', 'Could not fetch direct messages.');
     }
-  }, [user?.uid, computeTotalUnread]);
+  }, [user?.uid]);
 
   // Listen to real-time updates in direct messages
   const listenToDirectMessages = useCallback(() => {
@@ -295,53 +292,58 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     const unsubscribe = onSnapshot(
       dmQuery,
       async (querySnapshot) => {
-        const fetchedDMs: DirectMessage[] = [];
+        try {
+          const fetchedDMs: DirectMessage[] = [];
 
-        for (const docSnap of querySnapshot.docs) {
-          const dmData = docSnap.data();
-          const participantIds: string[] = dmData.participants;
+          for (const docSnap of querySnapshot.docs) {
+            const dmData = docSnap.data();
+            const participantIds: string[] = dmData.participants;
 
-          // Exclude the current user's UID to get the other participant
-          const otherParticipantId = participantIds.find(
-            (id) => id !== user.uid,
-          );
-          if (!otherParticipantId) continue; // Skip if no other participant
+            // Exclude the current user's UID to get the other participant
+            const otherParticipantId = participantIds.find(
+              (id) => id !== user.uid,
+            );
+            if (!otherParticipantId) continue; // Skip if no other participant
 
-          // Fetch other user's details
-          const otherUserDoc = await getDoc(
-            doc(db, 'users', otherParticipantId),
-          );
-          let otherUser: User;
-          if (otherUserDoc.exists()) {
-            const userData = otherUserDoc.data();
-            otherUser = {
-              uid: otherUserDoc.id,
-              displayName: userData.displayName || 'Unnamed User',
-              email: userData.email || '',
-              photoURL: userData.photoURL,
-            };
-          } else {
-            otherUser = {
-              uid: otherParticipantId,
-              displayName: 'Unknown User',
-              email: 'unknown@example.com',
-            };
+            // Fetch other user's details
+            const otherUserDoc = await getDoc(
+              doc(db, 'users', otherParticipantId),
+            );
+            let otherUser: User;
+            if (otherUserDoc.exists()) {
+              const userData = otherUserDoc.data();
+              otherUser = {
+                uid: otherUserDoc.id,
+                displayName: userData.displayName || 'Unnamed User',
+                email: userData.email || '',
+                photoURL: userData.photoURL,
+              };
+            } else {
+              otherUser = {
+                uid: otherParticipantId,
+                displayName: 'Unknown User',
+                email: 'unknown@example.com',
+              };
+            }
+
+            // Get lastRead timestamp for current user
+            const lastRead: Timestamp | null = dmData.lastRead
+              ? dmData.lastRead[user.uid] || null
+              : null;
+
+            fetchedDMs.push({
+              id: docSnap.id,
+              participants: [otherUser],
+              lastRead,
+            });
           }
 
-          // Get lastRead timestamp for current user
-          const lastRead: Timestamp | null = dmData.lastRead
-            ? dmData.lastRead[user.uid] || null
-            : null;
-
-          fetchedDMs.push({
-            id: docSnap.id,
-            participants: [otherUser],
-            lastRead,
-          });
+          setDms(fetchedDMs);
+          // Removed computeTotalUnread call to prevent circular dependency
+        } catch (error) {
+          console.error('Error processing direct messages snapshot:', error);
+          Alert.alert('Error', 'Could not process direct messages updates.');
         }
-
-        setDms(fetchedDMs);
-        await computeTotalUnread(); // Compute total after updating DMs
       },
       (error) => {
         console.error('Error listening to direct messages:', error);
@@ -350,7 +352,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     );
 
     return unsubscribe;
-  }, [user?.uid, computeTotalUnread]);
+  }, [user?.uid]);
 
   // Fetch DMs and set up real-time listeners on mount
   useEffect(() => {
@@ -363,6 +365,11 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
       console.log('DirectMessagesContext unmounted.');
     };
   }, [fetchDirectMessages, listenToDirectMessages]);
+
+  // Compute total unread messages whenever dms change
+  useEffect(() => {
+    computeTotalUnread();
+  }, [computeTotalUnread]);
 
   return (
     <DirectMessagesContext.Provider
