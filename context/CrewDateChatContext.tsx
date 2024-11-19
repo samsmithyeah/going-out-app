@@ -19,14 +19,11 @@ import {
   onSnapshot,
   getDoc,
   doc,
-  Unsubscribe,
   orderBy,
-  DocumentData,
   updateDoc,
   serverTimestamp,
   arrayUnion,
   arrayRemove,
-  setDoc, // Imported arrayUnion and arrayRemove
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from './UserContext';
@@ -61,8 +58,10 @@ interface CrewDateChatContextProps {
   updateLastRead: (chatId: string) => Promise<void>;
   listenToChats: () => () => void;
   listenToMessages: (chatId: string) => () => void;
-  addMemberToChat: (chatId: string, uid: string) => Promise<void>; // Added function
-  removeMemberFromChat: (chatId: string, uid: string) => Promise<void>; // Added function
+  addMemberToChat: (chatId: string, uid: string) => Promise<void>;
+  removeMemberFromChat: (chatId: string, uid: string) => Promise<void>;
+  fetchUnreadCount: (chatId: string) => Promise<number>;
+  totalUnread: number; // Added totalUnread
 }
 
 // Create the context
@@ -77,86 +76,124 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
   const { user } = useUser();
   const [chats, setChats] = useState<CrewDateChat[]>([]);
   const [messages, setMessages] = useState<{ [chatId: string]: Message[] }>({});
-  const { crews } = useCrews();
+  const { crews, usersCache, setUsersCache } = useCrews();
 
   // Cache for user details to minimize Firestore reads
-  const [usersCache, setUsersCache] = useState<{ [key: string]: User }>({});
+  //const [usersCache, setUsersCache] = useState<{ [key: string]: User }>({});
+
+  // New state for total unread messages
+  const [totalUnread, setTotalUnread] = useState<number>(0);
 
   // Helper function to fetch user details by UID with caching
-  const fetchUserDetails = async (uid: string): Promise<User> => {
-    if (usersCache[uid]) {
-      return usersCache[uid];
+  const fetchUserDetails = useCallback(
+    async (uid: string): Promise<User> => {
+      if (usersCache[uid]) {
+        return usersCache[uid];
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, 'users', uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const fetchedUser: User = {
+            uid: userDoc.id,
+            displayName: userData.displayName || 'Unnamed User',
+            email: userData.email || '',
+            photoURL: userData.photoURL,
+          };
+          setUsersCache((prev) => ({ ...prev, [uid]: fetchedUser }));
+          return fetchedUser;
+        } else {
+          // Handle case where user data does not exist
+          return {
+            uid,
+            displayName: 'Unknown User',
+            email: 'unknown@example.com',
+          };
+        }
+      } catch (error) {
+        console.error(`Error fetching user data for UID ${uid}:`, error);
+        return {
+          uid,
+          displayName: 'Error Fetching User',
+          email: 'error@example.com',
+        };
+      }
+    },
+    [usersCache],
+  );
+
+  // Fetch unread count for a specific chat
+  const fetchUnreadCount = useCallback(
+    async (chatId: string): Promise<number> => {
+      if (!user?.uid) return 0;
+
+      try {
+        const chatRef = doc(db, 'crew_date_chats', chatId);
+        const chatDoc = await getDoc(chatRef);
+
+        if (!chatDoc.exists()) {
+          console.error(`Chat document ${chatId} does not exist.`);
+          return 0;
+        }
+
+        const chatData = chatDoc.data();
+        const lastRead = chatData.lastRead ? chatData.lastRead[user.uid] : null;
+
+        const messagesRef = collection(
+          db,
+          'crew_date_chats',
+          chatId,
+          'messages',
+        );
+
+        let msgQuery;
+        if (lastRead) {
+          // Fetch messages created after lastRead
+          msgQuery = query(messagesRef, where('createdAt', '>', lastRead));
+        } else {
+          // If lastRead is null, all messages are unread
+          msgQuery = query(messagesRef);
+        }
+
+        const querySnapshot = await getDocs(msgQuery);
+
+        return querySnapshot.size;
+      } catch (error) {
+        console.error(`Error fetching unread count for chat ${chatId}:`, error);
+        return 0;
+      }
+    },
+    [user?.uid],
+  );
+
+  // Function to compute total unread messages
+  const computeTotalUnread = useCallback(async () => {
+    if (!user?.uid || chats.length === 0) {
+      setTotalUnread(0);
+      return;
     }
 
     try {
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        const fetchedUser: User = {
-          uid: userDoc.id,
-          displayName: userData.displayName || 'Unnamed User',
-          email: userData.email || '',
-          photoURL: userData.photoURL,
-        };
-        setUsersCache((prev) => ({ ...prev, [uid]: fetchedUser }));
-        return fetchedUser;
-      } else {
-        // Handle case where user data does not exist
-        return {
-          uid,
-          displayName: 'Unknown User',
-          email: 'unknown@example.com',
-        };
-      }
+      const unreadPromises = chats.map((chat) => fetchUnreadCount(chat.id));
+      const unreadCounts = await Promise.all(unreadPromises);
+      const total = unreadCounts.reduce((acc, count) => acc + count, 0);
+      setTotalUnread(total);
     } catch (error) {
-      console.error(`Error fetching user data for UID ${uid}:`, error);
-      return {
-        uid,
-        displayName: 'Error Fetching User',
-        email: 'error@example.com',
-      };
+      console.error('Error computing total unread messages:', error);
+      // Optionally handle the error, e.g., show a notification
     }
-  };
-
-  // Helper function to chunk array into smaller arrays of specified size
-  const chunkArray = (array: string[], size: number): string[][] => {
-    const result: string[][] = [];
-    for (let i = 0; i < array.length; i += size) {
-      result.push(array.slice(i, i + size));
-    }
-    return result;
-  };
-
-  // Helper function to fetch chats for a single crewId
-  const fetchChatsForCrew = async (crewId: string): Promise<DocumentData[]> => {
-    const startId = `${crewId}_`;
-    const endId = `${crewId}_\uf8ff`; // Unicode character to ensure the range includes all possible suffixes
-
-    const chatQuery = query(
-      collection(db, 'crew_date_chats'),
-      where('__name__', '>=', startId),
-      where('__name__', '<=', endId),
-    );
-
-    const querySnapshot = await getDocs(chatQuery);
-    const chats: DocumentData[] = [];
-
-    querySnapshot.forEach((doc) => {
-      chats.push({ id: doc.id, ...doc.data() });
-    });
-
-    return chats;
-  };
+  }, [user?.uid, chats, fetchUnreadCount]);
 
   // Fetch crew date chats where the user is a member and has at least one message
-  const fetchChats = async () => {
+  const fetchChats = useCallback(async () => {
     if (!user?.uid) return;
 
     try {
       const chatQuery = query(
         collection(db, 'crew_date_chats'),
         where('memberIds', 'array-contains', user.uid),
-        // where('hasMessages', '==', true), // Added condition
+        where('hasMessages', '==', true),
       );
 
       const querySnapshot = await getDocs(chatQuery);
@@ -201,20 +238,21 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       console.log('Fetched crew date chats:', fetchedChats);
 
       setChats(fetchedChats);
+      await computeTotalUnread(); // Compute total after fetching chats
     } catch (error) {
       console.error('Error fetching crew date chats:', error);
       Alert.alert('Error', 'Could not fetch crew date chats.');
     }
-  };
+  }, [user?.uid, crews, fetchUserDetails, computeTotalUnread]);
 
   // Listen to real-time updates in crew date chats where the user is a member and has at least one message
-  const listenToChats = () => {
+  const listenToChats = useCallback(() => {
     if (!user?.uid) return () => {};
 
     const chatQuery = query(
       collection(db, 'crew_date_chats'),
       where('memberIds', 'array-contains', user.uid),
-      //where('hasMessages', '==', true), // Added condition
+      where('hasMessages', '==', true), // Optional condition
     );
 
     const unsubscribe = onSnapshot(
@@ -258,6 +296,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         }
 
         setChats(fetchedChats);
+        await computeTotalUnread(); // Compute total after updating chats
       },
       (error) => {
         console.error('Error listening to chats:', error);
@@ -265,37 +304,44 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       },
     );
 
-    // Cleanup function to unsubscribe listener
     return () => {
       unsubscribe();
       console.log('Unsubscribed from crew date chat listener.');
     };
-  };
+  }, [user?.uid, crews, fetchUserDetails, computeTotalUnread]);
 
   // Send a message in a crew date chat
-  const sendMessage = async (chatId: string, text: string) => {
-    if (!user?.uid) return;
+  const sendMessage = useCallback(
+    async (chatId: string, text: string) => {
+      if (!user?.uid) return;
 
-    try {
-      const messagesRef = collection(db, 'crew_date_chats', chatId, 'messages');
-      const newMessage = {
-        senderId: user.uid,
-        text,
-        createdAt: Timestamp.fromDate(new Date()),
-      };
-      await addDoc(messagesRef, newMessage);
+      try {
+        const messagesRef = collection(
+          db,
+          'crew_date_chats',
+          chatId,
+          'messages',
+        );
+        const newMessage = {
+          senderId: user.uid,
+          text,
+          createdAt: Timestamp.fromDate(new Date()),
+        };
+        await addDoc(messagesRef, newMessage);
 
-      // **Update hasMessages field if not already true**
-      const chatRef = doc(db, 'crew_date_chats', chatId);
-      await updateDoc(chatRef, {
-        hasMessages: true,
-      });
-      console.log(`Message sent in chat ${chatId}: "${text}"`);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      Alert.alert('Error', 'Could not send message.');
-    }
-  };
+        // **Update hasMessages field if not already true**
+        const chatRef = doc(db, 'crew_date_chats', chatId);
+        await updateDoc(chatRef, {
+          hasMessages: true,
+        });
+        console.log(`Message sent in chat ${chatId}: "${text}"`);
+      } catch (error) {
+        console.error('Error sending message:', error);
+        Alert.alert('Error', 'Could not send message.');
+      }
+    },
+    [user?.uid],
+  );
 
   // Update lastRead timestamp for a specific chat
   const updateLastRead = useCallback(
@@ -308,96 +354,105 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           [`lastRead.${user.uid}`]: serverTimestamp(),
         });
         console.log(`Updated lastRead for chat ${chatId}`);
+        await computeTotalUnread(); // Recompute after updating lastRead
       } catch (error) {
         console.error(`Error updating lastRead for chat ${chatId}:`, error);
         Alert.alert('Error', 'Could not update last read status.');
       }
     },
-    [user?.uid],
+    [user?.uid, computeTotalUnread],
   );
 
   // Add a member to the chat's memberIds array
-  const addMemberToChat = async (
-    chatId: string,
-    uid: string,
-  ): Promise<void> => {
-    try {
-      const chatRef = doc(db, 'crew_date_chats', chatId);
-      setDoc(chatRef, {
-        memberIds: arrayUnion(uid),
-      });
-      console.log(`Added member ${uid} to chat ${chatId}`);
-    } catch (error) {
-      console.error(`Error adding member ${uid} to chat ${chatId}:`, error);
-      Alert.alert('Error', 'Could not add member to chat.');
-    }
-  };
+  const addMemberToChat = useCallback(
+    async (chatId: string, uid: string): Promise<void> => {
+      try {
+        const chatRef = doc(db, 'crew_date_chats', chatId);
+        await updateDoc(chatRef, {
+          memberIds: arrayUnion(uid),
+        });
+        console.log(`Added member ${uid} to chat ${chatId}`);
+      } catch (error) {
+        console.error(`Error adding member ${uid} to chat ${chatId}:`, error);
+        Alert.alert('Error', 'Could not add member to chat.');
+      }
+    },
+    [],
+  );
 
   // Remove a member from the chat's memberIds array
-  const removeMemberFromChat = async (
-    chatId: string,
-    uid: string,
-  ): Promise<void> => {
-    try {
-      const chatRef = doc(db, 'crew_date_chats', chatId);
-      await updateDoc(chatRef, {
-        memberIds: arrayRemove(uid),
-      });
-      console.log(`Removed member ${uid} from chat ${chatId}`);
-    } catch (error) {
-      console.error(`Error removing member ${uid} from chat ${chatId}:`, error);
-      Alert.alert('Error', 'Could not remove member from chat.');
-    }
-  };
+  const removeMemberFromChat = useCallback(
+    async (chatId: string, uid: string): Promise<void> => {
+      try {
+        const chatRef = doc(db, 'crew_date_chats', chatId);
+        await updateDoc(chatRef, {
+          memberIds: arrayRemove(uid),
+        });
+        console.log(`Removed member ${uid} from chat ${chatId}`);
+      } catch (error) {
+        console.error(
+          `Error removing member ${uid} from chat ${chatId}:`,
+          error,
+        );
+        Alert.alert('Error', 'Could not remove member from chat.');
+      }
+    },
+    [],
+  );
 
   // Listen to real-time updates in messages of a crew date chat with sender names
-  const listenToMessages = (chatId: string) => {
-    const messagesRef = collection(db, 'crew_date_chats', chatId, 'messages');
-    const msgQuery = query(messagesRef, orderBy('createdAt', 'asc'));
+  const listenToMessages = useCallback(
+    (chatId: string) => {
+      const messagesRef = collection(db, 'crew_date_chats', chatId, 'messages');
+      const msgQuery = query(messagesRef, orderBy('createdAt', 'desc')); // Optimize ordering
 
-    const unsubscribe = onSnapshot(
-      msgQuery,
-      async (querySnapshot) => {
-        try {
-          console.log(
-            `Real-time update: Fetched ${querySnapshot.size} messages for chat ${chatId}`,
-          );
+      const unsubscribe = onSnapshot(
+        msgQuery,
+        async (querySnapshot) => {
+          try {
+            console.log(
+              `Real-time update: Fetched ${querySnapshot.size} messages for chat ${chatId}`,
+            );
 
-          const fetchedMessages: Message[] = await Promise.all(
-            querySnapshot.docs.map(async (docSnap) => {
-              const msgData = docSnap.data();
-              const senderId: string = msgData.senderId;
-              const sender = await fetchUserDetails(senderId);
+            const fetchedMessages: Message[] = await Promise.all(
+              querySnapshot.docs.map(async (docSnap) => {
+                const msgData = docSnap.data();
+                const senderId: string = msgData.senderId;
+                const sender = await fetchUserDetails(senderId);
 
-              return {
-                id: docSnap.id,
-                senderId,
-                text: msgData.text,
-                createdAt: msgData.createdAt,
-                senderName: sender.displayName, // Include sender's name
-              };
-            }),
-          );
+                return {
+                  id: docSnap.id,
+                  senderId,
+                  text: msgData.text,
+                  createdAt: msgData.createdAt,
+                  senderName: sender.displayName, // Include sender's name
+                };
+              }),
+            );
 
-          setMessages((prev) => ({
-            ...prev,
-            [chatId]: fetchedMessages,
-          }));
-        } catch (error) {
-          console.error('Error processing messages snapshot:', error);
-          Alert.alert('Error', 'Could not process messages updates.');
-        }
-      },
-      (error) => {
-        console.error('Error listening to messages:', error);
-        Alert.alert('Error', 'Could not listen to messages.');
-      },
-    );
+            setMessages((prev) => ({
+              ...prev,
+              [chatId]: fetchedMessages,
+            }));
 
-    return unsubscribe;
-  };
+            await computeTotalUnread(); // Compute total after updating messages
+          } catch (error) {
+            console.error('Error processing messages snapshot:', error);
+            Alert.alert('Error', 'Could not process messages updates.');
+          }
+        },
+        (error) => {
+          console.error('Error listening to messages:', error);
+          Alert.alert('Error', 'Could not listen to messages.');
+        },
+      );
 
-  // Fetch chats and set up real-time listener on mount
+      return unsubscribe;
+    },
+    [fetchUserDetails, computeTotalUnread],
+  );
+
+  // Fetch chats and set up real-time listeners on mount
   useEffect(() => {
     fetchChats();
 
@@ -407,7 +462,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       if (unsubscribe) unsubscribe();
       console.log('CrewDateChatContext unmounted.');
     };
-  }, [user?.uid, crews]); // Added `crews` as a dependency to handle dynamic crew membership changes
+  }, [fetchChats, listenToChats]);
 
   return (
     <CrewDateChatContext.Provider
@@ -421,6 +476,8 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         listenToMessages,
         addMemberToChat,
         removeMemberFromChat,
+        fetchUnreadCount,
+        totalUnread, // Provide the totalUnread value
       }}
     >
       {children}

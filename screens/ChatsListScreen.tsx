@@ -42,8 +42,9 @@ interface CombinedChat {
 }
 
 const ChatsListScreen: React.FC = () => {
-  const { dms } = useDirectMessages();
-  const { chats: groupChats } = useCrewDateChat();
+  const { dms, fetchUnreadCount: fetchDMUnreadCount } = useDirectMessages();
+  const { chats: groupChats, fetchUnreadCount: fetchGroupUnreadCount } =
+    useCrewDateChat();
   const { crews } = useCrews();
   const { user } = useUser();
   const navigation = useNavigation<NavigationProp<NavParamList>>();
@@ -106,32 +107,32 @@ const ChatsListScreen: React.FC = () => {
   };
 
   // Helper function to fetch unread count for a chat
-  const fetchUnreadCount = async (
-    chatId: string,
-    chatType: 'direct' | 'group',
-    lastRead: Timestamp | null,
-  ): Promise<number> => {
-    try {
-      const messagesRef =
-        chatType === 'direct'
-          ? collection(db, 'direct_messages', chatId, 'messages')
-          : collection(db, 'crew_date_chats', chatId, 'messages');
+  // const fetchUnreadCount = async (
+  //   chatId: string,
+  //   chatType: 'direct' | 'group',
+  //   lastRead: Timestamp | null,
+  // ): Promise<number> => {
+  //   try {
+  //     const messagesRef =
+  //       chatType === 'direct'
+  //         ? collection(db, 'direct_messages', chatId, 'messages')
+  //         : collection(db, 'crew_date_chats', chatId, 'messages');
 
-      let messagesQuery;
+  //     let messagesQuery;
 
-      if (lastRead) {
-        messagesQuery = query(messagesRef, where('createdAt', '>', lastRead));
-      } else {
-        messagesQuery = query(messagesRef);
-      }
+  //     if (lastRead) {
+  //       messagesQuery = query(messagesRef, where('createdAt', '>', lastRead));
+  //     } else {
+  //       messagesQuery = query(messagesRef);
+  //     }
 
-      const snapshot = await getCountFromServer(messagesQuery);
-      return snapshot.data().count;
-    } catch (error) {
-      console.error(`Error fetching unread count for chat ${chatId}:`, error);
-      return 0;
-    }
-  };
+  //     const snapshot = await getCountFromServer(messagesQuery);
+  //     return snapshot.data().count;
+  //   } catch (error) {
+  //     console.error(`Error fetching unread count for chat ${chatId}:`, error);
+  //     return 0;
+  //   }
+  // };
 
   // Combine and sort chats with unread counts
   const combineChats = useCallback(async () => {
@@ -148,11 +149,12 @@ const ChatsListScreen: React.FC = () => {
 
         const lastMsg = await fetchLastMessage(dm.id, 'direct');
 
-        const unreadCount = await fetchUnreadCount(
-          dm.id,
-          'direct',
-          dm.lastRead,
-        );
+        // const unreadCount = await fetchUnreadCount(
+        //   dm.id,
+        //   'direct',
+        //   dm.lastRead,
+        // );
+        const unreadCount = await fetchDMUnreadCount(dm.id);
 
         combined.push({
           id: dm.id,
@@ -174,7 +176,8 @@ const ChatsListScreen: React.FC = () => {
 
         const lastMsg = await fetchLastMessage(gc.id, 'group');
 
-        const unreadCount = await fetchUnreadCount(gc.id, 'group', gc.lastRead);
+        //const unreadCount = await fetchUnreadCount(gc.id, 'group', gc.lastRead);
+        const unreadCount = await fetchGroupUnreadCount(gc.id);
 
         combined.push({
           id: gc.id,

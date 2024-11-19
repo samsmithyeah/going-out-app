@@ -180,7 +180,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
             await setDoc(
               chatRef,
               {
-                memberIds: [user.uid], // Correct field name
+                // memberIds: [user.uid], // Correct field name
                 typingStatus: {
                   [user.uid]: isTyping,
                   [`${user.uid}LastUpdate`]: serverTimestamp(),
