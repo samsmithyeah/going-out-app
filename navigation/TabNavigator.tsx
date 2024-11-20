@@ -31,7 +31,7 @@ const TabNavigator: React.FC = () => {
   useEffect(() => {
     console.log('Total DM Unread:', totalDMUnread);
     console.log('Total Group Unread:', totalGroupUnread);
-    setTotalUnread(totalDMUnread + totalGroupUnread);
+    setTotalUnread((totalDMUnread || 0) + (totalGroupUnread || 0));
     console.log('Total Unread:', totalUnread);
   }, [totalDMUnread, totalGroupUnread]);
 

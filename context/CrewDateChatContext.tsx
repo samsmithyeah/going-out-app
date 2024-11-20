@@ -73,7 +73,7 @@ const CrewDateChatContext = createContext<CrewDateChatContextProps | undefined>(
 export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { user } = useUser();
+  const { user, activeChats } = useUser(); // Access activeChats from UserContext
   const [chats, setChats] = useState<CrewDateChat[]>([]);
   const [messages, setMessages] = useState<{ [chatId: string]: Message[] }>({});
   const { crews, usersCache, setUsersCache } = useCrews();
@@ -172,7 +172,9 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     try {
-      const unreadPromises = chats.map((chat) => fetchUnreadCount(chat.id));
+      const unreadPromises = chats
+        .filter((chat) => !activeChats.has(chat.id)) // Exclude active chats
+        .map((chat) => fetchUnreadCount(chat.id));
       const unreadCounts = await Promise.all(unreadPromises);
       const total = unreadCounts.reduce((acc, count) => acc + count, 0);
       setTotalUnread(total);
@@ -180,7 +182,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       console.error('Error computing total unread messages:', error);
       // Optionally handle the error, e.g., show a notification
     }
-  }, [user?.uid, chats, fetchUnreadCount]);
+  }, [user?.uid, chats, fetchUnreadCount, activeChats]);
 
   // Fetch crew date chats where the user is a member and has at least one message
   const fetchChats = useCallback(async () => {
@@ -240,7 +242,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       console.error('Error fetching crew date chats:', error);
       Alert.alert('Error', 'Could not fetch crew date chats.');
     }
-  }, [user?.uid, crews, fetchUserDetails]); // Removed computeTotalUnread from dependencies
+  }, [user?.uid, crews, fetchUserDetails]);
 
   // Listen to real-time updates in crew date chats where the user is a member and has at least one message
   const listenToChats = useCallback(() => {
@@ -305,9 +307,9 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       unsubscribe();
       console.log('Unsubscribed from crew date chat listener.');
     };
-  }, [user?.uid, crews, fetchUserDetails]); // Removed computeTotalUnread from dependencies
+  }, [user?.uid, crews, fetchUserDetails]);
 
-  // New useEffect to compute totalUnread when chats or user.uid changes
+  // New useEffect to compute totalUnread when chats or activeChats change
   useEffect(() => {
     computeTotalUnread();
   }, [computeTotalUnread]);
@@ -362,7 +364,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         Alert.alert('Error', 'Could not update last read status.');
       }
     },
-    [user?.uid], // Removed computeTotalUnread from dependencies
+    [user?.uid],
   );
 
   // Add a member to the chat's memberIds array
@@ -436,8 +438,6 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
               ...prev,
               [chatId]: fetchedMessages,
             }));
-
-            // Removed computeTotalUnread from here
           } catch (error) {
             console.error('Error processing messages snapshot:', error);
             Alert.alert('Error', 'Could not process messages updates.');

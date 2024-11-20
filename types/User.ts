@@ -6,4 +6,5 @@ export interface User {
   email: string;
   photoURL?: string;
   expoPushToken?: string;
+  activeChats?: string[];
 }

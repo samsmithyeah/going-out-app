@@ -22,8 +22,6 @@ import {
   orderBy,
   updateDoc,
   serverTimestamp,
-  arrayUnion,
-  arrayRemove,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useUser } from './UserContext';
@@ -67,11 +65,12 @@ const DirectMessagesContext = createContext<
 export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { user } = useUser();
+  const { user, activeChats } = useUser(); // Access activeChats from UserContext
   const [dms, setDms] = useState<DirectMessage[]>([]);
   const [messages, setMessages] = useState<{ [dmId: string]: Message[] }>({});
   const [totalUnread, setTotalUnread] = useState<number>(0); // New state
 
+  // Fetch unread count for a specific DM
   const fetchUnreadCount = useCallback(
     async (dmId: string): Promise<number> => {
       if (!user?.uid) return 0;
@@ -118,7 +117,9 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     try {
-      const unreadPromises = dms.map((dm) => fetchUnreadCount(dm.id));
+      const unreadPromises = dms
+        .filter((dm) => !activeChats.has(dm.id)) // Exclude active DMs
+        .map((dm) => fetchUnreadCount(dm.id));
       const unreadCounts = await Promise.all(unreadPromises);
       const total = unreadCounts.reduce((acc, count) => acc + count, 0);
       setTotalUnread(total);
@@ -126,7 +127,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
       console.error('Error computing total unread messages:', error);
       // Optionally handle the error, e.g., show a notification
     }
-  }, [user?.uid, dms, fetchUnreadCount]);
+  }, [user?.uid, dms, fetchUnreadCount, activeChats]);
 
   // Send a message in a direct message conversation
   const sendMessage = useCallback(
@@ -206,8 +207,6 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
             ...prev,
             [dmId]: fetchedMessages,
           }));
-
-          // Do not call computeTotalUnread here to avoid circular dependency
         } catch (error) {
           console.error('Error processing messages snapshot:', error);
           Alert.alert('Error', 'Could not process messages updates.');
@@ -368,7 +367,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, [fetchDirectMessages, listenToDirectMessages]);
 
-  // Compute total unread messages whenever dms change
+  // Compute total unread messages whenever dms or activeChats change
   useEffect(() => {
     computeTotalUnread();
   }, [computeTotalUnread]);

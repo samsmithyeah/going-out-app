@@ -6,8 +6,16 @@ import React, {
   useCallback,
   useMemo,
   useLayoutEffect,
+  useRef,
 } from 'react';
-import { View, StyleSheet, Alert, Text } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Alert,
+  Text,
+  AppState,
+  AppStateStatus,
+} from 'react-native';
 import {
   GiftedChat,
   IMessage,
@@ -31,13 +39,11 @@ import {
   updateDoc,
   serverTimestamp,
   Timestamp,
-  arrayUnion,
-  arrayRemove,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 
 // Define Props
 type DMChatScreenProps = NativeStackScreenProps<NavParamList, 'DMChat'>;
@@ -101,14 +107,18 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   const { otherUserId } = route.params as RouteParams;
   const { sendMessage, updateLastRead } = useDirectMessages(); // Import updateLastRead
   const { crews, usersCache } = useCrews();
-  const { user } = useUser(); // Current authenticated user
-
-  // Initialize Reducer
+  const isFocused = useIsFocused();
+  const isFocusedRef = useRef(isFocused);
+  const { user, addActiveChat, removeActiveChat } = useUser(); // Access activeChats
   const [state, dispatch] = useReducer(reducer, {
     messages: [],
     isTyping: false,
     otherUserIsTyping: false,
   });
+
+  useEffect(() => {
+    isFocusedRef.current = isFocused;
+  }, [isFocused]);
 
   // Generate conversationId using both user IDs
   const conversationId = useMemo(() => {
@@ -180,6 +190,9 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   useEffect(() => {
     if (!conversationId) return;
 
+    // Add this chat to activeChats
+    addActiveChat(conversationId);
+
     const convoRef = doc(db, 'direct_messages', conversationId);
     const messagesRef = collection(convoRef, 'messages');
     const q = query(messagesRef, orderBy('createdAt', 'asc'));
@@ -188,6 +201,10 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     const unsubscribeMessages = onSnapshot(
       q,
       async (querySnapshot) => {
+        // Update lastRead first
+        await updateLastRead(conversationId);
+
+        // Then set messages
         const msgs: IMessage[] = querySnapshot.docs
           .map((docSnap) => ({
             _id: docSnap.id,
@@ -207,7 +224,6 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
           }))
           .reverse(); // GiftedChat expects newest first
         dispatch({ type: ActionKind.SET_MESSAGES, payload: msgs });
-        await updateLastRead(conversationId);
       },
       (error) => {
         console.error('Error listening to messages:', error);
@@ -254,6 +270,8 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
       unsubscribeTyping();
       updateTypingStatus.cancel(); // Cancel any pending debounced calls
       if (typingTimeout) clearTimeout(typingTimeout);
+      // Remove this chat from activeChats
+      removeActiveChat(conversationId);
       // Reset typing status when unmounting
       dispatch({ type: ActionKind.SET_IS_TYPING, payload: false });
       updateTypingStatus(false);
@@ -267,6 +285,9 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     otherUser.displayName,
     otherUser.photoURL,
     updateTypingStatus,
+    addActiveChat,
+    removeActiveChat,
+    updateLastRead,
   ]);
 
   // Handle sending messages
@@ -296,38 +317,62 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
       }
 
       // Add active chat to user's activeChats in Firestore
-      const addActiveChat = async () => {
+      const addActiveChatFunction = async () => {
         if (!user?.uid) return;
-        const userDocRef = doc(db, 'users', user.uid);
-        try {
-          await updateDoc(userDocRef, {
-            activeChats: arrayUnion(conversationId),
-          });
-        } catch (error) {
-          console.error('Error adding active chat:', error);
-        }
+        addActiveChat(conversationId);
       };
 
-      addActiveChat();
+      addActiveChatFunction();
 
       return () => {
         // Remove active chat from user's activeChats in Firestore
-        const removeActiveChat = async () => {
-          if (!user?.uid) return;
-          const userDocRef = doc(db, 'users', user.uid);
-          try {
-            await updateDoc(userDocRef, {
-              activeChats: arrayRemove(conversationId),
-            });
-          } catch (error) {
-            console.error('Error removing active chat:', error);
-          }
-        };
-
-        removeActiveChat();
+        if (conversationId) {
+          removeActiveChat(conversationId);
+        }
       };
-    }, [conversationId, updateLastRead, user?.uid]),
+    }, [
+      conversationId,
+      updateLastRead,
+      user?.uid,
+      addActiveChat,
+      removeActiveChat,
+    ]),
   );
+
+  // AppState Listener to handle app backgrounding
+  const appState = useRef<AppStateStatus>(AppState.currentState);
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (
+        appState.current.match(/active/) &&
+        nextAppState.match(/inactive|background/)
+      ) {
+        // App has moved to the background or is inactive
+        if (conversationId) {
+          removeActiveChat(conversationId);
+        }
+      } else if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        // App has come to the foreground
+        if (isFocusedRef.current && conversationId) {
+          addActiveChat(conversationId);
+        }
+      }
+      appState.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange,
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [conversationId, addActiveChat, removeActiveChat]);
 
   if (!conversationId) {
     return <LoadingOverlay />;

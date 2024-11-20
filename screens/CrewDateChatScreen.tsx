@@ -8,7 +8,14 @@ import React, {
   useLayoutEffect,
   useRef,
 } from 'react';
-import { View, StyleSheet, Alert, Text } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Alert,
+  Text,
+  AppState,
+  AppStateStatus,
+} from 'react-native';
 import {
   GiftedChat,
   IMessage,
@@ -22,7 +29,7 @@ import { useCrews } from '../context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator';
 import LoadingOverlay from '../components/LoadingOverlay';
-import { generateChatId } from '../helpers/chatUtils'; // Ensure this helper exists
+import { generateChatId } from '../helpers/chatUtils';
 import {
   collection,
   doc,
@@ -34,14 +41,12 @@ import {
   getDoc,
   serverTimestamp,
   Timestamp,
-  arrayUnion,
-  arrayRemove,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 
 // Define Props
 type CrewDateChatScreenProps = NativeStackScreenProps<
@@ -107,9 +112,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   const { crewId, date, id } = route.params;
   const { sendMessage, updateLastRead } = useCrewDateChat();
   const { crews, usersCache } = useCrews();
-  const { user } = useUser(); // Current authenticated user
-
-  // Initialize Reducer
+  const { user, addActiveChat, removeActiveChat } = useUser();
   const [state, dispatch] = useReducer(reducer, {
     messages: [],
     isTyping: false,
@@ -227,9 +230,22 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     [updateTypingStatus],
   );
 
+  // Track if the screen is focused
+  const isFocused = useIsFocused();
+  const isFocusedRef = useRef(isFocused);
+
+  useEffect(() => {
+    isFocusedRef.current = isFocused;
+  }, [isFocused]);
+
   // Set up Firestore listener for messages and typing status
   useEffect(() => {
     if (!chatId) return;
+
+    // Add this chat to activeChats
+    if (chatId !== null) {
+      addActiveChat(chatId);
+    }
 
     const chatRef = doc(db, 'crew_date_chats', chatId);
     const messagesRef = collection(chatRef, 'messages');
@@ -239,6 +255,10 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     const unsubscribeMessages = onSnapshot(
       q,
       async (querySnapshot) => {
+        // Update lastRead first
+        await updateLastRead(chatId);
+
+        // Then set messages
         const msgs: IMessage[] = querySnapshot.docs
           .map((docSnap) => ({
             _id: docSnap.id,
@@ -259,7 +279,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
           }))
           .reverse(); // GiftedChat expects newest first
         dispatch({ type: ActionKind.SET_MESSAGES, payload: msgs });
-        await updateLastRead(chatId);
       },
       (error) => {
         console.error('Error listening to messages:', error);
@@ -313,8 +332,8 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
       unsubscribeMessages();
       unsubscribeTyping();
       updateTypingStatus.cancel(); // Cancel any pending debounced calls
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
+      if (chatId !== null) {
+        removeActiveChat(chatId);
       }
       // Reset typing status when unmounting
       dispatch({ type: ActionKind.SET_IS_TYPING, payload: false });
@@ -327,6 +346,9 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     user?.photoURL,
     usersCache,
     updateTypingStatus,
+    addActiveChat,
+    removeActiveChat,
+    updateLastRead,
   ]);
 
   // Handle sending messages
@@ -335,9 +357,11 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
       const text = messages[0].text;
       if (text && text.trim() !== '') {
         await sendMessage(chatId!, text.trim());
+
         // Reset typing status after sending
         dispatch({ type: ActionKind.SET_IS_TYPING, payload: false });
         updateTypingStatus(false);
+
         // Update lastRead since the user has viewed the latest message
         await updateLastRead(chatId!);
       }
@@ -345,7 +369,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     [chatId, sendMessage, updateTypingStatus, updateLastRead],
   );
 
-  // Update lastRead when the screen gains focus
+  // Update lastRead and manage activeChats when the screen gains focus
   useFocusEffect(
     useCallback(() => {
       // Update lastRead when the screen is focused
@@ -354,38 +378,56 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
       }
 
       // Add active chat to user's activeChats in Firestore
-      const addActiveChat = async () => {
-        if (!user?.uid) return;
-        const userDocRef = doc(db, 'users', user.uid);
-        try {
-          await updateDoc(userDocRef, {
-            activeChats: arrayUnion(chatId),
-          });
-        } catch (error) {
-          console.error('Error adding active chat:', error);
-        }
+      const addActiveChatFunction = async () => {
+        if (!user?.uid || !chatId) return;
+        addActiveChat(chatId);
       };
 
-      addActiveChat();
+      addActiveChatFunction();
 
       return () => {
         // Remove active chat from user's activeChats in Firestore
-        const removeActiveChat = async () => {
-          if (!user?.uid) return;
-          const userDocRef = doc(db, 'users', user.uid);
-          try {
-            await updateDoc(userDocRef, {
-              activeChats: arrayRemove(chatId),
-            });
-          } catch (error) {
-            console.error('Error removing active chat:', error);
-          }
-        };
-
-        removeActiveChat();
+        if (chatId) {
+          removeActiveChat(chatId);
+        }
       };
-    }, [chatId, updateLastRead, user?.uid]),
+    }, [chatId, updateLastRead, user?.uid, addActiveChat, removeActiveChat]),
   );
+
+  // AppState Listener to handle app backgrounding and foregrounding
+  const appState = useRef<AppStateStatus>(AppState.currentState);
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (
+        appState.current.match(/active/) &&
+        nextAppState.match(/inactive|background/)
+      ) {
+        // App has moved to the background or is inactive
+        if (chatId) {
+          removeActiveChat(chatId);
+        }
+      } else if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        // App has come to the foreground
+        if (isFocusedRef.current && chatId) {
+          addActiveChat(chatId);
+        }
+      }
+      appState.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener(
+      'change',
+      handleAppStateChange,
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [chatId, addActiveChat, removeActiveChat]);
 
   // Conditional return must be after all hooks
   if (!chatId) {
