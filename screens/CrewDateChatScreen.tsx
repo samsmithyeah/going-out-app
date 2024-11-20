@@ -34,6 +34,8 @@ import {
   getDoc,
   serverTimestamp,
   Timestamp,
+  arrayUnion,
+  arrayRemove,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import debounce from 'lodash/debounce';
@@ -180,7 +182,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
             await setDoc(
               chatRef,
               {
-                // memberIds: [user.uid], // Correct field name
                 typingStatus: {
                   [user.uid]: isTyping,
                   [`${user.uid}LastUpdate`]: serverTimestamp(),
@@ -237,7 +238,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     // Listen to messages
     const unsubscribeMessages = onSnapshot(
       q,
-      (querySnapshot) => {
+      async (querySnapshot) => {
         const msgs: IMessage[] = querySnapshot.docs
           .map((docSnap) => ({
             _id: docSnap.id,
@@ -258,6 +259,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
           }))
           .reverse(); // GiftedChat expects newest first
         dispatch({ type: ActionKind.SET_MESSAGES, payload: msgs });
+        await updateLastRead(chatId);
       },
       (error) => {
         console.error('Error listening to messages:', error);
@@ -351,12 +353,38 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
         updateLastRead(chatId);
       }
 
-      // Optionally, handle any other focus-related logic here
+      // Add active chat to user's activeChats in Firestore
+      const addActiveChat = async () => {
+        if (!user?.uid) return;
+        const userDocRef = doc(db, 'users', user.uid);
+        try {
+          await updateDoc(userDocRef, {
+            activeChats: arrayUnion(chatId),
+          });
+        } catch (error) {
+          console.error('Error adding active chat:', error);
+        }
+      };
+
+      addActiveChat();
 
       return () => {
-        // Optional: Handle any cleanup when the screen loses focus
+        // Remove active chat from user's activeChats in Firestore
+        const removeActiveChat = async () => {
+          if (!user?.uid) return;
+          const userDocRef = doc(db, 'users', user.uid);
+          try {
+            await updateDoc(userDocRef, {
+              activeChats: arrayRemove(chatId),
+            });
+          } catch (error) {
+            console.error('Error removing active chat:', error);
+          }
+        };
+
+        removeActiveChat();
       };
-    }, [chatId, updateLastRead]),
+    }, [chatId, updateLastRead, user?.uid]),
   );
 
   // Conditional return must be after all hooks

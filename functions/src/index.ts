@@ -6,6 +6,8 @@ import { notifyUserOnCrewInvitation } from './notifications/notifyUserOnCrewInvi
 import { notifyCrewMembersOnMemberLeave } from './notifications/notifyCrewMembersOnMemberLeave';
 import { notifyCrewOnThreeUp } from './notifications/notifyCrewOnThreeUp';
 import { deleteCrew } from './utils/deleteCrew';
+import { notifyUserOnNewDMMessage } from './notifications/notifyUserOnNewDMMessage';
+import { notifyUsersOnNewGroupMessage } from './notifications/notifyUserOnNewGroupMessage';
 
 export {
   notifyCrewMembersOnCrewDeletion,
@@ -15,6 +17,8 @@ export {
   notifyUserOnCrewInvitation,
   notifyCrewOnThreeUp,
   deleteCrew,
+  notifyUserOnNewDMMessage,
+  notifyUsersOnNewGroupMessage,
 };
 
 // Initialize Firebase Admin SDK

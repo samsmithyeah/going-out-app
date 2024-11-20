@@ -40,7 +40,12 @@ export type NavParamList = {
   ChatsStack:
     | {
         screen: string;
-        params: { crewId: string; date: string };
+        params: {
+          crewId?: string;
+          date?: string;
+          id?: string;
+          otherUserId?: string;
+        };
         initial: boolean;
       }
     | undefined;

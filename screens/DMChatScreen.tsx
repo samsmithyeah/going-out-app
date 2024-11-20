@@ -31,6 +31,8 @@ import {
   updateDoc,
   serverTimestamp,
   Timestamp,
+  arrayUnion,
+  arrayRemove,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import debounce from 'lodash/debounce';
@@ -185,7 +187,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     // Listen to messages
     const unsubscribeMessages = onSnapshot(
       q,
-      (querySnapshot) => {
+      async (querySnapshot) => {
         const msgs: IMessage[] = querySnapshot.docs
           .map((docSnap) => ({
             _id: docSnap.id,
@@ -205,6 +207,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
           }))
           .reverse(); // GiftedChat expects newest first
         dispatch({ type: ActionKind.SET_MESSAGES, payload: msgs });
+        await updateLastRead(conversationId);
       },
       (error) => {
         console.error('Error listening to messages:', error);
@@ -292,12 +295,38 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
         updateLastRead(conversationId);
       }
 
-      // Optionally, handle any other focus-related logic here
+      // Add active chat to user's activeChats in Firestore
+      const addActiveChat = async () => {
+        if (!user?.uid) return;
+        const userDocRef = doc(db, 'users', user.uid);
+        try {
+          await updateDoc(userDocRef, {
+            activeChats: arrayUnion(conversationId),
+          });
+        } catch (error) {
+          console.error('Error adding active chat:', error);
+        }
+      };
+
+      addActiveChat();
 
       return () => {
-        // Optional: Handle any cleanup when the screen loses focus
+        // Remove active chat from user's activeChats in Firestore
+        const removeActiveChat = async () => {
+          if (!user?.uid) return;
+          const userDocRef = doc(db, 'users', user.uid);
+          try {
+            await updateDoc(userDocRef, {
+              activeChats: arrayRemove(conversationId),
+            });
+          } catch (error) {
+            console.error('Error removing active chat:', error);
+          }
+        };
+
+        removeActiveChat();
       };
-    }, [conversationId, updateLastRead]),
+    }, [conversationId, updateLastRead, user?.uid]),
   );
 
   if (!conversationId) {
