@@ -20,6 +20,7 @@ import {
   doc,
   orderBy,
   updateDoc,
+  setDoc,
   serverTimestamp,
   arrayUnion,
   arrayRemove,
@@ -393,7 +394,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     async (chatId: string, uid: string): Promise<void> => {
       try {
         const chatRef = doc(db, 'crew_date_chats', chatId);
-        await updateDoc(chatRef, {
+        await setDoc(chatRef, {
           memberIds: arrayUnion(uid),
         });
         console.log(`Added member ${uid} to chat ${chatId}`);

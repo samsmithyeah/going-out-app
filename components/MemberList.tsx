@@ -143,6 +143,7 @@ const MemberList: React.FC<MemberListProps> = ({
           <Text style={styles.emptyText}>{emptyMessage}</Text>
         }
         scrollEnabled={false}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
     </View>
   );
@@ -194,5 +195,10 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginTop: 20,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginLeft: 85,
   },
 });

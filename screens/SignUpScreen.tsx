@@ -20,7 +20,7 @@ import {
   FirebaseUser,
   createUserWithEmailAndPassword,
 } from '../firebase';
-import { addUserToFirestore } from '../helpers/AddUserToFirestore';
+import { addUserToFirestore } from '../utils/AddUserToFirestore';
 import { useUser } from '../context/UserContext';
 import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';

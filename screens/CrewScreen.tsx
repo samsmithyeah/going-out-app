@@ -327,6 +327,19 @@ const CrewScreen: React.FC = () => {
     }
   };
 
+  // Function to navigate to OtherUserProfileScreen
+  const navigateToUserProfile = (selectedUser: User) => {
+    if (selectedUser.uid === user?.uid) {
+      navigation.navigate('UserProfileStack', {
+        screen: 'UserProfile',
+        params: { userId: user.uid },
+        initial: false,
+      });
+      return;
+    }
+    navigation.navigate('OtherUserProfile', { userId: selectedUser.uid });
+  };
+
   return (
     <>
       {(loading || !crew) && <LoadingOverlay />}
@@ -389,6 +402,7 @@ const CrewScreen: React.FC = () => {
             members={membersUpForGoingOut}
             currentUserId={user?.uid || null}
             emptyMessage={"No one's up for it on this date"}
+            onMemberPress={navigateToUserProfile}
           />
         ) : (
           <View style={styles.skeletonContainer}>
@@ -407,22 +421,25 @@ const CrewScreen: React.FC = () => {
 
         {/* Button to navigate to crew date chat */}
         {currentUserStatus && (
-          <CustomButton
-            title="Chat"
-            onPress={() =>
-              navigation.navigate('CrewDateChat', {
-                crewId,
-                date: selectedDate,
-              })
-            }
-            icon={{
-              name: 'chatbubble-ellipses-outline',
-              size: 24,
-              library: 'Ionicons',
-            }}
-            accessibilityLabel="Open Chat"
-            accessibilityHint="Navigate to crew date chat"
-          />
+          <View style={styles.chatButton}>
+            <CustomButton
+              title="Message the up-for-it crew"
+              variant="primary"
+              onPress={() =>
+                navigation.navigate('CrewDateChat', {
+                  crewId,
+                  date: selectedDate,
+                })
+              }
+              icon={{
+                name: 'chatbubble-ellipses-outline',
+                size: 24,
+                library: 'Ionicons',
+              }}
+              accessibilityLabel="Open Chat"
+              accessibilityHint="Navigate to crew date chat"
+            />
+          </View>
         )}
 
         {/* Toggle Status Button */}
@@ -463,7 +480,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#f5f5f5',
-    position: 'relative', // Ensure absolute positioning is relative to this container
   },
   statusButton: {
     position: 'absolute',
@@ -480,13 +496,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    width: width - 32, // Adjusting for padding
+    width: width - 32,
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0)', // Fully transparent background
+    backgroundColor: 'rgba(255, 255, 255, 0)',
   },
   overlayText: {
     color: '#333',
@@ -522,4 +538,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  chatButton: {},
 });

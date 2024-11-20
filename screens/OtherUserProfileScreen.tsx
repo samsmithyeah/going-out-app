@@ -118,21 +118,23 @@ const OtherUserProfileScreen: React.FC = () => {
         <InfoItem label="Email Address" value={userProfile.email || 'N/A'} />
       </View>
 
-      <CustomButton
-        title="Chat"
-        onPress={() =>
-          navigation.navigate('DMChat', {
-            otherUserId: userProfile.uid,
-          })
-        }
-        icon={{
-          name: 'chatbubble-ellipses-outline',
-          size: 24,
-          library: 'Ionicons',
-        }}
-        accessibilityLabel="Open Chat"
-        accessibilityHint="Navigate to crew date chat"
-      />
+      <View style={styles.chatButton}>
+        <CustomButton
+          title={`Send a message to ${userProfile.displayName}`}
+          onPress={() =>
+            navigation.navigate('DMChat', {
+              otherUserId: userProfile.uid,
+            })
+          }
+          icon={{
+            name: 'chatbubble-ellipses-outline',
+            size: 24,
+            library: 'Ionicons',
+          }}
+          accessibilityLabel="Open Chat"
+          accessibilityHint="Navigate to crew date chat"
+        />
+      </View>
     </View>
   );
 };
@@ -189,5 +191,8 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     color: 'red',
+  },
+  chatButton: {
+    marginTop: 20,
   },
 });

@@ -29,7 +29,7 @@ import { useCrews } from '../context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator';
 import LoadingOverlay from '../components/LoadingOverlay';
-import { generateChatId } from '../helpers/chatUtils';
+import { generateChatId } from '../utils/chatHelpers';
 import {
   collection,
   doc,
@@ -449,7 +449,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
           name: user?.displayName || 'You',
           avatar: user?.photoURL || undefined,
         }}
-        placeholder="Type your message..."
         bottomOffset={80}
         renderUsernameOnMessage
         isTyping={state.isTyping} // Current user's typing status

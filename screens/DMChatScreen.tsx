@@ -29,7 +29,7 @@ import { useCrews } from '../context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '../navigation/AppNavigator';
 import LoadingOverlay from '../components/LoadingOverlay';
-import { generateDMConversationId } from '../helpers/chatUtils';
+import { generateDMConversationId } from '../utils/chatHelpers';
 import {
   collection,
   doc,
@@ -397,9 +397,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
           name: user?.displayName || 'You',
           avatar: user?.photoURL || undefined,
         }}
-        placeholder="Type your message..."
         bottomOffset={80}
-        renderUsernameOnMessage
         isTyping={state.isTyping} // Using isTyping prop
         onInputTextChanged={handleInputTextChanged} // Manage typing state
         renderBubble={(props) => (
