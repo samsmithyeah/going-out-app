@@ -8,14 +8,7 @@ import React, {
   useLayoutEffect,
   useRef,
 } from 'react';
-import {
-  View,
-  StyleSheet,
-  Alert,
-  Text,
-  AppState,
-  AppStateStatus,
-} from 'react-native';
+import { View, StyleSheet, Text, AppState, AppStateStatus } from 'react-native';
 import {
   GiftedChat,
   IMessage,
@@ -242,11 +235,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   // Set up Firestore listener for messages and typing status
   useEffect(() => {
     if (!chatId) return;
-
-    // Add this chat to activeChats
-    if (chatId !== null) {
-      addActiveChat(chatId);
-    }
 
     const chatRef = doc(db, 'crew_date_chats', chatId);
     const messagesRef = collection(chatRef, 'messages');
