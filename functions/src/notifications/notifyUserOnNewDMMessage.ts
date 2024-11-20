@@ -1,4 +1,4 @@
-// functions/notifyUserOnNewDMMessage.js
+// functions/notifyUserOnNewDMMessage.ts
 
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
@@ -12,6 +12,7 @@ export const notifyUserOnNewDMMessage = onDocumentCreated(
   'direct_messages/{dmId}/messages/{messageId}',
   async (event) => {
     const db = admin.firestore();
+
     // Ensure event data exists
     if (!event.data) {
       console.log('Event data is undefined.');
@@ -49,69 +50,107 @@ export const notifyUserOnNewDMMessage = onDocumentCreated(
       return null;
     }
 
-    // Fetch the recipient's user document
-    const recipientDoc = await db.collection('users').doc(recipientId).get();
+    // Reference to the recipient's user document
+    const recipientRef = db.collection('users').doc(recipientId);
 
-    if (!recipientDoc.exists) {
-      console.log(`Recipient user ${recipientId} does not exist.`);
-      return null;
-    }
+    // Initialize variable to hold the new badge count
+    let newBadgeCount: number | null = null;
 
-    const recipientData = recipientDoc.data();
+    try {
+      // Run a transaction to check activeChats and increment badgeCount if necessary
+      newBadgeCount = await db.runTransaction(async (transaction) => {
+        const recipientDoc = await transaction.get(recipientRef);
 
-    if (!recipientData) {
-      console.log(`Recipient data for user ${recipientId} is undefined.`);
-      return null;
-    }
-
-    const activeChats = recipientData.activeChats || [];
-
-    // Check if the recipient has the DM chat open
-    if (activeChats.includes(dmId)) {
-      console.log('Recipient is actively viewing the DM chat. No notification sent.');
-      return null;
-    }
-
-    // Collect all valid Expo push tokens for the recipient
-    const expoPushTokens = [];
-
-    if (recipientData.expoPushToken && Expo.isExpoPushToken(recipientData.expoPushToken)) {
-      expoPushTokens.push(recipientData.expoPushToken);
-    }
-
-    if (recipientData.expoPushTokens && Array.isArray(recipientData.expoPushTokens)) {
-      recipientData.expoPushTokens.forEach((token) => {
-        if (Expo.isExpoPushToken(token)) {
-          expoPushTokens.push(token);
+        if (!recipientDoc.exists) {
+          throw new Error(`Recipient user ${recipientId} does not exist.`);
         }
-      });
-    }
 
-    if (expoPushTokens.length === 0) {
-      console.log(`No valid Expo push tokens found for user ${recipientId}.`);
+        const recipientData = recipientDoc.data();
+
+        if (!recipientData) {
+          throw new Error(`Recipient data for user ${recipientId} is undefined.`);
+        }
+
+        const activeChats: string[] = recipientData.activeChats || [];
+
+        // Check if the recipient is actively viewing the DM chat
+        if (activeChats.includes(dmId)) {
+          console.log('Recipient is actively viewing the DM chat. No badge increment.');
+          return null; // Do not increment badgeCount
+        }
+
+        // Get current badge count, default to 0 if undefined
+        const currentBadge = typeof recipientData.badgeCount === 'number' ? recipientData.badgeCount : 0;
+        const updatedBadge = currentBadge + 1;
+
+        // Update the badgeCount atomically
+        transaction.update(recipientRef, { badgeCount: updatedBadge });
+
+        return updatedBadge;
+      });
+    } catch (error) {
+      console.error('Transaction failed:', error);
       return null;
     }
 
-    // Prepare notification payload
-    const messages: ExpoPushMessage[] = expoPushTokens.map((pushToken) => ({
-      to: pushToken,
-      sound: 'default',
-      title: senderName,
-      body: text,
-      data: {
-        screen: 'DMChat',
-        dmId,
-        senderId,
-        senderName: senderName,
-        messageText: text,
-      },
-      badge: 1,
-    }));
+    // If badgeCount was incremented, proceed to send notification
+    if (newBadgeCount !== null) {
+      // Fetch the updated recipient data
+      const recipientDoc = await recipientRef.get();
+      const recipientData = recipientDoc.data();
 
-    // Send the notifications using the sendExpoNotifications utility
-    await sendExpoNotifications(messages);
+      if (!recipientData) {
+        console.log(`Recipient data for user ${recipientId} is undefined after transaction.`);
+        return null;
+      }
 
-    console.log(`Sent DM notification to user ${recipientId}.`);
+      // Collect all valid Expo push tokens for the recipient
+      const expoPushTokens: string[] = [];
+
+      if (recipientData.expoPushToken && Expo.isExpoPushToken(recipientData.expoPushToken)) {
+        expoPushTokens.push(recipientData.expoPushToken);
+      }
+
+      if (recipientData.expoPushTokens && Array.isArray(recipientData.expoPushTokens)) {
+        recipientData.expoPushTokens.forEach((token: string) => {
+          if (Expo.isExpoPushToken(token)) {
+            expoPushTokens.push(token);
+          }
+        });
+      }
+
+      if (expoPushTokens.length === 0) {
+        console.log(`No valid Expo push tokens found for user ${recipientId}.`);
+        return null;
+      }
+
+      // Prepare notification payload with the incremented badge count
+      const messages: ExpoPushMessage[] = expoPushTokens.map((pushToken) => ({
+        to: pushToken,
+        sound: 'default',
+        title: senderName,
+        body: text,
+        data: {
+          screen: 'DMChat',
+          dmId,
+          senderId,
+          senderName: senderName,
+          messageText: text,
+        },
+        badge: newBadgeCount ?? 0,
+      }));
+
+      try {
+        // Send the notifications using the sendExpoNotifications utility
+        await sendExpoNotifications(messages);
+        console.log(`Sent DM notification to user ${recipientId} with badge count ${newBadgeCount}.`);
+      } catch (error) {
+        console.error('Failed to send notifications:', error);
+      }
+    } else {
+      // Optionally, handle cases where the user is actively viewing the chat
+      console.log('No badge count incremented. User is actively viewing the chat.');
+    }
 
     return null;
   }

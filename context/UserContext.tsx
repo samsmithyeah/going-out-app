@@ -13,6 +13,7 @@ import { User } from '../types/User';
 import { Alert } from 'react-native';
 import { doc, getDoc, updateDoc } from 'firebase/firestore'; // Firestore functions
 import Toast from 'react-native-toast-message';
+import * as Notifications from 'expo-notifications';
 
 interface UserContextType {
   user: User | null;
@@ -21,6 +22,7 @@ interface UserContextType {
   activeChats: Set<string>; // Using Set for efficient lookups
   addActiveChat: (chatId: string) => void;
   removeActiveChat: (chatId: string) => void;
+  setBadgeCount: (count: number) => Promise<void>; // Added setBadgeCount
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -125,6 +127,26 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     [updateActiveChatsInDB],
   );
 
+  const setBadgeCount = useCallback(
+    async (count: number) => {
+      if (!user?.uid) return;
+      const userDocRef = doc(db, 'users', user.uid);
+      try {
+        await updateDoc(userDocRef, { badgeCount: count });
+        Notifications.setBadgeCountAsync(count);
+        console.log(`Badge count updated to ${count} for user ${user.uid}`);
+      } catch (error) {
+        console.error('Error setting badge count:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not update badge count',
+        });
+      }
+    },
+    [user?.uid],
+  );
+
   const logout = async () => {
     try {
       Alert.alert('Log out', 'Are you sure you want to log out?', [
@@ -157,6 +179,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         activeChats,
         addActiveChat,
         removeActiveChat,
+        setBadgeCount, // Expose setBadgeCount
       }}
     >
       {children}

@@ -7,4 +7,5 @@ export interface User {
   photoURL?: string;
   expoPushToken?: string;
   activeChats?: string[];
+  badgeCount?: number;
 }
