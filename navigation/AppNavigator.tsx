@@ -37,6 +37,23 @@ export type NavParamList = {
   AddMembers: { crewId: string };
   OtherUserProfile: { userId: string };
   MatchesList: { date: string };
+  ChatsStack:
+    | {
+        screen: string;
+        params: {
+          crewId?: string;
+          date?: string;
+          id?: string;
+          otherUserId?: string;
+        };
+        initial: boolean;
+      }
+    | undefined;
+  DMChat: { otherUserId: string };
+  DMConversations: undefined;
+  NewDM: undefined;
+  CrewDateChat: { crewId?: string; date?: string; id?: string };
+  ChatsList: undefined;
 };
 
 const Stack = createStackNavigator<NavParamList>();

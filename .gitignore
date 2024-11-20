@@ -28,6 +28,7 @@ android/
 
 # Firebase
 functions/*.log
+firebase-debug.log
 
 goingoutapp-c90b1-65d96c7159f9.json
 original.json
