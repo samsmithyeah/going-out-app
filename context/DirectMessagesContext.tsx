@@ -8,7 +8,6 @@ import React, {
   ReactNode,
   useCallback,
 } from 'react';
-import { Alert } from 'react-native';
 import {
   collection,
   query,
@@ -26,6 +25,7 @@ import {
 import { db } from '../firebase';
 import { useUser } from './UserContext';
 import { User } from '../types/User';
+import Toast from 'react-native-toast-message';
 
 // Define the Message interface
 interface Message {
@@ -103,6 +103,11 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         return querySnapshot.size;
       } catch (error) {
         console.error('Error fetching unread count:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not fetch unread count.',
+        });
         return 0;
       }
     },
@@ -126,6 +131,11 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     } catch (error) {
       console.error('Error computing total unread messages:', error);
       // Optionally handle the error, e.g., show a notification
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not compute total unread messages',
+      });
     }
   }, [user?.uid, dms, fetchUnreadCount, activeChats]);
 
@@ -144,7 +154,11 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         await addDoc(messagesRef, newMessage);
       } catch (error) {
         console.error('Error sending message:', error);
-        Alert.alert('Error', 'Could not send message.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not send message.',
+        });
       }
     },
     [user?.uid],
@@ -164,7 +178,11 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         // Do not call computeTotalUnread here to avoid circular dependency
       } catch (error) {
         console.error(`Error updating lastRead for DM ${dmId}:`, error);
-        Alert.alert('Error', 'Could not update last read status.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not update last read status.',
+        });
       }
     },
     [user?.uid],
@@ -209,12 +227,20 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           }));
         } catch (error) {
           console.error('Error processing messages snapshot:', error);
-          Alert.alert('Error', 'Could not process messages updates.');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not process messages updates.',
+          });
         }
       },
       (error) => {
         console.error('Error listening to DM messages:', error);
-        Alert.alert('Error', 'Could not listen to messages.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not listen to messages.',
+        });
       },
     );
 
@@ -277,7 +303,11 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
       // Removed computeTotalUnread call to prevent circular dependency
     } catch (error) {
       console.error('Error fetching direct messages:', error);
-      Alert.alert('Error', 'Could not fetch direct messages.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not fetch direct messages.',
+      });
     }
   }, [user?.uid]);
 
@@ -343,12 +373,20 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           // Removed computeTotalUnread call to prevent circular dependency
         } catch (error) {
           console.error('Error processing direct messages snapshot:', error);
-          Alert.alert('Error', 'Could not process direct messages updates.');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not process direct messages updates.',
+          });
         }
       },
       (error) => {
         console.error('Error listening to direct messages:', error);
-        Alert.alert('Error', 'Could not listen to direct messages.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not listen to direct messages.',
+        });
       },
     );
 

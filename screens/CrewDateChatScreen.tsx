@@ -47,6 +47,7 @@ import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 
 // Define Props
 type CrewDateChatScreenProps = NativeStackScreenProps<
@@ -282,7 +283,11 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
       },
       (error) => {
         console.error('Error listening to messages:', error);
-        Alert.alert('Error', 'Could not load messages.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not load messages',
+        });
       },
     );
 

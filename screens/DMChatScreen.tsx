@@ -44,6 +44,7 @@ import { db } from '../firebase';
 import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 
 // Define Props
 type DMChatScreenProps = NativeStackScreenProps<NavParamList, 'DMChat'>;
@@ -227,7 +228,11 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
       },
       (error) => {
         console.error('Error listening to messages:', error);
-        Alert.alert('Error', 'Could not load messages.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not load messages',
+        });
       },
     );
 

@@ -8,7 +8,6 @@ import React, {
   ReactNode,
   useCallback,
 } from 'react';
-import { Alert } from 'react-native';
 import {
   collection,
   query,
@@ -29,6 +28,7 @@ import { db } from '../firebase';
 import { useUser } from './UserContext';
 import { User } from '../types/User';
 import { useCrews } from './CrewsContext';
+import Toast from 'react-native-toast-message';
 
 // Define the Message interface
 interface Message {
@@ -181,6 +181,11 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     } catch (error) {
       console.error('Error computing total unread messages:', error);
       // Optionally handle the error, e.g., show a notification
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not compute total unread messages',
+      });
     }
   }, [user?.uid, chats, fetchUnreadCount, activeChats]);
 
@@ -240,7 +245,11 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       // Removed computeTotalUnread from here
     } catch (error) {
       console.error('Error fetching crew date chats:', error);
-      Alert.alert('Error', 'Could not fetch crew date chats.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not fetch crew date chats',
+      });
     }
   }, [user?.uid, crews, fetchUserDetails]);
 
@@ -299,7 +308,11 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       },
       (error) => {
         console.error('Error listening to chats:', error);
-        Alert.alert('Error', 'Could not listen to chats.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not listen to chats',
+        });
       },
     );
 
@@ -341,7 +354,11 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         console.log(`Message sent in chat ${chatId}: "${text}"`);
       } catch (error) {
         console.error('Error sending message:', error);
-        Alert.alert('Error', 'Could not send message.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not send message.',
+        });
       }
     },
     [user?.uid],
@@ -361,7 +378,11 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         await computeTotalUnread(); // Optional: You can keep this if needed
       } catch (error) {
         console.error(`Error updating lastRead for chat ${chatId}:`, error);
-        Alert.alert('Error', 'Could not update last read status.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not update last read status.',
+        });
       }
     },
     [user?.uid],
@@ -378,7 +399,11 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         console.log(`Added member ${uid} to chat ${chatId}`);
       } catch (error) {
         console.error(`Error adding member ${uid} to chat ${chatId}:`, error);
-        Alert.alert('Error', 'Could not add member to chat.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not add member to chat.',
+        });
       }
     },
     [],
@@ -398,7 +423,11 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           `Error removing member ${uid} from chat ${chatId}:`,
           error,
         );
-        Alert.alert('Error', 'Could not remove member from chat.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not remove member from chat.',
+        });
       }
     },
     [],
@@ -440,12 +469,20 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
             }));
           } catch (error) {
             console.error('Error processing messages snapshot:', error);
-            Alert.alert('Error', 'Could not process messages updates.');
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'Could not process messages updates.',
+            });
           }
         },
         (error) => {
           console.error('Error listening to messages:', error);
-          Alert.alert('Error', 'Could not listen to messages.');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not listen to messages.',
+          });
         },
       );
 
