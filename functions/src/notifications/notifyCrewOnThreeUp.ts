@@ -1,4 +1,4 @@
-// functions/src/notifyCrewOnThreeUp.ts
+// functions/src/notifications/notifyCrewOnThreeUp.ts
 
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';

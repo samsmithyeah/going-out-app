@@ -1,4 +1,4 @@
-// functions/notifyUsersOnNewGroupMessage.ts
+// functions/src/notifications/notifyUsersOnNewGroupMessage.ts
 
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
