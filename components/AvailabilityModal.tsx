@@ -10,7 +10,6 @@ import {
   Modal,
   TouchableWithoutFeedback,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import moment from 'moment';
 import { Ionicons } from '@expo/vector-icons';
 

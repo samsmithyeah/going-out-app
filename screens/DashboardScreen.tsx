@@ -1,7 +1,13 @@
 // screens/DashboardScreen.tsx
 
 import React from 'react';
-import { View, StyleSheet, FlatList } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import { useCrews } from '../context/CrewsContext';
 import DateCard from '../components/DateCard';
 import moment from 'moment';
@@ -11,6 +17,8 @@ import { useNavigation } from '@react-navigation/native'; // Hook for navigation
 import LoadingOverlay from '../components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 import ScreenTitle from '../components/ScreenTitle';
+import CreateCrewModal from '../components/CreateCrewModal'; // Import your modal
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Example icon library
 
 const getDotColor = (count: number, total: number): string => {
   if (count === total && total > 0) return '#32CD32'; // Green
@@ -34,6 +42,8 @@ const DashboardScreen: React.FC = () => {
     loadingMatches,
   } = useCrews();
   const [isLoadingUsers, setIsLoadingUsers] = React.useState<boolean>(false);
+  const [isCreateModalVisible, setIsCreateModalVisible] =
+    React.useState<boolean>(false); // State for modal
 
   const navigation = useNavigation<DashboardScreenNavigationProp>();
 
@@ -71,6 +81,27 @@ const DashboardScreen: React.FC = () => {
     navigation.navigate('MatchesList', { date });
   };
 
+  // Handle opening the CreateCrewModal
+  const openCreateCrewModal = () => {
+    setIsCreateModalVisible(true);
+  };
+
+  // Handle closing the CreateCrewModal
+  const closeCreateCrewModal = () => {
+    setIsCreateModalVisible(false);
+  };
+
+  const handleCrewCreated = (crewId: string) => {
+    console.log('Crew created:', crewId);
+    closeCreateCrewModal();
+    Toast.show({
+      type: 'success',
+      text1: 'Success',
+      text2: 'Crew created successfully',
+    });
+    navigation.navigate('Crew', { crewId });
+  };
+
   // Render a single day item using DateCard component
   const renderDayItem = ({ item }: { item: string }) => {
     const count = dateCounts[item] || 0;
@@ -100,16 +131,39 @@ const DashboardScreen: React.FC = () => {
       <View style={styles.container}>
         {/* Profile Section */}
         <ScreenTitle title="Your week" />
-        {/* Weekly Status List */}
-        <FlatList
-          data={weekDates}
-          renderItem={renderDayItem}
-          keyExtractor={(item) => item}
-          horizontal={false}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.weekListContainer}
-        />
+        {/* Conditional Rendering */}
+        {crewIds.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Icon name="group-add" size={64} color="#888" />
+            <Text style={styles.emptyText}>You are not in any crews yet</Text>
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={openCreateCrewModal}
+            >
+              <Text style={styles.createButtonText}>Create one</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          /* Weekly Status List */
+          <FlatList
+            data={weekDates}
+            renderItem={renderDayItem}
+            keyExtractor={(item) => item}
+            horizontal={false}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.weekListContainer}
+          />
+        )}
       </View>
+      {/* Create Crew Modal */}
+      <CreateCrewModal
+        isVisible={isCreateModalVisible}
+        onClose={() => {
+          console.log('Setting isModalVisible to false');
+          closeCreateCrewModal();
+        }}
+        onCrewCreated={handleCrewCreated}
+      />
     </>
   );
 };
@@ -123,6 +177,26 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   weekListContainer: {},
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#555',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  createButton: {
+    marginTop: 12,
+    paddingHorizontal: 20,
+  },
+  createButtonText: {
+    color: '#1e90ff',
+    fontSize: 20,
+  },
 });
 
 export default DashboardScreen;

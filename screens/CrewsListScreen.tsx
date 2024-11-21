@@ -1,7 +1,7 @@
 // screens/CrewsListScreen.tsx
 
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCrews } from '../context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -16,6 +16,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import LoadingOverlay from '../components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Ensure you have this installed
 
 type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
@@ -117,6 +118,20 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
     navigation.navigate('Crew', { crewId });
   };
 
+  // Render the empty state UI
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Icon name="group-add" size={64} color="#888" />
+      <Text style={styles.emptyText}>You are not in any crews yet</Text>
+      <TouchableOpacity
+        style={styles.createButton}
+        onPress={() => setIsModalVisible(true)}
+      >
+        <Text style={styles.createButtonText}>Create one</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <>
       {(isLoading || isLoadingUsers) && <LoadingOverlay />}
@@ -142,8 +157,13 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
           onSearchQueryChange={setSearchQuery}
         />
 
-        {/* Crew List */}
-        <CrewList crews={filteredCrews} usersCache={usersCache} />
+        {/* Conditional Rendering */}
+        {crews.length === 0 ? (
+          renderEmptyState()
+        ) : (
+          // Crew List
+          <CrewList crews={filteredCrews} usersCache={usersCache} />
+        )}
 
         {/* Create Crew Modal */}
         <CreateCrewModal
@@ -171,5 +191,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#555',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  createButton: {
+    marginTop: 12,
+    paddingHorizontal: 20,
+  },
+  createButtonText: {
+    color: '#1e90ff',
+    fontSize: 20,
   },
 });

@@ -31,7 +31,9 @@ import Toast from 'react-native-toast-message';
 
 interface CrewsContextProps {
   crewIds: string[];
+  setCrewIds: React.Dispatch<React.SetStateAction<string[]>>;
   crews: Crew[];
+  setCrews: React.Dispatch<React.SetStateAction<Crew[]>>;
   dateCounts: { [key: string]: number };
   dateMatches: { [key: string]: number };
   dateMatchingCrews: { [key: string]: string[] };
@@ -540,7 +542,9 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
     <CrewsContext.Provider
       value={{
         crewIds,
+        setCrewIds,
         crews,
+        setCrews,
         dateCounts,
         dateMatches,
         dateMatchingCrews,

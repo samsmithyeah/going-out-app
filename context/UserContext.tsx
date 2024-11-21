@@ -91,11 +91,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         });
       } catch (error) {
         console.error('Error updating active chats:', error);
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Could not update active chats',
-        });
+        // TODO: Disabling toast as this error is triggered when user logs out
+        // Toast.show({
+        //   type: 'error',
+        //   text1: 'Error',
+        //   text2: 'Could not update active chats',
+        // });
       }
     },
     [user?.uid],

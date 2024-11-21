@@ -25,6 +25,7 @@ import {
   User as FirebaseUser,
   updateProfile,
 } from 'firebase/auth';
+import { useNavigation } from '@react-navigation/native';
 
 type NavParamList = {
   SignUp: undefined;
@@ -40,7 +41,7 @@ type Props = {
   route: SignUpScreenRouteProp;
 };
 
-const SignUpScreen: React.FC<Props> = ({ navigation }) => {
+const SignUpScreen: React.FC<Props> = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [firstName, setFirstName] = useState<string>('');
@@ -49,6 +50,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const { setUser } = useUser();
   const [passwordStrength, setPasswordStrength] = useState<number>(0);
+  const navigation = useNavigation<StackNavigationProp<NavParamList>>();
 
   const evaluatePasswordStrength = (pass: string) => {
     const evaluation = zxcvbn(pass);
@@ -117,8 +119,6 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
       await addUserToFirestore(updatedUser);
 
       setUser(updatedUser);
-
-      navigation.navigate('Home');
     } catch (err: any) {
       console.error('Sign Up Error:', err);
       setFormError(err.message);

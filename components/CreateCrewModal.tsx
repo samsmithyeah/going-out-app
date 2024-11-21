@@ -7,6 +7,7 @@ import { db } from '../firebase';
 import CustomModal from './CustomModal';
 import CustomTextInput from './CustomTextInput';
 import Toast from 'react-native-toast-message';
+import { useCrews } from '../context/CrewsContext';
 
 type CreateCrewModalProps = {
   isVisible: boolean;
@@ -22,6 +23,7 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
   const { user } = useUser();
   const [newCrewName, setNewCrewName] = useState('');
   const [loading, setLoading] = useState(false);
+  const { setCrews, setCrewIds } = useCrews();
 
   const createCrew = async () => {
     if (!newCrewName.trim()) {
@@ -50,9 +52,20 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
         name: newCrewName.trim(),
         ownerId: user.uid,
         memberIds: [user.uid],
-        // Optionally, initialize iconUrl if you have a default image
-        // iconUrl: 'https://example.com/default-icon.png',
       });
+
+      // Update local state with the new crew
+      setCrews((prevCrews) => [
+        ...prevCrews,
+        {
+          id: crewRef.id,
+          name: newCrewName.trim(),
+          ownerId: user.uid,
+          memberIds: [user.uid],
+          activity: 'meeting up',
+        },
+      ]);
+      setCrewIds((prevIds) => [...prevIds, crewRef.id]);
 
       // Clear input and close modal
       setNewCrewName('');
