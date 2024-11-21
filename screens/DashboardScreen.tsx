@@ -1,9 +1,8 @@
 // screens/DashboardScreen.tsx
 
 import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
 import { useCrews } from '../context/CrewsContext';
-import { useUser } from '../context/UserContext';
 import DateCard from '../components/DateCard';
 import moment from 'moment';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -25,7 +24,6 @@ type DashboardScreenNavigationProp = NativeStackNavigationProp<
 >;
 
 const DashboardScreen: React.FC = () => {
-  const { user } = useUser();
   const {
     crewIds,
     dateCounts,
@@ -122,6 +120,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#f5f5f5',
     justifyContent: 'flex-start',
+    paddingBottom: 0,
   },
   weekListContainer: {},
 });
