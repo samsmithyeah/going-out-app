@@ -44,9 +44,9 @@ const TabNavigator: React.FC = () => {
         name="DashboardStack"
         component={DashboardStackNavigator}
         options={{
-          title: 'Dashboard',
+          title: 'Your week',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <Ionicons name="calendar-outline" size={size} color={color} />
           ),
         }}
       />

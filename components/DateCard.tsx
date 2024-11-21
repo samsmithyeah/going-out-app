@@ -4,7 +4,6 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import moment from 'moment';
-import { Dimensions } from 'react-native';
 
 interface DateCardProps {
   date: string;
@@ -51,13 +50,23 @@ const DateCard: React.FC<DateCardProps> = ({
     );
   };
 
+  const getFormattedDate = (date: string) => {
+    if (date === moment().format('YYYY-MM-DD')) {
+      return 'Today';
+    } else if (date === moment().add(1, 'days').format('YYYY-MM-DD')) {
+      return 'Tomorrow';
+    } else {
+      return moment(date).format('dddd, MMMM Do');
+    }
+  };
+
   return (
     <View
       style={[styles.dayContainer, isDisabled && styles.disabledDayContainer]}
     >
       <View style={styles.dayHeader}>
         <Text style={[styles.dayText, isDisabled && styles.disabledDayText]}>
-          {moment(date).format('dddd, MMMM Do')}
+          {getFormattedDate(date)}
         </Text>
       </View>
       <View style={styles.statusRow}>
@@ -143,8 +152,6 @@ const DateCard: React.FC<DateCardProps> = ({
   );
 };
 
-const { width } = Dimensions.get('window');
-
 const styles = StyleSheet.create({
   dayContainer: {
     backgroundColor: '#FFFFFF',
@@ -154,7 +161,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderColor: '#E0E0E0',
     borderWidth: 1,
-    width: width * 0.9,
   },
   disabledDayContainer: {
     backgroundColor: '#E0E0E0',
