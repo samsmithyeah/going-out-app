@@ -3,10 +3,10 @@
 import React, { useEffect, createContext, useContext } from 'react';
 import { useCrewDateChat } from './CrewDateChatContext';
 import { useDirectMessages } from './DirectMessagesContext';
+import { useInvitations } from './InvitationsContext';
 import { useUser } from './UserContext';
 import Toast from 'react-native-toast-message';
 
-// Create a context (though it's not providing any value)
 const BadgeCountContext = createContext(null);
 
 export const BadgeCountProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -14,16 +14,17 @@ export const BadgeCountProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { totalUnread: crewTotalUnread } = useCrewDateChat();
   const { totalUnread: dmTotalUnread } = useDirectMessages();
+  const { pendingCount: invitationsPendingCount } = useInvitations();
   const { user, setBadgeCount } = useUser();
 
   useEffect(() => {
     const updateBadgeCount = async () => {
       if (!user?.uid) return;
 
-      const totalUnread = crewTotalUnread + dmTotalUnread;
+      const total = crewTotalUnread + dmTotalUnread + invitationsPendingCount;
 
       try {
-        await setBadgeCount(totalUnread);
+        await setBadgeCount(total);
       } catch (error) {
         console.error('Error updating badge count:', error);
         Toast.show({
@@ -35,7 +36,13 @@ export const BadgeCountProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     updateBadgeCount();
-  }, [crewTotalUnread, dmTotalUnread, user, setBadgeCount]);
+  }, [
+    crewTotalUnread,
+    dmTotalUnread,
+    invitationsPendingCount,
+    user,
+    setBadgeCount,
+  ]);
 
   return (
     <BadgeCountContext.Provider value={null}>

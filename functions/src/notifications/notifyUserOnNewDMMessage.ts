@@ -1,4 +1,4 @@
-// functions/notifyUserOnNewDMMessage.ts
+// functions/src/notifications/notifyUserOnNewDMMessage.ts
 
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
