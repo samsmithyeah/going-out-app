@@ -18,6 +18,7 @@ import {
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { deleteCrew, db } from '../firebase';
 import { useUser } from '../context/UserContext';
+import { useCrews } from '../context/CrewsContext';
 import { User } from '../types/User';
 import { Ionicons } from '@expo/vector-icons';
 import { NavParamList } from '../navigation/AppNavigator';
@@ -34,6 +35,7 @@ type CrewSettingsScreenRouteProp = RouteProp<NavParamList, 'CrewSettings'>;
 
 const CrewSettingsScreen: React.FC = () => {
   const { user } = useUser();
+  const { setCrews, setCrewIds } = useCrews();
   const route = useRoute<CrewSettingsScreenRouteProp>();
   const { crewId } = route.params;
   const navigation = useNavigation<NavigationProp<NavParamList>>();
@@ -175,6 +177,11 @@ const CrewSettingsScreen: React.FC = () => {
               // Call the Cloud Function to delete the crew
               const result = await deleteCrew(crewId);
               const data = result.data as { success: boolean };
+              // Update local state
+              setCrews((prevCrews) =>
+                prevCrews.filter((crew) => crew.id !== crewId),
+              );
+              setCrewIds((prevIds) => prevIds.filter((id) => id !== crewId));
               if (data.success) {
                 navigation.navigate('CrewsList');
                 Toast.show({
@@ -232,6 +239,13 @@ const CrewSettingsScreen: React.FC = () => {
                 if (crew.memberIds.length === 1) {
                   // If the user is the only member, delete the crew
                   await deleteCrew(crewId);
+                  // Update local state
+                  setCrews((prevCrews) =>
+                    prevCrews.filter((crew) => crew.id !== crewId),
+                  );
+                  setCrewIds((prevIds) =>
+                    prevIds.filter((id) => id !== crewId),
+                  );
                   navigation.navigate('CrewsList');
                   Toast.show({
                     type: 'success',

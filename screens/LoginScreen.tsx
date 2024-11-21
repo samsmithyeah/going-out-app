@@ -151,7 +151,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             onPress={() => navigation.navigate('SignUp')}
           >
             <Text style={styles.signupText}>Don't have an account? </Text>
-            <Text style={styles.signupLink}>Sign Up</Text>
+            <Text style={styles.signupLink}>Sign up</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -94,7 +94,7 @@ const EditUserProfileModal: React.FC = () => {
 
       Toast.show({
         type: 'success',
-        text1: 'Profile Updated',
+        text1: 'Profile updated',
         text2: 'Your profile has been updated successfully.',
       });
       navigation.goBack(); // Close the modal after saving
