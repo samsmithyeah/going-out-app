@@ -181,11 +181,11 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
               fontSize: 16,
             }}
           >
-            Add
+            Invite
           </Text>
         </TouchableOpacity>
       ),
-      title: 'Add Members',
+      title: 'Add members',
     });
   }, [navigation, selectedMemberIds]);
 
@@ -443,12 +443,14 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
           onMemberPress={navigateToUserProfile}
         />
 
-        <Text style={styles.addViaEmailText}>Or invite via email address:</Text>
+        <Text style={styles.addViaEmailText}>
+          Or add with their email address:
+        </Text>
         {/* Button to Open Email Invitation Modal */}
         <CustomButton
-          title="Invite a new member"
+          title="Add a new member"
           onPress={openEmailModal}
-          accessibilityLabel="Invite member with email address"
+          accessibilityLabel="Add member with email address"
           accessibilityHint="Opens a modal to invite a member by their email address"
           variant="secondary"
         />
@@ -457,7 +459,7 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
         <CustomModal
           isVisible={isModalVisible}
           onClose={closeEmailModal}
-          title="Invite a new member"
+          title="Add a new member"
           buttons={[
             {
               label: 'Invite',
