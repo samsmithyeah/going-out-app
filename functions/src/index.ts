@@ -7,7 +7,7 @@ import { notifyCrewMembersOnMemberLeave } from './notifications/notifyCrewMember
 import { notifyCrewOnThreeUp } from './notifications/notifyCrewOnThreeUp';
 import { deleteCrew } from './utils/deleteCrew';
 import { notifyUserOnNewDMMessage } from './notifications/notifyUserOnNewDMMessage';
-import { notifyUsersOnNewGroupMessage } from './notifications/notifyUserOnNewGroupMessage';
+import { notifyUsersOnNewGroupMessage } from './notifications/notifyUsersOnNewGroupMessage';
 
 export {
   notifyCrewMembersOnCrewDeletion,
