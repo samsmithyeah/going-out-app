@@ -389,15 +389,28 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     [user?.uid],
   );
 
-  // Add a member to the chat's memberIds array
   const addMemberToChat = useCallback(
     async (chatId: string, uid: string): Promise<void> => {
       try {
         const chatRef = doc(db, 'crew_date_chats', chatId);
-        await setDoc(chatRef, {
-          memberIds: arrayUnion(uid),
-        });
-        console.log(`Added member ${uid} to chat ${chatId}`);
+        const chatSnap = await getDoc(chatRef);
+
+        if (chatSnap.exists()) {
+          // Document exists, update it
+          await updateDoc(chatRef, {
+            memberIds: arrayUnion(uid),
+          });
+          console.log(`Added member ${uid} to existing chat ${chatId}`);
+        } else {
+          // Document does not exist, create it
+          await setDoc(chatRef, {
+            memberIds: [uid], // Initialize the array
+            createdAt: serverTimestamp(), // Optionally track when the chat was created
+          });
+          console.log(
+            `Created new chat and added member ${uid} to chat ${chatId}`,
+          );
+        }
       } catch (error) {
         console.error(`Error adding member ${uid} to chat ${chatId}:`, error);
         Toast.show({

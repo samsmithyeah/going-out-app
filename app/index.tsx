@@ -3,6 +3,7 @@ import { CrewsProvider } from '../context/CrewsContext';
 import { InvitationsProvider } from '../context/InvitationsContext';
 import { CrewDateChatProvider } from '../context/CrewDateChatContext';
 import { DirectMessagesProvider } from '../context/DirectMessagesContext';
+import { BadgeCountProvider } from '../context/BadgeCountContext';
 import { registerRootComponent } from 'expo';
 import Toast, {
   BaseToast,
@@ -75,7 +76,9 @@ const Root: React.FC = () => {
           <InvitationsProvider>
             <CrewDateChatProvider>
               <DirectMessagesProvider>
-                <App />
+                <BadgeCountProvider>
+                  <App />
+                </BadgeCountProvider>
               </DirectMessagesProvider>
             </CrewDateChatProvider>
           </InvitationsProvider>

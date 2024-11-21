@@ -1,4 +1,4 @@
-// functions/src/notifyCrewOnStatusChange.ts
+// functions/src/notifications/notifyCrewOnStatusChange.ts
 
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';

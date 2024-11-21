@@ -97,6 +97,7 @@ export const addUserToFirestore = async (user: User) => {
       firstName: user.firstName,
       lastName: user.lastName,
       photoURL: user.photoURL,
+      badgeCount: 0,
     };
     await registerForPushNotificationsAsync(user);
     const userExists = (await getDoc(userDocRef)).exists();
