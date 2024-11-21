@@ -110,8 +110,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', // Arrange image and text horizontally
     alignItems: 'center', // Vertically center items
     padding: 12,
-    borderWidth: 2,
-    borderColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     backgroundColor: '#fff',
     borderRadius: 10,
     marginBottom: 8,

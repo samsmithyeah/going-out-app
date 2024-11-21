@@ -1,10 +1,10 @@
 // components/DateCard.tsx
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // Ensure consistency or remove if unused
 import moment from 'moment';
-import { Dimensions } from 'react-native';
+import AvailabilityModal from './AvailabilityModal'; // Import the new component
 
 interface DateCardProps {
   date: string;
@@ -29,26 +29,25 @@ const DateCard: React.FC<DateCardProps> = ({
   onToggle,
   onPressMatches, // Destructure the new prop
 }) => {
-  const statusText = `Up for seeing ${count} of ${total} crew${total !== 1 ? 's' : ''}`;
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  const statusText = `You're up for seeing ${count} of ${total} crew${total !== 1 ? 's' : ''}`;
   const isFullyUp = count === total;
   const isNotUp = count === 0;
 
   const handleToggle = (toggleTo: boolean) => {
-    Alert.alert(
-      'Confirm update',
-      `Are you sure you want to mark yourself ${toggleTo ? 'available' : 'unavailable'} across all your crews on ${moment(date).format('MMMM Do, YYYY')}?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'OK',
-          onPress: () => onToggle(date, toggleTo),
-        },
-      ],
-      { cancelable: false },
-    );
+    onToggle(date, toggleTo);
+    // No need to handle Alert here as it's now managed in AvailabilityModal
+  };
+
+  const getFormattedDate = (date: string) => {
+    if (date === moment().format('YYYY-MM-DD')) {
+      return 'Today';
+    } else if (date === moment().add(1, 'days').format('YYYY-MM-DD')) {
+      return 'Tomorrow';
+    } else {
+      return moment(date).format('dddd, MMMM Do');
+    }
   };
 
   return (
@@ -57,7 +56,7 @@ const DateCard: React.FC<DateCardProps> = ({
     >
       <View style={styles.dayHeader}>
         <Text style={[styles.dayText, isDisabled && styles.disabledDayText]}>
-          {moment(date).format('dddd, MMMM Do')}
+          {getFormattedDate(date)}
         </Text>
       </View>
       <View style={styles.statusRow}>
@@ -70,60 +69,14 @@ const DateCard: React.FC<DateCardProps> = ({
           </Text>
         </View>
         {!isDisabled && (
-          <View style={styles.buttonRow}>
-            <TouchableOpacity
-              onPress={() => handleToggle(true)}
-              disabled={isFullyUp || isLoading}
-              style={[
-                styles.iconButton,
-                (isFullyUp || isLoading) && styles.disabledButton,
-              ]}
-              accessibilityLabel={`Mark as up for ${moment(date).format(
-                'dddd, MMMM Do',
-              )}`}
-              accessibilityHint={
-                isFullyUp
-                  ? `You are already marked as up for all crews on ${moment(
-                      date,
-                    ).format('MMMM Do, YYYY')}.`
-                  : `Tap to mark yourself as up for all crews on ${moment(
-                      date,
-                    ).format('MMMM Do, YYYY')}.`
-              }
-            >
-              <Icon
-                name="check-circle"
-                size={24}
-                color={isFullyUp ? '#A9A9A9' : '#32CD32'} // Grey if disabled, Green otherwise
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleToggle(false)}
-              disabled={isNotUp || isLoading}
-              style={[
-                styles.iconButton,
-                (isNotUp || isLoading) && styles.disabledButton,
-              ]}
-              accessibilityLabel={`Mark as not up for ${moment(date).format(
-                'dddd, MMMM Do',
-              )}`}
-              accessibilityHint={
-                isNotUp
-                  ? `You are already marked as not up for any crews on ${moment(
-                      date,
-                    ).format('MMMM Do, YYYY')}.`
-                  : `Tap to mark yourself as not up for any crews on ${moment(
-                      date,
-                    ).format('MMMM Do, YYYY')}.`
-              }
-            >
-              <Icon
-                name="cancel"
-                size={24}
-                color={isNotUp ? '#A9A9A9' : '#FF6347'} // Grey if disabled, Tomato otherwise
-              />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            style={styles.iconButton}
+            accessibilityLabel={`Options for ${getFormattedDate(date)}`}
+            accessibilityHint="Tap to open options for marking availability"
+          >
+            <Ionicons name="create-outline" size={24} color="#333333" />
+          </TouchableOpacity>
         )}
       </View>
       {/* Display Matches */}
@@ -132,18 +85,27 @@ const DateCard: React.FC<DateCardProps> = ({
           style={styles.matchesContainer}
           onPress={() => onPressMatches(date)} // Handle press
           accessibilityLabel={`${matches} matches`}
-          accessibilityHint={`Tap to view your matching crews on ${moment(date).format('MMMM Do, YYYY')}`}
+          accessibilityHint={`Tap to view your matching crews on ${getFormattedDate(date)}`}
         >
           <Text style={styles.matchesText}>
             {matches === 1 ? '🎉 1 match' : `🎉 ${matches} matches`}
           </Text>
         </TouchableOpacity>
       )}
+
+      {/* Availability Modal */}
+      <AvailabilityModal
+        visible={isModalVisible}
+        onClose={() => setModalVisible(false)}
+        date={date}
+        isFullyUp={isFullyUp}
+        isNotUp={isNotUp}
+        isLoading={isLoading}
+        onToggle={handleToggle}
+      />
     </View>
   );
 };
-
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   dayContainer: {
@@ -154,14 +116,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderColor: '#E0E0E0',
     borderWidth: 1,
-    width: width * 0.9,
   },
   disabledDayContainer: {
     backgroundColor: '#E0E0E0',
   },
-  dayHeader: {
-    marginBottom: 6,
-  },
+  dayHeader: {},
   dayText: {
     fontSize: 16,
     color: '#333333',
@@ -190,26 +149,20 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
   matchesContainer: {
-    marginTop: 8,
     paddingVertical: 4,
     paddingHorizontal: 8,
     backgroundColor: '#1E90FF',
     borderRadius: 4,
     alignSelf: 'flex-start',
+    marginTop: 8, // Adjusted to match original spacing
   },
   matchesText: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '500',
   },
-  buttonRow: {
-    flexDirection: 'row',
-  },
   iconButton: {
-    marginLeft: 8,
-  },
-  disabledButton: {
-    opacity: 0.5,
+    padding: 8,
   },
 });
 

@@ -1,9 +1,8 @@
 // screens/DashboardScreen.tsx
 
 import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
 import { useCrews } from '../context/CrewsContext';
-import { useUser } from '../context/UserContext';
 import DateCard from '../components/DateCard';
 import moment from 'moment';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,6 +10,7 @@ import { NavParamList } from '../navigation/AppNavigator'; // Adjust the path as
 import { useNavigation } from '@react-navigation/native'; // Hook for navigation
 import LoadingOverlay from '../components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
+import ScreenTitle from '../components/ScreenTitle';
 
 const getDotColor = (count: number, total: number): string => {
   if (count === total && total > 0) return '#32CD32'; // Green
@@ -24,7 +24,6 @@ type DashboardScreenNavigationProp = NativeStackNavigationProp<
 >;
 
 const DashboardScreen: React.FC = () => {
-  const { user } = useUser();
   const {
     crewIds,
     dateCounts,
@@ -100,10 +99,7 @@ const DashboardScreen: React.FC = () => {
       {isLoading && <LoadingOverlay />}
       <View style={styles.container}>
         {/* Profile Section */}
-        <View style={styles.profileContainer}>
-          <Text style={styles.greeting}>Hi {user?.displayName}! 👋</Text>
-        </View>
-
+        <ScreenTitle title="Your week" />
         {/* Weekly Status List */}
         <FlatList
           data={weekDates}
@@ -121,23 +117,12 @@ const DashboardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 16,
-    backgroundColor: '#F5F5F5', // Solid light background
-    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#f5f5f5',
     justifyContent: 'flex-start',
+    paddingBottom: 0,
   },
-  profileContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  greeting: {
-    fontSize: 20, // Adjust as needed
-    color: '#333333', // Dark text for readability
-    fontWeight: '700',
-  },
-  weekListContainer: {
-    alignItems: 'center',
-  },
+  weekListContainer: {},
 });
 
 export default DashboardScreen;
