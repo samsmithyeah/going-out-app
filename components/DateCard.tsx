@@ -1,9 +1,18 @@
 // components/DateCard.tsx
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import moment from 'moment';
+import { Ionicons } from '@expo/vector-icons';
 
 interface DateCardProps {
   date: string;
@@ -28,14 +37,18 @@ const DateCard: React.FC<DateCardProps> = ({
   onToggle,
   onPressMatches, // Destructure the new prop
 }) => {
-  const statusText = `Up for seeing ${count} of ${total} crew${total !== 1 ? 's' : ''}`;
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  const statusText = `You're up for seeing ${count} of ${total} crew${total !== 1 ? 's' : ''}`;
   const isFullyUp = count === total;
   const isNotUp = count === 0;
 
   const handleToggle = (toggleTo: boolean) => {
     Alert.alert(
       'Confirm update',
-      `Are you sure you want to mark yourself ${toggleTo ? 'available' : 'unavailable'} across all your crews on ${moment(date).format('MMMM Do, YYYY')}?`,
+      `Are you sure you want to mark yourself ${
+        toggleTo ? 'available' : 'unavailable'
+      } across all your crews on ${moment(date).format('MMMM Do, YYYY')}?`,
       [
         {
           text: 'Cancel',
@@ -43,7 +56,10 @@ const DateCard: React.FC<DateCardProps> = ({
         },
         {
           text: 'OK',
-          onPress: () => onToggle(date, toggleTo),
+          onPress: () => {
+            onToggle(date, toggleTo);
+            setModalVisible(false); // Close the modal after action
+          },
         },
       ],
       { cancelable: false },
@@ -79,60 +95,16 @@ const DateCard: React.FC<DateCardProps> = ({
           </Text>
         </View>
         {!isDisabled && (
-          <View style={styles.buttonRow}>
-            <TouchableOpacity
-              onPress={() => handleToggle(true)}
-              disabled={isFullyUp || isLoading}
-              style={[
-                styles.iconButton,
-                (isFullyUp || isLoading) && styles.disabledButton,
-              ]}
-              accessibilityLabel={`Mark as up for ${moment(date).format(
-                'dddd, MMMM Do',
-              )}`}
-              accessibilityHint={
-                isFullyUp
-                  ? `You are already marked as up for all crews on ${moment(
-                      date,
-                    ).format('MMMM Do, YYYY')}.`
-                  : `Tap to mark yourself as up for all crews on ${moment(
-                      date,
-                    ).format('MMMM Do, YYYY')}.`
-              }
-            >
-              <Icon
-                name="check-circle"
-                size={24}
-                color={isFullyUp ? '#A9A9A9' : '#32CD32'} // Grey if disabled, Green otherwise
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleToggle(false)}
-              disabled={isNotUp || isLoading}
-              style={[
-                styles.iconButton,
-                (isNotUp || isLoading) && styles.disabledButton,
-              ]}
-              accessibilityLabel={`Mark as not up for ${moment(date).format(
-                'dddd, MMMM Do',
-              )}`}
-              accessibilityHint={
-                isNotUp
-                  ? `You are already marked as not up for any crews on ${moment(
-                      date,
-                    ).format('MMMM Do, YYYY')}.`
-                  : `Tap to mark yourself as not up for any crews on ${moment(
-                      date,
-                    ).format('MMMM Do, YYYY')}.`
-              }
-            >
-              <Icon
-                name="cancel"
-                size={24}
-                color={isNotUp ? '#A9A9A9' : '#FF6347'} // Grey if disabled, Tomato otherwise
-              />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            style={styles.iconButton}
+            accessibilityLabel={`Options for ${moment(date).format(
+              'dddd, MMMM Do',
+            )}`}
+            accessibilityHint="Tap to open options for marking availability"
+          >
+            <Ionicons name="create-outline" size={24} color="#333333" />
+          </TouchableOpacity>
         )}
       </View>
       {/* Display Matches */}
@@ -148,6 +120,94 @@ const DateCard: React.FC<DateCardProps> = ({
           </Text>
         </TouchableOpacity>
       )}
+
+      {/* Modal for Context Menu */}
+      <Modal
+        visible={isModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.modalContainer}>
+                {/* Close Icon */}
+                <TouchableOpacity
+                  onPress={() => setModalVisible(false)}
+                  style={styles.closeButton}
+                  accessibilityLabel="Close options"
+                  accessibilityHint="Closes the options menu"
+                >
+                  <Icon name="close" size={24} color="#D3D3D3" />
+                </TouchableOpacity>
+
+                {/* Modal Title */}
+                <Text style={styles.modalTitle}>{getFormattedDate(date)}</Text>
+
+                {/* Divider */}
+                <View style={styles.divider} />
+
+                {/* Option: Mark as Available */}
+                <TouchableOpacity
+                  style={styles.modalOption}
+                  onPress={() => handleToggle(true)}
+                  disabled={isFullyUp || isLoading}
+                  accessibilityLabel={`Mark as available for ${moment(date).format('dddd, MMMM Do')}`}
+                  accessibilityHint={
+                    isFullyUp
+                      ? `You are already marked as available for all crews on ${moment(date).format('MMMM Do, YYYY')}.`
+                      : `Tap to mark yourself as available for all crews on ${moment(date).format('MMMM Do, YYYY')}.`
+                  }
+                >
+                  <Icon
+                    name="check-circle"
+                    size={24}
+                    color={isFullyUp ? '#A9A9A9' : '#32CD32'}
+                    style={styles.modalIcon}
+                  />
+                  <Text
+                    style={[
+                      styles.modalText,
+                      (isFullyUp || isLoading) && styles.disabledText,
+                    ]}
+                  >
+                    Mark as available for all crews
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Option: Mark as Unavailable */}
+                <TouchableOpacity
+                  style={styles.modalOption}
+                  onPress={() => handleToggle(false)}
+                  disabled={isNotUp || isLoading}
+                  accessibilityLabel={`Mark as unavailable for ${moment(date).format('dddd, MMMM Do')}`}
+                  accessibilityHint={
+                    isNotUp
+                      ? `You are already marked as unavailable for any crews on ${moment(date).format('MMMM Do, YYYY')}.`
+                      : `Tap to mark yourself as unavailable for any crews on ${moment(date).format('MMMM Do, YYYY')}.`
+                  }
+                >
+                  <Icon
+                    name="cancel"
+                    size={24}
+                    color={isNotUp ? '#A9A9A9' : '#FF6347'}
+                    style={styles.modalIcon}
+                  />
+                  <Text
+                    style={[
+                      styles.modalText,
+                      (isNotUp || isLoading) && styles.disabledText,
+                    ]}
+                  >
+                    Mark as unavailable for all crews
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 };
@@ -165,9 +225,7 @@ const styles = StyleSheet.create({
   disabledDayContainer: {
     backgroundColor: '#E0E0E0',
   },
-  dayHeader: {
-    marginBottom: 6,
-  },
+  dayHeader: {},
   dayText: {
     fontSize: 16,
     color: '#333333',
@@ -196,7 +254,6 @@ const styles = StyleSheet.create({
     color: '#333333',
   },
   matchesContainer: {
-    marginTop: 8,
     paddingVertical: 4,
     paddingHorizontal: 8,
     backgroundColor: '#1E90FF',
@@ -208,14 +265,56 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
   },
-  buttonRow: {
-    flexDirection: 'row',
-  },
   iconButton: {
-    marginLeft: 8,
+    padding: 8,
   },
-  disabledButton: {
-    opacity: 0.5,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '80%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    elevation: 5,
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    padding: 4,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center',
+    color: '#333333',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginBottom: 12,
+  },
+  modalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  modalIcon: {
+    marginRight: 12,
+  },
+  modalText: {
+    fontSize: 16,
+    color: '#333333',
+  },
+  disabledText: {
+    color: '#A9A9A9',
   },
 });
 
