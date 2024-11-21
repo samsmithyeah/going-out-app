@@ -62,8 +62,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#fff',
     borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     padding: 16,
     alignItems: 'center',
     marginBottom: 10, // Space between cards
