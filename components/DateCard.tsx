@@ -152,9 +152,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
     backgroundColor: '#1E90FF',
-    borderRadius: 4,
+    borderRadius: 5,
     alignSelf: 'flex-start',
-    marginTop: 8, // Adjusted to match original spacing
   },
   matchesText: {
     color: '#FFFFFF',

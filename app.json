@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "GoingOutApp",
-    "slug": "GoingOutApp",
+    "name": "Flock",
+    "slug": "flock",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

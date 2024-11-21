@@ -1,27 +1,12 @@
 // firebase.ts
 import { initializeApp } from 'firebase/app';
 import {
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithCredential,
-  updateProfile,
   getReactNativePersistence,
   initializeAuth,
-  createUserWithEmailAndPassword,
-  User as FirebaseUser,
   getAuth,
 } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  addDoc,
-  collection,
-  onSnapshot,
-} from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
@@ -85,23 +70,12 @@ const deleteCrew = (crewId: string) => {
   return deleteCrewCallable({ crewId });
 };
 
-export {
-  auth,
-  db,
-  functions,
-  storage,
-  deleteCrew,
-  updateProfile,
-  signInWithCredential,
-  GoogleAuthProvider,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  doc,
-  getDoc,
-  setDoc,
-  collection,
-  addDoc,
-  onSnapshot,
-  FirebaseUser,
+const pokeCrew = (crewId: string, date: string, userId: string) => {
+  if (!auth.currentUser) {
+    throw new Error('User is not authenticated');
+  }
+  const pokeCrewCallable = httpsCallable(functions, 'pokeCrew');
+  return pokeCrewCallable({ crewId, date, userId });
 };
+
+export { auth, db, functions, storage, deleteCrew, pokeCrew };
