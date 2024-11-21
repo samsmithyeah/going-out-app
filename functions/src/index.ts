@@ -8,6 +8,7 @@ import { notifyCrewOnThreeUp } from './notifications/notifyCrewOnThreeUp';
 import { deleteCrew } from './utils/deleteCrew';
 import { notifyUserOnNewDMMessage } from './notifications/notifyUserOnNewDMMessage';
 import { notifyUsersOnNewGroupMessage } from './notifications/notifyUsersOnNewGroupMessage';
+import { pokeCrew } from './notifications/pokeCrew';
 
 export {
   notifyCrewMembersOnCrewDeletion,
@@ -19,6 +20,7 @@ export {
   deleteCrew,
   notifyUserOnNewDMMessage,
   notifyUsersOnNewGroupMessage,
+  pokeCrew,
 };
 
 // Initialize Firebase Admin SDK

@@ -14,17 +14,17 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import FastImage from 'react-native-fast-image';
-import {
-  auth,
-  updateProfile,
-  FirebaseUser,
-  createUserWithEmailAndPassword,
-} from '../firebase';
+import { auth } from '../firebase';
 import { addUserToFirestore } from '../utils/AddUserToFirestore';
 import { useUser } from '../context/UserContext';
 import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';
 import zxcvbn from 'zxcvbn';
+import {
+  createUserWithEmailAndPassword,
+  User as FirebaseUser,
+  updateProfile,
+} from 'firebase/auth';
 
 type NavParamList = {
   SignUp: undefined;

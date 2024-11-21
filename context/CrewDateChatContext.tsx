@@ -44,7 +44,7 @@ interface Message {
 interface CrewDateChat {
   id: string; // e.g., 'crew123_2024-04-27'
   crewId: string; // Extracted crewId
-  members: User[];
+  otherMembers: User[];
   crewName: string; // Fetched from crews collection
   avatarUrl?: string; // Optional: Include avatar URL
   lastRead: Timestamp | null; // Last read timestamp for the current user
@@ -62,7 +62,8 @@ interface CrewDateChatContextProps {
   addMemberToChat: (chatId: string, uid: string) => Promise<void>;
   removeMemberFromChat: (chatId: string, uid: string) => Promise<void>;
   fetchUnreadCount: (chatId: string) => Promise<number>;
-  totalUnread: number; // Added totalUnread
+  totalUnread: number;
+  getChatParticipantsCount: (chatId: string) => number;
 }
 
 // Create the context
@@ -213,7 +214,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         const otherMemberIds = memberIds.filter((id) => id !== user.uid);
 
         // Fetch details for other members
-        const members: User[] = await Promise.all(
+        const otherMembers: User[] = await Promise.all(
           otherMemberIds.map((uid) => fetchUserDetails(uid)),
         );
 
@@ -232,7 +233,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         fetchedChats.push({
           id: docSnap.id,
           crewId: crewId,
-          members,
+          otherMembers,
           crewName,
           avatarUrl: crew?.iconUrl,
           lastRead,
@@ -278,7 +279,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           const otherMemberIds = memberIds.filter((id) => id !== user.uid);
 
           // Fetch details for other members
-          const members: User[] = await Promise.all(
+          const otherMembers: User[] = await Promise.all(
             otherMemberIds.map((uid) => fetchUserDetails(uid)),
           );
 
@@ -297,7 +298,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           fetchedChats.push({
             id: docSnap.id,
             crewId: crewId,
-            members,
+            otherMembers,
             crewName,
             avatarUrl: crew?.iconUrl,
             lastRead,
@@ -505,6 +506,12 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     [fetchUserDetails],
   );
 
+  // Get count of chat participants
+  const getChatParticipantsCount = (chatId: string): number => {
+    const chat = chats.find((chat) => chat.id === chatId);
+    return chat ? chat.otherMembers.length + 1 : 0;
+  };
+
   // Fetch chats and set up real-time listeners on mount
   useEffect(() => {
     fetchChats();
@@ -530,7 +537,8 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         addMemberToChat,
         removeMemberFromChat,
         fetchUnreadCount,
-        totalUnread, // Provide the totalUnread value
+        totalUnread,
+        getChatParticipantsCount,
       }}
     >
       {children}

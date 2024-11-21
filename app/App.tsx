@@ -34,12 +34,12 @@ const App: React.FC = () => {
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log('Notification Response:', response);
-        const { screen, crewId, chatId, senderId } =
+        const { screen, crewId, chatId, senderId, date } =
           response.notification.request.content.data;
         if (screen === 'Crew' && crewId) {
           navigation.navigate('CrewsStack', {
             screen,
-            params: { crewId },
+            params: { crewId, ...(date && { date }) },
             initial: false,
           });
         } else if (screen === 'CrewDateChat' && chatId) {

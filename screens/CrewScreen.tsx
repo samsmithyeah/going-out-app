@@ -22,7 +22,7 @@ import {
   onSnapshot,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, pokeCrew } from '../firebase';
 import { useUser } from '../context/UserContext';
 import { User } from '../types/User';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
@@ -340,6 +340,47 @@ const CrewScreen: React.FC = () => {
     navigation.navigate('OtherUserProfile', { userId: selectedUser.uid });
   };
 
+  const handlePokeCrew = async () => {
+    if (!crewId || !selectedDate || !user?.uid) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Missing required information to poke the crew.',
+      });
+      return;
+    }
+
+    try {
+      // Confirm the poke action with the user
+      Alert.alert(
+        'Poke the others?',
+        'This will send a notification to members who are not marked as up for it on this date.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Poke',
+            onPress: async () => {
+              await pokeCrew(crewId, selectedDate, user.uid);
+              Toast.show({
+                type: 'success',
+                text1: 'Poke Sent',
+                text2: 'Your poke has been sent to the crew.',
+              });
+            },
+          },
+        ],
+        { cancelable: true },
+      );
+    } catch (error) {
+      console.error('Error poking crew:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to poke the crew.',
+      });
+    }
+  };
+
   return (
     <>
       {(loading || !crew) && <LoadingOverlay />}
@@ -421,24 +462,41 @@ const CrewScreen: React.FC = () => {
 
         {/* Button to navigate to crew date chat */}
         {currentUserStatus && (
-          <View style={styles.chatButton}>
-            <CustomButton
-              title="Message the up-for-it crew"
-              variant="primary"
-              onPress={() =>
-                navigation.navigate('CrewDateChat', {
-                  crewId,
-                  date: selectedDate,
-                })
-              }
-              icon={{
-                name: 'chatbubble-ellipses-outline',
-                size: 24,
-                library: 'Ionicons',
-              }}
-              accessibilityLabel="Open Chat"
-              accessibilityHint="Navigate to crew date chat"
-            />
+          <View>
+            <View style={styles.chatButton}>
+              <CustomButton
+                title="Message the up-for-it crew"
+                variant="primary"
+                onPress={() =>
+                  navigation.navigate('CrewDateChat', {
+                    crewId,
+                    date: selectedDate,
+                  })
+                }
+                icon={{
+                  name: 'chatbubble-ellipses-outline',
+                  size: 24,
+                  library: 'Ionicons',
+                }}
+                accessibilityLabel="Open Chat"
+                accessibilityHint="Navigate to crew date chat"
+              />
+            </View>
+            <View style={styles.chatButton}>
+              <CustomButton
+                title="Poke the others"
+                onPress={handlePokeCrew}
+                loading={false}
+                variant="secondary" // Choose an appropriate variant
+                icon={{
+                  name: 'beer-outline',
+                  size: 24,
+                  library: 'Ionicons',
+                }}
+                accessibilityLabel="Poke Crew"
+                accessibilityHint="Send a poke to crew members who are not up for it"
+              />
+            </View>
           </View>
         )}
 
@@ -538,5 +596,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  chatButton: {},
+  chatButton: {
+    marginBottom: 10,
+  },
 });

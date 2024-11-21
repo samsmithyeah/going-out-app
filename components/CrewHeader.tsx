@@ -7,9 +7,18 @@ import ProfilePicturePicker from './ProfilePicturePicker'; // Reuse existing com
 
 interface CrewHeaderProps {
   crew: Crew;
+  customCrewName?: string;
+  customMemberCount?: number;
 }
 
-const CrewHeader: React.FC<CrewHeaderProps> = ({ crew }) => {
+const CrewHeader: React.FC<CrewHeaderProps> = ({
+  crew,
+  customCrewName,
+  customMemberCount,
+}) => {
+  const crewName = customCrewName || crew.name;
+  const memberCount = customMemberCount || crew.memberIds.length;
+
   return (
     <View style={styles.container}>
       <ProfilePicturePicker
@@ -20,10 +29,9 @@ const CrewHeader: React.FC<CrewHeaderProps> = ({ crew }) => {
         size={35}
       />
       <View style={styles.textContainer}>
-        <Text style={styles.crewName}>{crew.name}</Text>
+        <Text style={styles.crewName}>{crewName}</Text>
         <Text style={styles.memberCount}>
-          {crew.memberIds.length}{' '}
-          {crew.memberIds.length === 1 ? 'member' : 'members'}
+          {memberCount} {memberCount === 1 ? 'member' : 'members'}
         </Text>
       </View>
     </View>

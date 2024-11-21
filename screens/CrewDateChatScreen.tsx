@@ -41,6 +41,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+import CrewHeader from '../components/CrewHeader';
 
 // Define Props
 type CrewDateChatScreenProps = NativeStackScreenProps<
@@ -104,7 +105,8 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   navigation,
 }) => {
   const { crewId, date, id } = route.params;
-  const { sendMessage, updateLastRead } = useCrewDateChat();
+  const { sendMessage, updateLastRead, getChatParticipantsCount } =
+    useCrewDateChat();
   const { crews, usersCache } = useCrews();
   const { user, addActiveChat, removeActiveChat } = useUser();
   const [state, dispatch] = useReducer(reducer, {
@@ -146,6 +148,21 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     [date],
   );
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: crew
+        ? () => (
+            <CrewHeader
+              crew={crew}
+              customCrewName={`${crewName} - ${formattedDate}`}
+              customMemberCount={getChatParticipantsCount(chatId!)}
+            />
+          )
+        : 'Crew',
+      headerTitleAlign: 'left',
+    });
+  }, [navigation, crew, crewId]);
+
   // Typing Users - useMemo called unconditionally
   const typingUsers = useMemo(() => {
     const typingUserIds = Object.keys(state.otherUsersTyping).filter(
@@ -155,13 +172,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
       (userId) => usersCache[userId]?.displayName || 'Someone',
     );
   }, [state.otherUsersTyping, usersCache]);
-
-  // Set navigation title
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: `${crewName} - ${formattedDate}`,
-    });
-  }, [navigation, crewName, formattedDate]);
 
   // Ref for typing timeout
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
