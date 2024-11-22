@@ -1,6 +1,6 @@
 // navigation/TabNavigator.tsx
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import InvitationsScreen from '@/screens/InvitationsScreen';
@@ -26,14 +26,10 @@ const TabNavigator: React.FC = () => {
   const { pendingCount } = useInvitations();
   const { totalUnread: totalDMUnread } = useDirectMessages();
   const { totalUnread: totalGroupUnread } = useCrewDateChat();
-  const [totalUnread, setTotalUnread] = useState<number>(0);
 
-  useEffect(() => {
-    console.log('Total DM Unread:', totalDMUnread);
-    console.log('Total Group Unread:', totalGroupUnread);
-    setTotalUnread((totalDMUnread || 0) + (totalGroupUnread || 0));
-    console.log('Total Unread:', totalUnread);
-  }, [totalDMUnread, totalGroupUnread]);
+  const getTotalUnread = () => {
+    return totalDMUnread + totalGroupUnread;
+  };
 
   return (
     <Tab.Navigator
@@ -84,10 +80,10 @@ const TabNavigator: React.FC = () => {
             <Ionicons name="chatbubbles-outline" size={size} color={color} />
           ),
           tabBarBadge:
-            totalUnread > 0
-              ? totalUnread > 99
+            getTotalUnread() > 0
+              ? getTotalUnread() > 99
                 ? '99+'
-                : totalUnread
+                : getTotalUnread()
               : undefined,
         }}
       />

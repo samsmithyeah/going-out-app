@@ -324,7 +324,6 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, [user?.uid, crews, fetchUserDetails]);
 
-  // New useEffect to compute totalUnread when chats or activeChats change
   useEffect(() => {
     computeTotalUnread();
   }, [computeTotalUnread]);
@@ -377,7 +376,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           [`lastRead.${user.uid}`]: serverTimestamp(),
         });
         console.log(`Updated lastRead for chat ${chatId}`);
-        await computeTotalUnread(); // Optional: You can keep this if needed
+        await computeTotalUnread();
       } catch (error) {
         console.error(`Error updating lastRead for chat ${chatId}:`, error);
         Toast.show({
