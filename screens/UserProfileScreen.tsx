@@ -10,13 +10,13 @@ import {
   Dimensions,
 } from 'react-native';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import { useUser } from '../context/UserContext';
-import { User } from '../types/User';
-import ProfilePicturePicker from '../components/ProfilePicturePicker';
+import { db } from '@/firebase';
+import { useUser } from '@/context/UserContext';
+import { User } from '@/types/User';
+import ProfilePicturePicker from '@/components/ProfilePicturePicker';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { UserProfileStackParamList } from '../navigation/UserProfileStackNavigator';
-import CustomButton from '../components/CustomButton'; // Assuming CustomButton is a styled button
+import { UserProfileStackParamList } from '@/navigation/UserProfileStackNavigator';
+import CustomButton from '@/components/CustomButton'; // Assuming CustomButton is a styled button
 import Toast from 'react-native-toast-message';
 import Colors from '../styles/colors';
 

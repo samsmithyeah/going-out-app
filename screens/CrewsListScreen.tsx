@@ -3,18 +3,18 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useCrews } from '../context/CrewsContext';
+import { useCrews } from '@/context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { NavParamList } from '../navigation/AppNavigator';
-import ScreenTitle from '../components/ScreenTitle';
-import CrewList from '../components/CrewList';
-import CreateCrewModal from '../components/CreateCrewModal';
-import { Crew } from '../types/Crew';
-import { User } from '../types/User';
-import CustomSearchInput from '../components/CustomSearchInput';
+import { NavParamList } from '@/navigation/AppNavigator';
+import ScreenTitle from '@/components/ScreenTitle';
+import CrewList from '@/components/CrewList';
+import CreateCrewModal from '@/components/CreateCrewModal';
+import { Crew } from '@/types/Crew';
+import { User } from '@/types/User';
+import CustomSearchInput from '@/components/CustomSearchInput';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import LoadingOverlay from '../components/LoadingOverlay';
+import { db } from '@/firebase';
+import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Ensure you have this installed
 import globalStyles from '../styles/globalStyles';

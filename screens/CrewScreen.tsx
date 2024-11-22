@@ -22,21 +22,21 @@ import {
   onSnapshot,
   Timestamp,
 } from 'firebase/firestore';
-import { db, pokeCrew } from '../firebase';
-import { useUser } from '../context/UserContext';
-import { User } from '../types/User';
+import { db, pokeCrew } from '@/firebase';
+import { useUser } from '@/context/UserContext';
+import { User } from '@/types/User';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { NavParamList } from '../navigation/AppNavigator';
-import MemberList from '../components/MemberList';
+import { NavParamList } from '@/navigation/AppNavigator';
+import MemberList from '@/components/MemberList';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
-import { Crew } from '../types/Crew';
-import CustomButton from '../components/CustomButton';
-import CrewHeader from '../components/CrewHeader';
-import { useCrews } from '../context/CrewsContext';
-import LoadingOverlay from '../components/LoadingOverlay';
+import { Crew } from '@/types/Crew';
+import CustomButton from '@/components/CustomButton';
+import CrewHeader from '@/components/CrewHeader';
+import { useCrews } from '@/context/CrewsContext';
+import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
-import { useCrewDateChat } from '../context/CrewDateChatContext';
+import { useCrewDateChat } from '@/context/CrewDateChatContext';
 import globalStyles from '../styles/globalStyles';
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;

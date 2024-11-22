@@ -1,7 +1,7 @@
 // types/Invitation.ts
 
 import { Timestamp } from 'firebase/firestore';
-import { Crew } from '../types/Crew';
+import { Crew } from '@/types/Crew';
 import { User } from './User';
 
 export interface Invitation {

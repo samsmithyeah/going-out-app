@@ -18,7 +18,7 @@ import {
   deleteObject,
 } from 'firebase/storage';
 import FastImage from 'react-native-fast-image';
-import { storage } from '../firebase';
+import { storage } from '@/firebase';
 import Toast from 'react-native-toast-message';
 
 interface ProfilePicturePickerProps {

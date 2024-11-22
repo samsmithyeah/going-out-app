@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Crew } from '../types/Crew';
+import { Crew } from '@/types/Crew';
 import ProfilePicturePicker from './ProfilePicturePicker'; // Reuse existing component
 
 interface CrewHeaderProps {

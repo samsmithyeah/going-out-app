@@ -4,7 +4,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import FastImage from 'react-native-fast-image';
-import { InvitationWithDetails } from '../types/Invitation';
+import { InvitationWithDetails } from '@/types/Invitation';
 
 interface InvitationCardProps {
   invitation: InvitationWithDetails;

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import ProfilePicturePicker from './ProfilePicturePicker';
 import SkeletonUserItem from './SkeletonUserItem'; // Ensure this component exists
-import { User } from '../types/User';
+import { User } from '@/types/User';
 import { Ionicons } from '@expo/vector-icons';
 
 // Define the extended interface with optional status

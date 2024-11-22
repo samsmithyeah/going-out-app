@@ -22,11 +22,11 @@ import {
   setDoc,
   updateDoc,
 } from 'firebase/firestore';
-import { db } from '../firebase'; // Ensure this points to your Firebase initialization
+import { db } from '@/firebase'; // Ensure this points to your Firebase initialization
 import { useUser } from './UserContext'; // Custom hook to access user data
 import moment from 'moment';
-import { Crew } from '../types/Crew';
-import { User } from '../types/User';
+import { Crew } from '@/types/Crew';
+import { User } from '@/types/User';
 import Toast from 'react-native-toast-message';
 
 interface CrewsContextProps {

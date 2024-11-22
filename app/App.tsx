@@ -1,11 +1,11 @@
 // App.tsx
 import React, { useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
-import AppNavigator from '../navigation/AppNavigator';
+import AppNavigator from '@/navigation/AppNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
-import { useUser } from '../context/UserContext';
-import { NavParamList } from '../navigation/AppNavigator';
+import { useUser } from '@/context/UserContext';
+import { NavParamList } from '@/navigation/AppNavigator';
 
 // Configure notification handler
 Notifications.setNotificationHandler({

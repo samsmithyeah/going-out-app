@@ -22,9 +22,9 @@ import {
   updateDoc,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '@/firebase';
 import { useUser } from './UserContext';
-import { User } from '../types/User';
+import { User } from '@/types/User';
 import Toast from 'react-native-toast-message';
 
 // Define the Message interface

@@ -17,14 +17,14 @@ import {
   updateDoc,
   arrayUnion,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '@/firebase';
 import { useUser } from './UserContext';
-import { Crew } from '../types/Crew';
-import { User } from '../types/User';
-import { InvitationWithDetails, Invitation } from '../types/Invitation';
+import { Crew } from '@/types/Crew';
+import { User } from '@/types/User';
+import { InvitationWithDetails, Invitation } from '@/types/Invitation';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
-import { NavParamList } from '../navigation/AppNavigator';
+import { NavParamList } from '@/navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
 
 interface InvitationsContextType {

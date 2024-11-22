@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import UserProfileScreen from '../screens/UserProfileScreen';
-import EditUserProfileModal from '../screens/EditUserProfileModal';
+import UserProfileScreen from '@/screens/UserProfileScreen';
+import EditUserProfileModal from '@/screens/EditUserProfileModal';
 
 export type UserProfileStackParamList = {
   UserProfile: undefined;

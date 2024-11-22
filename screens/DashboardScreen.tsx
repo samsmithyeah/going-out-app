@@ -8,18 +8,17 @@ import {
   Text,
   TouchableOpacity,
 } from 'react-native';
-import { useCrews } from '../context/CrewsContext';
-import DateCard from '../components/DateCard';
+import { useCrews } from '@/context/CrewsContext';
+import DateCard from '@/components/DateCard';
 import moment from 'moment';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { NavParamList } from '../navigation/AppNavigator'; // Adjust the path as necessary
+import { NavParamList } from '@/navigation/AppNavigator'; // Adjust the path as necessary
 import { useNavigation } from '@react-navigation/native'; // Hook for navigation
-import LoadingOverlay from '../components/LoadingOverlay';
+import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
-import ScreenTitle from '../components/ScreenTitle';
-import CreateCrewModal from '../components/CreateCrewModal'; // Import your modal
+import ScreenTitle from '@/components/ScreenTitle';
+import CreateCrewModal from '@/components/CreateCrewModal'; // Import your modal
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Example icon library
-import { StatusBar } from 'expo-status-bar';
 import globalStyles from '../styles/globalStyles';
 
 const getDotColor = (count: number, total: number): string => {
@@ -129,7 +128,6 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <>
-      <StatusBar translucent backgroundColor="transparent" />
       {isLoading && <LoadingOverlay />}
       <View style={globalStyles.container}>
         {/* Profile Section */}

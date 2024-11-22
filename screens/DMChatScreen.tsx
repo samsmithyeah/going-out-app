@@ -16,12 +16,12 @@ import {
   Send,
   SendProps,
 } from 'react-native-gifted-chat';
-import { useUser } from '../context/UserContext';
-import { useDirectMessages } from '../context/DirectMessagesContext';
-import { useCrews } from '../context/CrewsContext';
+import { useUser } from '@/context/UserContext';
+import { useDirectMessages } from '@/context/DirectMessagesContext';
+import { useCrews } from '@/context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { NavParamList } from '../navigation/AppNavigator';
-import LoadingOverlay from '../components/LoadingOverlay';
+import { NavParamList } from '@/navigation/AppNavigator';
+import LoadingOverlay from '@/components/LoadingOverlay';
 import { generateDMConversationId } from '../utils/chatHelpers';
 import {
   collection,
@@ -33,7 +33,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '@/firebase';
 import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';

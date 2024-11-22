@@ -13,11 +13,11 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { auth } from '../firebase';
+import { auth } from '@/firebase';
 import { addUserToFirestore } from '../utils/AddUserToFirestore';
-import { useUser } from '../context/UserContext';
-import CustomButton from '../components/CustomButton';
-import CustomTextInput from '../components/CustomTextInput';
+import { useUser } from '@/context/UserContext';
+import CustomButton from '@/components/CustomButton';
+import CustomTextInput from '@/components/CustomTextInput';
 import zxcvbn from 'zxcvbn';
 import {
   createUserWithEmailAndPassword,

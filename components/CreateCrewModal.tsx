@@ -1,13 +1,13 @@
 // components/CreateCrewModal.tsx
 
 import React, { useState } from 'react';
-import { useUser } from '../context/UserContext';
+import { useUser } from '@/context/UserContext';
 import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '@/firebase';
 import CustomModal from './CustomModal';
 import CustomTextInput from './CustomTextInput';
 import Toast from 'react-native-toast-message';
-import { useCrews } from '../context/CrewsContext';
+import { useCrews } from '@/context/CrewsContext';
 
 type CreateCrewModalProps = {
   isVisible: boolean;
