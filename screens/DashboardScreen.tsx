@@ -100,7 +100,11 @@ const DashboardScreen: React.FC = () => {
       text1: 'Success',
       text2: 'Crew created successfully',
     });
-    navigation.navigate('Crew', { crewId });
+    navigation.navigate('CrewsStack', {
+      screen: 'Crew',
+      params: { crewId },
+      initial: false,
+    });
   };
 
   // Render a single day item using DateCard component

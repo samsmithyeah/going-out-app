@@ -17,7 +17,7 @@ import { db } from '@/firebase';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Ensure you have this installed
-import globalStyles from '@/styles/globalStyles';
+import Colors from '@/styles/colors';
 
 type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
@@ -136,7 +136,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   return (
     <>
       {(isLoading || isLoadingUsers) && <LoadingOverlay />}
-      <View style={globalStyles.container}>
+      <View style={styles.container}>
         {/* Header Container */}
         <View style={styles.headerContainer}>
           {/* Screen Title */}
@@ -183,6 +183,13 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
 export default CrewsListScreen;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: Colors.background,
+    justifyContent: 'flex-start',
+    paddingBottom: 100,
+  },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

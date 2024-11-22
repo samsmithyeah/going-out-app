@@ -53,7 +53,7 @@ interface DirectMessagesContextProps {
   listenToDirectMessages: () => () => void;
   listenToDMMessages: (dmId: string) => () => void;
   fetchUnreadCount: (dmId: string) => Promise<number>;
-  totalUnread: number; // Added totalUnread
+  totalUnread: number;
 }
 
 // Create the context
@@ -421,7 +421,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         listenToDirectMessages,
         listenToDMMessages,
         fetchUnreadCount,
-        totalUnread, // Provide the totalUnread value
+        totalUnread,
       }}
     >
       {children}
