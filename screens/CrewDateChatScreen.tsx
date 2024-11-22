@@ -143,10 +143,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   );
 
   const crewName = useMemo(() => (crew ? crew.name : 'Unknown Crew'), [crew]);
-  const formattedDate = useMemo(
-    () => moment(date).format('MMMM Do, YYYY'),
-    [date],
-  );
+  const formattedDate = useMemo(() => moment(date).format('MMM Do'), [date]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
