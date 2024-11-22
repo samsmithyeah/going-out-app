@@ -26,6 +26,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { NavParamList } from '@/navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
+import { useCrews } from '@/context/CrewsContext';
 
 interface InvitationsContextType {
   invitations: InvitationWithDetails[];
@@ -47,6 +48,7 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
   children,
 }) => {
   const { user } = useUser();
+  const { setCrews, setCrewIds } = useCrews();
   const navigation = useNavigation<StackNavigationProp<NavParamList>>();
   const [invitations, setInvitations] = useState<InvitationWithDetails[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -209,6 +211,19 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
       await updateDoc(invitationRef, {
         status: 'accepted',
       });
+
+      // Update local state
+      setCrews((prevCrews) => [
+        ...prevCrews,
+        {
+          id: crewRef.id,
+          name: crewSnap.data()?.name || 'Unknown Crew',
+          ownerId: crewSnap.data()?.ownerId || '',
+          memberIds: crewSnap.data()?.memberIds || [],
+          activity: crewSnap.data()?.activity || '',
+        },
+      ]);
+      setCrewIds((prevIds: string[]) => [...prevIds, crewRef.id]);
 
       Toast.show({
         type: 'success',
