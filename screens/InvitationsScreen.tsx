@@ -13,6 +13,7 @@ import ScreenTitle from '../components/ScreenTitle';
 import InvitationCard from '../components/InvitationCard';
 import { useInvitations } from '../context/InvitationsContext';
 import { InvitationWithDetails } from '../types/Invitation';
+import globalStyles from '../styles/globalStyles';
 
 const InvitationsScreen: React.FC = () => {
   const { invitations, loading, acceptInvitation, declineInvitation } =
@@ -35,7 +36,7 @@ const InvitationsScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={globalStyles.container}>
       <ScreenTitle title="Invitations" />
       {invitations.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -56,11 +57,6 @@ const InvitationsScreen: React.FC = () => {
 export default InvitationsScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f5f5f5', // Light background for contrast
-  },
   loaderContainer: {
     flex: 1,
     justifyContent: 'center',

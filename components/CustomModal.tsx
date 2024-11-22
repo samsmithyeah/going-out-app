@@ -10,6 +10,7 @@ import {
   Keyboard,
 } from 'react-native';
 import CustomButton from './CustomButton';
+import Colors from '../styles/colors';
 
 type ButtonProps = {
   label: string;
@@ -76,7 +77,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)', // Semi-transparent background
   },
   modalContent: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
     borderRadius: 10,
     padding: 25,
     alignItems: 'center',

@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import FastImage from 'react-native-fast-image';
 import { auth } from '../firebase';
 import { addUserToFirestore } from '../utils/AddUserToFirestore';
 import { useUser } from '../context/UserContext';
@@ -26,6 +25,7 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
+import Colors from '../styles/colors';
 
 type NavParamList = {
   SignUp: undefined;
@@ -134,15 +134,6 @@ const SignUpScreen: React.FC<Props> = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.container}
         >
-          <View style={styles.logoContainer}>
-            <FastImage
-              source={require('../assets/images/icon.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.title}>Create account</Text>
-          </View>
-
           <View style={styles.formContainer}>
             {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
@@ -263,28 +254,14 @@ const SignUpScreen: React.FC<Props> = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6497b1',
-  },
-  logoContainer: {
-    marginTop: 70,
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 28,
-    color: '#fff',
-    fontWeight: '700',
+    backgroundColor: Colors.flock,
   },
   formContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 15,
     padding: 20,
     marginHorizontal: 20,
+    marginTop: 200,
   },
   passwordStrengthContainer: {
     marginBottom: 15,

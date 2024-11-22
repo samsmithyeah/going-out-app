@@ -13,6 +13,7 @@ import { getDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 import LoadingOverlay from '../components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
+import globalStyles from '../styles/globalStyles';
 
 type MatchesListScreenProps = NativeStackScreenProps<
   NavParamList,
@@ -127,7 +128,7 @@ const MatchesListScreen: React.FC<MatchesListScreenProps> = ({
   // Handle case when there are no matching crews
   if (matchingCrews.length === 0) {
     return (
-      <View style={styles.container}>
+      <View style={globalStyles.container}>
         <Text style={styles.noMatchesText}>
           You have no matches on this day.
         </Text>
@@ -136,7 +137,7 @@ const MatchesListScreen: React.FC<MatchesListScreenProps> = ({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={globalStyles.container}>
       <CrewList
         crews={matchingCrews}
         usersCache={usersCache}
@@ -149,11 +150,6 @@ const MatchesListScreen: React.FC<MatchesListScreenProps> = ({
 export default MatchesListScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-  },
   noMatchesText: {
     fontSize: 16,
     color: '#888888',
