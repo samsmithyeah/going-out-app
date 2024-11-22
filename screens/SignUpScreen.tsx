@@ -25,7 +25,7 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
-import Colors from '../styles/colors';
+import Colors from '@styles/colors';
 
 type NavParamList = {
   SignUp: undefined;

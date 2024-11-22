@@ -19,7 +19,7 @@ import Toast from 'react-native-toast-message';
 import ScreenTitle from '@/components/ScreenTitle';
 import CreateCrewModal from '@/components/CreateCrewModal'; // Import your modal
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Example icon library
-import globalStyles from '../styles/globalStyles';
+import globalStyles from '@styles/globalStyles';
 
 const getDotColor = (count: number, total: number): string => {
   if (count === total && total > 0) return '#32CD32'; // Green

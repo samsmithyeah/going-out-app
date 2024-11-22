@@ -29,7 +29,7 @@ import { useUser } from '@/context/UserContext';
 import FastImage from 'react-native-fast-image';
 import ScreenTitle from '@/components/ScreenTitle';
 import CustomSearchInput from '@/components/CustomSearchInput';
-import globalStyles from '../styles/globalStyles';
+import globalStyles from '@styles/globalStyles';
 
 interface CombinedChat {
   id: string;

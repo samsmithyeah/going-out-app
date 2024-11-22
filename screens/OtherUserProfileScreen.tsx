@@ -15,7 +15,7 @@ import ProfilePicturePicker from '@/components/ProfilePicturePicker';
 import { NavParamList } from '@/navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
 import CustomButton from '@/components/CustomButton';
-import Colors from '../styles/colors';
+import Colors from '@styles/colors';
 
 type OtherUserProfileScreenRouteProp = RouteProp<
   NavParamList,
