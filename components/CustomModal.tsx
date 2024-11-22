@@ -10,7 +10,7 @@ import {
   Keyboard,
 } from 'react-native';
 import CustomButton from './CustomButton';
-import Colors from '@styles/colors';
+import Colors from '@/styles/colors';
 
 type ButtonProps = {
   label: string;

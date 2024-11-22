@@ -37,7 +37,7 @@ import { useCrews } from '@/context/CrewsContext';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 import { useCrewDateChat } from '@/context/CrewDateChatContext';
-import globalStyles from '@styles/globalStyles';
+import globalStyles from '@/styles/globalStyles';
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
 

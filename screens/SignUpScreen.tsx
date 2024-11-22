@@ -14,7 +14,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { auth } from '@/firebase';
-import { addUserToFirestore } from '../utils/AddUserToFirestore';
+import { addUserToFirestore } from '@/utils/AddUserToFirestore';
 import { useUser } from '@/context/UserContext';
 import CustomButton from '@/components/CustomButton';
 import CustomTextInput from '@/components/CustomTextInput';
@@ -25,7 +25,7 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
-import Colors from '@styles/colors';
+import Colors from '@/styles/colors';
 
 type NavParamList = {
   SignUp: undefined;

@@ -19,7 +19,7 @@ import { NavParamList } from '@/navigation/AppNavigator';
 import { useUser } from '@/context/UserContext';
 import CustomButton from '@/components/CustomButton';
 import CustomTextInput from '@/components/CustomTextInput';
-import Colors from '@styles/colors';
+import Colors from '@/styles/colors';
 
 type LoginScreenProps = NativeStackScreenProps<NavParamList, 'Login'>;
 

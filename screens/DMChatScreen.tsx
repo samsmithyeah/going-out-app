@@ -22,7 +22,7 @@ import { useCrews } from '@/context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '@/navigation/AppNavigator';
 import LoadingOverlay from '@/components/LoadingOverlay';
-import { generateDMConversationId } from '../utils/chatHelpers';
+import { generateDMConversationId } from '@/utils/chatHelpers';
 import {
   collection,
   doc,

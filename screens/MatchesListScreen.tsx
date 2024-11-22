@@ -13,7 +13,7 @@ import { getDoc, doc } from 'firebase/firestore';
 import { db } from '@/firebase';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
-import globalStyles from '@styles/globalStyles';
+import globalStyles from '@/styles/globalStyles';
 
 type MatchesListScreenProps = NativeStackScreenProps<
   NavParamList,

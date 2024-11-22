@@ -14,7 +14,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/firebase';
 import CustomButton from '@/components/CustomButton';
 import CustomTextInput from '@/components/CustomTextInput';
-import Colors from '@styles/colors';
+import Colors from '@/styles/colors';
 
 type ForgotPasswordProps = NativeStackScreenProps<
   NavParamList,
