@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { useUser } from '@/context/UserContext';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
-import CustomModal from './CustomModal';
-import CustomTextInput from './CustomTextInput';
+import CustomModal from '@/components/CustomModal';
+import CustomTextInput from '@/components/CustomTextInput';
 import Toast from 'react-native-toast-message';
 import { useCrews } from '@/context/CrewsContext';
 

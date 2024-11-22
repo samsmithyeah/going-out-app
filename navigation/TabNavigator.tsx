@@ -4,11 +4,11 @@ import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import InvitationsScreen from '@/screens/InvitationsScreen';
-import UserProfileStackNavigator from './UserProfileStackNavigator';
-import DashboardStackNavigator from './DashboardStackNavigator';
-import CrewsStackNavigator from './CrewsStackNavigator';
+import UserProfileStackNavigator from '@/navigation/UserProfileStackNavigator';
+import DashboardStackNavigator from '@/navigation/DashboardStackNavigator';
+import CrewsStackNavigator from '@/navigation/CrewsStackNavigator';
 import { useInvitations } from '@/context/InvitationsContext';
-import ChatsStackNavigator from './ChatsStackNavigator';
+import ChatsStackNavigator from '@/navigation/ChatsStackNavigator';
 import { useDirectMessages } from '@/context/DirectMessagesContext';
 import { useCrewDateChat } from '@/context/CrewDateChatContext';
 

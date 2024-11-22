@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import CrewsListScreen from '@/screens/CrewsListScreen';
 import CrewScreen from '@/screens/CrewScreen';
 import CrewSettingsScreen from '@/screens/CrewSettingsScreen';
-import { NavParamList } from './AppNavigator';
+import { NavParamList } from '@/navigation/AppNavigator';
 import AddMembersScreen from '@/screens/AddMembersScreen';
 import OtherUserProfileScreen from '@/screens/OtherUserProfileScreen';
 import CrewDateChatScreen from '@/screens/CrewDateChatScreen';

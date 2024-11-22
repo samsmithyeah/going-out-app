@@ -23,7 +23,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/firebase';
-import { useUser } from './UserContext';
+import { useUser } from '@/context/UserContext';
 import { User } from '@/types/User';
 import Toast from 'react-native-toast-message';
 

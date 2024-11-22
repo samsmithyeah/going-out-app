@@ -8,8 +8,8 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import ProfilePicturePicker from './ProfilePicturePicker';
-import SkeletonUserItem from './SkeletonUserItem'; // Ensure this component exists
+import ProfilePicturePicker from '@/components/ProfilePicturePicker';
+import SkeletonUserItem from '@/components/SkeletonUserItem';
 import { User } from '@/types/User';
 import { Ionicons } from '@expo/vector-icons';
 
