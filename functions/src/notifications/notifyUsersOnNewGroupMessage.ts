@@ -3,7 +3,7 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 import { Expo, ExpoPushMessage } from 'expo-server-sdk';
-import { sendExpoNotifications } from '@/utils/sendExpoNotifications';
+import { sendExpoNotifications } from '../utils/sendExpoNotifications';
 import * as moment from 'moment';
 
 /**

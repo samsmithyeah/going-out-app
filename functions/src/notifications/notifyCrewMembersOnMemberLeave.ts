@@ -3,7 +3,7 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 import { Expo, ExpoPushMessage } from 'expo-server-sdk';
-import { sendExpoNotifications } from '@/utils/sendExpoNotifications';
+import { sendExpoNotifications } from '../utils/sendExpoNotifications';
 
 // Notify crew members when a user leaves the crew
 export const notifyCrewMembersOnMemberLeave = onDocumentUpdated(
