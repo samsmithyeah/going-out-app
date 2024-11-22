@@ -3,8 +3,8 @@ import Constants from 'expo-constants';
 import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { db } from '../firebase';
-import { User } from '../types/User';
+import { db } from '@/firebase';
+import { User } from '@/types/User';
 import Toast from 'react-native-toast-message';
 
 const registerForPushNotificationsAsync = async (user: User) => {

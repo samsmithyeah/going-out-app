@@ -2,18 +2,18 @@
 
 import React, { useEffect, useState, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useCrews } from '../context/CrewsContext';
-import CrewList from '../components/CrewList';
+import { useCrews } from '@/context/CrewsContext';
+import CrewList from '@/components/CrewList';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { NavParamList } from '../navigation/AppNavigator'; // Adjust the path as necessary
-import { Crew } from '../types/Crew';
-import { User } from '../types/User';
+import { NavParamList } from '@/navigation/AppNavigator'; // Adjust the path as necessary
+import { Crew } from '@/types/Crew';
+import { User } from '@/types/User';
 import moment from 'moment';
 import { getDoc, doc } from 'firebase/firestore';
-import { db } from '../firebase';
-import LoadingOverlay from '../components/LoadingOverlay';
+import { db } from '@/firebase';
+import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
-import globalStyles from '../styles/globalStyles';
+import globalStyles from '@/styles/globalStyles';
 
 type MatchesListScreenProps = NativeStackScreenProps<
   NavParamList,

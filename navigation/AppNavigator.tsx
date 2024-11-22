@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { useUser } from '../context/UserContext';
-import SignUpScreen from '../screens/SignUpScreen';
-import TabNavigator from './TabNavigator';
-import LoginStackNavigator from './LoginStackNavigator';
+import { useUser } from '@/context/UserContext';
+import SignUpScreen from '@/screens/SignUpScreen';
+import TabNavigator from '@/navigation/TabNavigator';
+import LoginStackNavigator from '@/navigation/LoginStackNavigator';
 
 export type NavParamList = {
   Home: undefined;

@@ -2,14 +2,14 @@
 
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import CrewsListScreen from '../screens/CrewsListScreen';
-import CrewScreen from '../screens/CrewScreen';
-import CrewSettingsScreen from '../screens/CrewSettingsScreen';
-import { NavParamList } from './AppNavigator';
-import AddMembersScreen from '../screens/AddMembersScreen';
-import OtherUserProfileScreen from '../screens/OtherUserProfileScreen';
-import CrewDateChatScreen from '../screens/CrewDateChatScreen';
-import DMChatScreen from '../screens/DMChatScreen';
+import CrewsListScreen from '@/screens/CrewsListScreen';
+import CrewScreen from '@/screens/CrewScreen';
+import CrewSettingsScreen from '@/screens/CrewSettingsScreen';
+import { NavParamList } from '@/navigation/AppNavigator';
+import AddMembersScreen from '@/screens/AddMembersScreen';
+import OtherUserProfileScreen from '@/screens/OtherUserProfileScreen';
+import CrewDateChatScreen from '@/screens/CrewDateChatScreen';
+import DMChatScreen from '@/screens/DMChatScreen';
 
 const Stack = createStackNavigator<NavParamList>();
 

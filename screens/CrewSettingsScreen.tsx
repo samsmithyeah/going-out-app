@@ -16,19 +16,19 @@ import {
   NavigationProp,
 } from '@react-navigation/native';
 import { doc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
-import { deleteCrew, db } from '../firebase';
-import { useUser } from '../context/UserContext';
-import { useCrews } from '../context/CrewsContext';
-import { User } from '../types/User';
+import { deleteCrew, db } from '@/firebase';
+import { useUser } from '@/context/UserContext';
+import { useCrews } from '@/context/CrewsContext';
+import { User } from '@/types/User';
 import { Ionicons } from '@expo/vector-icons';
-import { NavParamList } from '../navigation/AppNavigator';
-import ProfilePicturePicker from '../components/ProfilePicturePicker';
-import MemberList from '../components/MemberList';
-import { Crew } from '../types/Crew';
-import CustomButton from '../components/CustomButton';
-import CustomTextInput from '../components/CustomTextInput';
-import CustomModal from '../components/CustomModal';
-import LoadingOverlay from '../components/LoadingOverlay';
+import { NavParamList } from '@/navigation/AppNavigator';
+import ProfilePicturePicker from '@/components/ProfilePicturePicker';
+import MemberList from '@/components/MemberList';
+import { Crew } from '@/types/Crew';
+import CustomButton from '@/components/CustomButton';
+import CustomTextInput from '@/components/CustomTextInput';
+import CustomModal from '@/components/CustomModal';
+import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 
 type CrewSettingsScreenRouteProp = RouteProp<NavParamList, 'CrewSettings'>;

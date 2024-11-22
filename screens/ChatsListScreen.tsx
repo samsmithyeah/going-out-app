@@ -9,11 +9,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { useDirectMessages } from '../context/DirectMessagesContext';
-import { useCrewDateChat } from '../context/CrewDateChatContext';
-import { useCrews } from '../context/CrewsContext';
+import { useDirectMessages } from '@/context/DirectMessagesContext';
+import { useCrewDateChat } from '@/context/CrewDateChatContext';
+import { useCrews } from '@/context/CrewsContext';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { NavParamList } from '../navigation/AppNavigator';
+import { NavParamList } from '@/navigation/AppNavigator';
 import {
   collection,
   query,
@@ -23,13 +23,13 @@ import {
   getDoc,
   doc,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '@/firebase';
 import moment from 'moment';
-import { useUser } from '../context/UserContext';
+import { useUser } from '@/context/UserContext';
 import FastImage from 'react-native-fast-image';
-import ScreenTitle from '../components/ScreenTitle';
-import CustomSearchInput from '../components/CustomSearchInput';
-import globalStyles from '../styles/globalStyles';
+import ScreenTitle from '@/components/ScreenTitle';
+import CustomSearchInput from '@/components/CustomSearchInput';
+import globalStyles from '@/styles/globalStyles';
 
 interface CombinedChat {
   id: string;

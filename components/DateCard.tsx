@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Ensure consistency or remove if unused
+import { Ionicons } from '@expo/vector-icons';
 import moment from 'moment';
-import AvailabilityModal from './AvailabilityModal'; // Import the new component
+import AvailabilityModal from '@/components/AvailabilityModal';
 
 interface DateCardProps {
   date: string;

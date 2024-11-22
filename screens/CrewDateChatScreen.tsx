@@ -16,13 +16,13 @@ import {
   Send,
   SendProps,
 } from 'react-native-gifted-chat';
-import { useUser } from '../context/UserContext';
-import { useCrewDateChat } from '../context/CrewDateChatContext';
-import { useCrews } from '../context/CrewsContext';
+import { useUser } from '@/context/UserContext';
+import { useCrewDateChat } from '@/context/CrewDateChatContext';
+import { useCrews } from '@/context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { NavParamList } from '../navigation/AppNavigator';
-import LoadingOverlay from '../components/LoadingOverlay';
-import { generateChatId } from '../utils/chatHelpers';
+import { NavParamList } from '@/navigation/AppNavigator';
+import LoadingOverlay from '@/components/LoadingOverlay';
+import { generateChatId } from '@/utils/chatHelpers';
 import {
   collection,
   doc,
@@ -35,13 +35,13 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '@/firebase';
 import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import moment from 'moment';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
-import CrewHeader from '../components/CrewHeader';
+import CrewHeader from '@/components/CrewHeader';
 
 // Define Props
 type CrewDateChatScreenProps = NativeStackScreenProps<

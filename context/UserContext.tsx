@@ -8,8 +8,8 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import { auth, db } from '../firebase'; // Ensure correct import paths
-import { User } from '../types/User';
+import { auth, db } from '@/firebase'; // Ensure correct import paths
+import { User } from '@/types/User';
 import { Alert } from 'react-native';
 import { doc, getDoc, updateDoc } from 'firebase/firestore'; // Firestore functions
 import Toast from 'react-native-toast-message';

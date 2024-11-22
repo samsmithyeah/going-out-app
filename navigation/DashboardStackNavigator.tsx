@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import DashboardScreen from '../screens/DashboardScreen';
-import MatchesListScreen from '../screens/MatchesListScreen';
+import DashboardScreen from '@/screens/DashboardScreen';
+import MatchesListScreen from '@/screens/MatchesListScreen';
 
 export type DashboardStackParamList = {
   Dashboard: undefined;

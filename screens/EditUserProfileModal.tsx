@@ -13,11 +13,11 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import { useUser } from '../context/UserContext';
-import ProfilePicturePicker from '../components/ProfilePicturePicker';
-import CustomButton from '../components/CustomButton';
-import CustomTextInput from '../components/CustomTextInput';
+import { db } from '@/firebase';
+import { useUser } from '@/context/UserContext';
+import ProfilePicturePicker from '@/components/ProfilePicturePicker';
+import CustomButton from '@/components/CustomButton';
+import CustomTextInput from '@/components/CustomTextInput';
 import Toast from 'react-native-toast-message';
 
 const EditUserProfileModal: React.FC = () => {

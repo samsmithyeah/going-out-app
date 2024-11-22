@@ -9,11 +9,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ScreenTitle from '../components/ScreenTitle';
-import InvitationCard from '../components/InvitationCard';
-import { useInvitations } from '../context/InvitationsContext';
-import { InvitationWithDetails } from '../types/Invitation';
-import globalStyles from '../styles/globalStyles';
+import ScreenTitle from '@/components/ScreenTitle';
+import InvitationCard from '@/components/InvitationCard';
+import { useInvitations } from '@/context/InvitationsContext';
+import { InvitationWithDetails } from '@/types/Invitation';
+import globalStyles from '@/styles/globalStyles';
 
 const InvitationsScreen: React.FC = () => {
   const { invitations, loading, acceptInvitation, declineInvitation } =

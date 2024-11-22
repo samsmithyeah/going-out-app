@@ -25,10 +25,10 @@ import {
   arrayUnion,
   arrayRemove,
 } from 'firebase/firestore';
-import { db } from '../firebase';
-import { useUser } from './UserContext';
-import { User } from '../types/User';
-import { useCrews } from './CrewsContext';
+import { db } from '@/firebase';
+import { useUser } from '@/context/UserContext';
+import { User } from '@/types/User';
+import { useCrews } from '@/context/CrewsContext';
 import Toast from 'react-native-toast-message';
 
 // Define the Message interface

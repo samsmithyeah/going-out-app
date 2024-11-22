@@ -10,10 +10,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import FastImage from 'react-native-fast-image';
-import { Crew } from '../types/Crew'; // Assuming you have a Crew type
-import { User } from '../types/User';
+import { Crew } from '@/types/Crew'; // Assuming you have a Crew type
+import { User } from '@/types/User';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { NavParamList } from '../navigation/AppNavigator';
+import { NavParamList } from '@/navigation/AppNavigator';
 
 type CrewListProps = {
   crews: Crew[];

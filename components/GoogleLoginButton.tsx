@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import * as Google from 'expo-auth-session/providers/google';
-import { auth } from '../firebase';
-import { addUserToFirestore } from '../utils/AddUserToFirestore';
-import CustomButton from './CustomButton'; // Import CustomButton
+import { auth } from '@/firebase';
+import { addUserToFirestore } from '@/utils/AddUserToFirestore';
+import CustomButton from '@/components/CustomButton'; // Import CustomButton
 import Toast from 'react-native-toast-message'; // Import Toast
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 

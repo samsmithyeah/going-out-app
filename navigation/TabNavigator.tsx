@@ -3,14 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import InvitationsScreen from '../screens/InvitationsScreen';
-import UserProfileStackNavigator from './UserProfileStackNavigator';
-import DashboardStackNavigator from './DashboardStackNavigator';
-import CrewsStackNavigator from './CrewsStackNavigator';
-import { useInvitations } from '../context/InvitationsContext';
-import ChatsStackNavigator from './ChatsStackNavigator';
-import { useDirectMessages } from '../context/DirectMessagesContext';
-import { useCrewDateChat } from '../context/CrewDateChatContext';
+import InvitationsScreen from '@/screens/InvitationsScreen';
+import UserProfileStackNavigator from '@/navigation/UserProfileStackNavigator';
+import DashboardStackNavigator from '@/navigation/DashboardStackNavigator';
+import CrewsStackNavigator from '@/navigation/CrewsStackNavigator';
+import { useInvitations } from '@/context/InvitationsContext';
+import ChatsStackNavigator from '@/navigation/ChatsStackNavigator';
+import { useDirectMessages } from '@/context/DirectMessagesContext';
+import { useCrewDateChat } from '@/context/CrewDateChatContext';
 
 export type TabsParamList = {
   DashboardStack: undefined;

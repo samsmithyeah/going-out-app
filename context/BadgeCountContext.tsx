@@ -1,10 +1,10 @@
 // context/BadgeCountContext.tsx
 
 import React, { useEffect, createContext, useContext } from 'react';
-import { useCrewDateChat } from './CrewDateChatContext';
-import { useDirectMessages } from './DirectMessagesContext';
-import { useInvitations } from './InvitationsContext';
-import { useUser } from './UserContext';
+import { useCrewDateChat } from '@/context/CrewDateChatContext';
+import { useDirectMessages } from '@/context/DirectMessagesContext';
+import { useInvitations } from '@/context/InvitationsContext';
+import { useUser } from '@/context/UserContext';
 import Toast from 'react-native-toast-message';
 
 const BadgeCountContext = createContext(null);

@@ -14,17 +14,17 @@ import {
   limit,
   writeBatch,
 } from 'firebase/firestore';
-import { db } from '../firebase';
-import { useUser } from '../context/UserContext';
-import { User } from '../types/User';
-import MemberList from '../components/MemberList';
-import CustomSearchInput from '../components/CustomSearchInput';
-import CustomButton from '../components/CustomButton';
-import CustomModal from '../components/CustomModal';
-import CustomTextInput from '../components/CustomTextInput';
-import { NavParamList } from '../navigation/AppNavigator';
+import { db } from '@/firebase';
+import { useUser } from '@/context/UserContext';
+import { User } from '@/types/User';
+import MemberList from '@/components/MemberList';
+import CustomSearchInput from '@/components/CustomSearchInput';
+import CustomButton from '@/components/CustomButton';
+import CustomModal from '@/components/CustomModal';
+import CustomTextInput from '@/components/CustomTextInput';
+import { NavParamList } from '@/navigation/AppNavigator';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import LoadingOverlay from '../components/LoadingOverlay';
+import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 
 interface MemberWithStatus extends User {

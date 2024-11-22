@@ -9,17 +9,17 @@ import {
   Keyboard,
   TouchableOpacity,
 } from 'react-native';
-import { auth } from '../firebase';
+import { auth } from '@/firebase';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import * as WebBrowser from 'expo-web-browser';
 import FastImage from 'react-native-fast-image';
-import GoogleLoginButton from '../components/GoogleLoginButton';
-import { NavParamList } from '../navigation/AppNavigator';
-import { useUser } from '../context/UserContext';
-import CustomButton from '../components/CustomButton';
-import CustomTextInput from '../components/CustomTextInput';
-import Colors from '../styles/colors';
+import GoogleLoginButton from '@/components/GoogleLoginButton';
+import { NavParamList } from '@/navigation/AppNavigator';
+import { useUser } from '@/context/UserContext';
+import CustomButton from '@/components/CustomButton';
+import CustomTextInput from '@/components/CustomTextInput';
+import Colors from '@/styles/colors';
 
 type LoginScreenProps = NativeStackScreenProps<NavParamList, 'Login'>;
 
@@ -81,7 +81,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       <View style={styles.container}>
         <View style={styles.logoContainer}>
           <FastImage
-            source={require('../assets/images/flock-transparent.png')}
+            source={require('@/assets/images/flock-transparent.png')}
             style={styles.logo}
             resizeMode="contain"
           />

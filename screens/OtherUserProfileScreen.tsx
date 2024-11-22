@@ -3,19 +3,19 @@
 import React, { useEffect, useLayoutEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '@/firebase';
 import {
   RouteProp,
   useRoute,
   useNavigation,
   NavigationProp,
 } from '@react-navigation/native';
-import { User } from '../types/User';
-import ProfilePicturePicker from '../components/ProfilePicturePicker';
-import { NavParamList } from '../navigation/AppNavigator';
+import { User } from '@/types/User';
+import ProfilePicturePicker from '@/components/ProfilePicturePicker';
+import { NavParamList } from '@/navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
-import CustomButton from '../components/CustomButton';
-import Colors from '../styles/colors';
+import CustomButton from '@/components/CustomButton';
+import Colors from '@/styles/colors';
 
 type OtherUserProfileScreenRouteProp = RouteProp<
   NavParamList,

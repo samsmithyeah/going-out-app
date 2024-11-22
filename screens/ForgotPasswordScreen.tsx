@@ -9,12 +9,12 @@ import {
   Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { NavParamList } from '../navigation/AppNavigator';
+import { NavParamList } from '@/navigation/AppNavigator';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../firebase';
-import CustomButton from '../components/CustomButton';
-import CustomTextInput from '../components/CustomTextInput';
-import Colors from '../styles/colors';
+import { auth } from '@/firebase';
+import CustomButton from '@/components/CustomButton';
+import CustomTextInput from '@/components/CustomTextInput';
+import Colors from '@/styles/colors';
 
 type ForgotPasswordProps = NativeStackScreenProps<
   NavParamList,

@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import ChatsListScreen from '../screens/ChatsListScreen';
-import CrewDateChatScreen from '../screens/CrewDateChatScreen';
-import DMChatScreen from '../screens/DMChatScreen';
+import ChatsListScreen from '@/screens/ChatsListScreen';
+import CrewDateChatScreen from '@/screens/CrewDateChatScreen';
+import DMChatScreen from '@/screens/DMChatScreen';
 
 export type ChatsStackParamList = {
   ChatsList: undefined;
