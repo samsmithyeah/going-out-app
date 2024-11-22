@@ -25,6 +25,7 @@ ios/
 
 # Android
 android/
+*.aab
 
 # Firebase
 functions/*.log
