@@ -14,6 +14,7 @@ import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
 import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';
+import Colors from '../styles/colors';
 
 type ForgotPasswordProps = NativeStackScreenProps<
   NavParamList,
@@ -107,7 +108,7 @@ export default ForgotPasswordScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6497b1',
+    backgroundColor: Colors.flock,
     justifyContent: 'center',
   },
   instructions: {

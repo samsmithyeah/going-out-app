@@ -19,6 +19,7 @@ import { NavParamList } from '../navigation/AppNavigator';
 import { useUser } from '../context/UserContext';
 import CustomButton from '../components/CustomButton';
 import CustomTextInput from '../components/CustomTextInput';
+import Colors from '../styles/colors';
 
 type LoginScreenProps = NativeStackScreenProps<NavParamList, 'Login'>;
 
@@ -80,11 +81,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
       <View style={styles.container}>
         <View style={styles.logoContainer}>
           <FastImage
-            source={require('../assets/images/icon.png')}
+            source={require('../assets/images/flock-transparent.png')}
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={styles.title}>Welcome!</Text>
         </View>
 
         <View style={styles.formContainer}>
@@ -162,22 +162,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6497b1',
+    backgroundColor: Colors.flock,
   },
   logoContainer: {
-    marginTop: 70,
+    marginTop: 40,
     alignItems: 'center',
-    marginBottom: 30,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 200,
+    height: 200,
     marginBottom: 10,
-  },
-  title: {
-    fontSize: 28,
-    color: '#fff',
-    fontWeight: '700',
   },
   formContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.6)',

@@ -37,6 +37,7 @@ import { useCrews } from '../context/CrewsContext';
 import LoadingOverlay from '../components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 import { useCrewDateChat } from '../context/CrewDateChatContext';
+import globalStyles from '../styles/globalStyles';
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
 
@@ -384,7 +385,7 @@ const CrewScreen: React.FC = () => {
   return (
     <>
       {(loading || !crew) && <LoadingOverlay />}
-      <View style={styles.container}>
+      <View style={globalStyles.container}>
         {/* Date Picker with Arrow Buttons */}
         <View style={styles.datePickerContainer}>
           {/* Left Arrow Button */}
@@ -534,11 +535,6 @@ export default CrewScreen;
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-  },
   statusButton: {
     position: 'absolute',
     bottom: 20,

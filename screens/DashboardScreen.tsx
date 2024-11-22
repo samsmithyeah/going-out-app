@@ -19,6 +19,8 @@ import Toast from 'react-native-toast-message';
 import ScreenTitle from '../components/ScreenTitle';
 import CreateCrewModal from '../components/CreateCrewModal'; // Import your modal
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Example icon library
+import { StatusBar } from 'expo-status-bar';
+import globalStyles from '../styles/globalStyles';
 
 const getDotColor = (count: number, total: number): string => {
   if (count === total && total > 0) return '#32CD32'; // Green
@@ -127,8 +129,9 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <>
+      <StatusBar translucent backgroundColor="transparent" />
       {isLoading && <LoadingOverlay />}
-      <View style={styles.container}>
+      <View style={globalStyles.container}>
         {/* Profile Section */}
         <ScreenTitle title="Your week" />
         {/* Conditional Rendering */}
@@ -169,13 +172,6 @@ const DashboardScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-    justifyContent: 'flex-start',
-    paddingBottom: 0,
-  },
   weekListContainer: {},
   emptyContainer: {
     flex: 1,

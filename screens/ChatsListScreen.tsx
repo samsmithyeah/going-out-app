@@ -29,6 +29,7 @@ import { useUser } from '../context/UserContext';
 import FastImage from 'react-native-fast-image';
 import ScreenTitle from '../components/ScreenTitle';
 import CustomSearchInput from '../components/CustomSearchInput';
+import globalStyles from '../styles/globalStyles';
 
 interface CombinedChat {
   id: string;
@@ -323,7 +324,7 @@ const ChatsListScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={globalStyles.container}>
       <ScreenTitle title="Chats" />
 
       {/* Search Bar */}
@@ -346,11 +347,6 @@ const ChatsListScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-  },
   chatItem: {
     flexDirection: 'row',
     paddingVertical: 15,

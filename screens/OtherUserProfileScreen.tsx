@@ -15,6 +15,7 @@ import ProfilePicturePicker from '../components/ProfilePicturePicker';
 import { NavParamList } from '../navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
 import CustomButton from '../components/CustomButton';
+import Colors from '../styles/colors';
 
 type OtherUserProfileScreenRouteProp = RouteProp<
   NavParamList,
@@ -159,7 +160,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     alignItems: 'center',
-    backgroundColor: '#f5f5f5', // Light background color
+    backgroundColor: Colors.background,
   },
   loaderContainer: {
     flex: 1,
