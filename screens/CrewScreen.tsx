@@ -361,12 +361,21 @@ const CrewScreen: React.FC = () => {
           {
             text: 'Poke',
             onPress: async () => {
-              await pokeCrew(crewId, selectedDate, user.uid);
-              Toast.show({
-                type: 'success',
-                text1: 'Poke Sent',
-                text2: 'Your poke has been sent to the crew.',
-              });
+              try {
+                const poke = await pokeCrew(crewId, selectedDate, user.uid);
+                Toast.show({
+                  type: 'success',
+                  text1: 'Poke Sent',
+                  text2: (poke.data as { message: string }).message,
+                });
+              } catch (error) {
+                console.error('Error sending poke:', error);
+                Toast.show({
+                  type: 'error',
+                  text1: 'Error',
+                  text2: 'Failed to send poke.',
+                });
+              }
             },
           },
         ],

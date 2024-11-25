@@ -23,9 +23,9 @@ const CrewHeader: React.FC<CrewHeaderProps> = ({
     <View style={styles.container}>
       <ProfilePicturePicker
         imageUrl={crew.iconUrl || null}
+        iconName="people-outline"
         onImageUpdate={() => {}}
         editable={false}
-        storagePath={`crews/${crew.id}/icon.jpg`}
         size={35}
       />
       <View style={styles.textContainer}>
