@@ -30,6 +30,7 @@ import FastImage from 'react-native-fast-image';
 import ScreenTitle from '@/components/ScreenTitle';
 import CustomSearchInput from '@/components/CustomSearchInput';
 import globalStyles from '@/styles/globalStyles';
+import { Ionicons } from '@expo/vector-icons';
 
 interface CombinedChat {
   id: string;
@@ -268,10 +269,13 @@ const ChatsListScreen: React.FC = () => {
         onPress={() => handleNavigation(item.id, item.type)}
       >
         {/* Avatar */}
-        <FastImage
-          source={item.iconUrl ? { uri: item.iconUrl } : undefined}
-          style={styles.avatar}
-        />
+        {item.iconUrl ? (
+          <FastImage source={{ uri: item.iconUrl }} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatar}>
+            <Ionicons name="people-outline" size={30} color="#888" />
+          </View>
+        )}
 
         {/* Chat Details */}
         <View style={styles.chatDetails}>
@@ -359,6 +363,8 @@ const styles = StyleSheet.create({
     borderRadius: 27.5,
     backgroundColor: '#ddd',
     marginRight: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   chatDetails: {
     flex: 1,

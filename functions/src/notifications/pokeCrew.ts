@@ -63,8 +63,7 @@ export const pokeCrew = functions.https.onCall(
       if (
         !crewData ||
         !crewData.memberIds ||
-        !crewData.name ||
-        !crewData.activity
+        !crewData.name
       ) {
         throw new functions.https.HttpsError(
           'invalid-argument',
@@ -74,7 +73,7 @@ export const pokeCrew = functions.https.onCall(
 
       const { name: crewName, activity } = crewData;
 
-      console.log(`Poking crew ${crewName} about ${activity} on ${date}.`);
+      const activityName = activity ? activity.toLowerCase() : 'meeting up';
 
       const crewMemberIds = crewData.memberIds.filter((id: string) => id !== userId);
 
@@ -133,7 +132,7 @@ export const pokeCrew = functions.https.onCall(
 
       // **Prepare the Notification Message**
       const dateDescription = getDateDescription(date);
-      const messageBody = `${senderName} has poked the crew about ${activity.toLowerCase()} ${dateDescription}!`;
+      const messageBody = `${senderName} has poked the crew about ${activityName} ${dateDescription}!`;
 
       // **Fetch Push Tokens for Members Not Up**
       const batchSize = 10; // Firestore 'in' queries support up to 10 elements
@@ -170,7 +169,7 @@ export const pokeCrew = functions.https.onCall(
         console.log('No valid Expo push tokens found for members not up.');
         return {
           success: false,
-          message: 'No valid push tokens to notify.',
+          message: 'The crew members not up for it didn\'t have push notifications set up correctly.',
         };
       }
 
@@ -197,7 +196,7 @@ export const pokeCrew = functions.https.onCall(
         `Sent poke notifications to members not up in crew ${crewName} for date ${dateDescription}.`
       );
 
-      return { success: true, message: 'Pokes sent successfully.' };
+      return { success: true, message: 'The crew were successfully poked' };
     } catch (error) {
       console.error('Error in pokeCrew function:', error);
       if (error instanceof functions.https.HttpsError) {
