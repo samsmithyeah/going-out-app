@@ -416,6 +416,15 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
 
   // Setup real-time listeners for crews
   useEffect(() => {
+    if (!user?.uid) {
+      console.log('User not logged in. Clearing crews data.');
+      setCrewIds([]);
+      setCrews([]);
+      setDateCounts({});
+      setDateMatches({});
+      setDateMatchingCrews({});
+      return;
+    }
     let unsubscribeList: Unsubscribe[] = [];
 
     const setupCrewListeners = (fetchedCrewIds: string[]) => {
