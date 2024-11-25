@@ -26,11 +26,11 @@ import {
 import { db } from '@/firebase';
 import moment from 'moment';
 import { useUser } from '@/context/UserContext';
-import FastImage from 'react-native-fast-image';
 import ScreenTitle from '@/components/ScreenTitle';
 import CustomSearchInput from '@/components/CustomSearchInput';
 import globalStyles from '@/styles/globalStyles';
-import { Ionicons } from '@expo/vector-icons';
+
+import ProfilePicturePicker from '@/components/ProfilePicturePicker';
 
 interface CombinedChat {
   id: string;
@@ -269,13 +269,15 @@ const ChatsListScreen: React.FC = () => {
         onPress={() => handleNavigation(item.id, item.type)}
       >
         {/* Avatar */}
-        {item.iconUrl ? (
-          <FastImage source={{ uri: item.iconUrl }} style={styles.avatar} />
-        ) : (
-          <View style={styles.avatar}>
-            <Ionicons name="people-outline" size={30} color="#888" />
-          </View>
-        )}
+        <View style={styles.avatar}>
+          <ProfilePicturePicker
+            size={55}
+            imageUrl={item.iconUrl ?? null}
+            iconName="people-outline"
+            editable={false}
+            onImageUpdate={() => {}}
+          />
+        </View>
 
         {/* Chat Details */}
         <View style={styles.chatDetails}>
@@ -358,13 +360,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   avatar: {
-    width: 55,
-    height: 55,
-    borderRadius: 27.5,
-    backgroundColor: '#ddd',
     marginRight: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   chatDetails: {
     flex: 1,

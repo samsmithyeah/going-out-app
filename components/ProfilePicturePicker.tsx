@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   profilePictureContainer: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#e6e6e6',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
