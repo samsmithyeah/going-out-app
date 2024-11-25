@@ -249,7 +249,13 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
 
   // Fetch direct messages involving the current user
   const fetchDirectMessages = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!user?.uid) {
+      console.log('User is not logged in. Clearing DMs.');
+      setDms([]);
+      setMessages({});
+      setTotalUnread(0);
+      return;
+    }
 
     try {
       const dmQuery = query(

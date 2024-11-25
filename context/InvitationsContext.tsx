@@ -57,6 +57,7 @@ export const InvitationsProvider: React.FC<InvitationsProviderProps> = ({
 
   useEffect(() => {
     if (!user?.uid) {
+      console.log('User not logged in. Clearing invitations.');
       setInvitations([]);
       setLoading(false);
       return;

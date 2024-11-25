@@ -175,7 +175,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
 
     try {
       const unreadPromises = chats
-        .filter((chat) => !activeChats.has(chat.id)) // Exclude active chats
+        .filter((chat) => !activeChats.has(chat.id))
         .map((chat) => fetchUnreadCount(chat.id));
       const unreadCounts = await Promise.all(unreadPromises);
       const total = unreadCounts.reduce((acc, count) => acc + count, 0);
@@ -193,7 +193,13 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
 
   // Fetch crew date chats where the user is a member and has at least one message
   const fetchChats = useCallback(async () => {
-    if (!user?.uid) return;
+    if (!user?.uid) {
+      console.log('User is signed out. Clearing group chats.');
+      setChats([]);
+      setMessages({});
+      setTotalUnread(0);
+      return;
+    }
 
     try {
       const chatQuery = query(
@@ -325,6 +331,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
   }, [user?.uid, crews, fetchUserDetails]);
 
   useEffect(() => {
+    console.log('Current chats:', chats);
     computeTotalUnread();
   }, [computeTotalUnread]);
 
