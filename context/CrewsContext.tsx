@@ -121,6 +121,7 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
     return crewsData;
   };
 
+  // Helper function to fetch up statuses
   const fetchUpStatuses = async (fetchedCrewIds: string[]) => {
     const counts: { [key: string]: number } = {};
 
@@ -129,27 +130,36 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
       counts[date] = 0;
     });
 
-    // Batch fetching using queries
-    const batchPromises = fetchedCrewIds.map(async (crewId) => {
-      const statusesRef = collection(db, 'crews', crewId, 'statuses');
-      const statusesQuery = query(
-        statusesRef,
-        where('upForGoingOutTonight', '==', true),
-        where('date', 'in', weekDates),
-      );
-      const snapshot = await getDocs(statusesQuery);
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
-        const date = data.date;
-        if (counts[date] !== undefined) {
-          counts[date] += 1;
-        }
-      });
-    });
+    // Prepare all status document references
+    const statusDocRefs = fetchedCrewIds.flatMap((crewId) =>
+      weekDates.map((date) =>
+        doc(db, 'crews', crewId, 'statuses', date, 'userStatuses', user!.uid),
+      ),
+    );
 
     try {
-      setLoadingStatuses(true);
-      await Promise.all(batchPromises);
+      setLoadingStatuses(true); // Start loading statuses
+      // Fetch all status documents concurrently
+      const statusSnapshots = await Promise.all(
+        statusDocRefs.map((ref) => getDoc(ref)),
+      );
+
+      // Aggregate counts and matching crews
+      statusSnapshots.forEach((statusSnap) => {
+        if (statusSnap.exists()) {
+          const statusData = statusSnap.data();
+          if (
+            typeof statusData.upForGoingOutTonight === 'boolean' &&
+            statusData.upForGoingOutTonight
+          ) {
+            const date = statusSnap.ref.parent.parent?.id;
+            if (date && counts[date] !== undefined) {
+              counts[date] += 1;
+            }
+          }
+        }
+      });
+
       setDateCounts(counts);
     } catch (error: any) {
       console.error('Error fetching up statuses:', error);
@@ -159,7 +169,7 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
         text2: 'Could not fetch member statuses',
       });
     } finally {
-      setLoadingStatuses(false);
+      setLoadingStatuses(false); // End loading statuses
     }
   };
 
