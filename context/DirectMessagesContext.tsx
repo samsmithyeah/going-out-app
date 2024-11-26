@@ -322,7 +322,10 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
 
       console.log(`Fetched ${fetchedDMs.length} direct messages`);
       console.log('Fetched direct messages:', fetchedDMs);
-      setDms(fetchedDMs);
+      const validDMs = fetchedDMs.filter(
+        (dm): dm is DirectMessage => dm !== null,
+      );
+      setDms(validDMs);
       // Removed computeTotalUnread call to prevent circular dependency
     } catch (error) {
       console.error('Error fetching direct messages:', error);
@@ -432,10 +435,11 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
             })
             .filter((dm) => dm !== null);
 
-          console.log(`Fetched ${fetchedDMs.length} direct messages`);
-          console.log('Fetched direct messages:', fetchedDMs);
+          const validDMs = fetchedDMs.filter(
+            (dm): dm is DirectMessage => dm !== null,
+          );
 
-          setDms(fetchedDMs);
+          setDms(validDMs);
           // Removed computeTotalUnread call to prevent circular dependency
         } catch (error) {
           console.error('Error fetching direct messages:', error);
