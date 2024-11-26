@@ -473,6 +473,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
   // Listen to real-time updates in messages of a crew date chat with sender names
   const listenToMessages = useCallback(
     (chatId: string) => {
+      if (!user?.uid) return () => {};
       const messagesRef = collection(db, 'crew_date_chats', chatId, 'messages');
       const msgQuery = query(messagesRef, orderBy('createdAt', 'desc')); // Optimize ordering
 

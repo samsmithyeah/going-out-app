@@ -178,6 +178,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     () =>
       debounce(async (isTyping: boolean) => {
         if (!chatId || !user?.uid) return;
+        const userUid = user.uid;
         const chatRef = doc(db, 'crew_date_chats', chatId);
         try {
           const chatSnap = await getDoc(chatRef);
@@ -187,8 +188,8 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
               chatRef,
               {
                 typingStatus: {
-                  [user.uid]: isTyping,
-                  [`${user.uid}LastUpdate`]: serverTimestamp(),
+                  [userUid]: isTyping,
+                  [`${userUid}LastUpdate`]: serverTimestamp(),
                 },
               },
               { merge: true }, // Merge to avoid overwriting existing fields
@@ -196,8 +197,8 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
           } else {
             // Update existing document
             await updateDoc(chatRef, {
-              [`typingStatus.${user.uid}`]: isTyping,
-              [`typingStatus.${user.uid}LastUpdate`]: serverTimestamp(),
+              [`typingStatus.${userUid}`]: isTyping,
+              [`typingStatus.${userUid}LastUpdate`]: serverTimestamp(),
             });
           }
         } catch (error) {
@@ -290,6 +291,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     const unsubscribeTyping = onSnapshot(
       chatRef,
       (docSnapshot) => {
+        if (!user?.uid) return;
         if (docSnapshot.exists()) {
           const data = docSnapshot.data();
           if (data.typingStatus) {
@@ -323,7 +325,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
         }
       },
       (error) => {
-        console.error('Error listening to typing status:', error);
+        console.error('Error listening to typing status (group):', error);
       },
     );
 

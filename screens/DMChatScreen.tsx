@@ -230,6 +230,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     const unsubscribeTyping = onSnapshot(
       convoRef,
       (docSnapshot) => {
+        if (!user?.uid) return;
         if (docSnapshot.exists()) {
           const data = docSnapshot.data();
           if (data.typingStatus) {
@@ -255,7 +256,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
         }
       },
       (error) => {
-        console.error('Error listening to typing status:', error);
+        console.error('Error listening to typing status (DMs):', error);
       },
     );
 
