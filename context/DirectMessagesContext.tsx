@@ -322,7 +322,6 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
 
       console.log(`Fetched ${fetchedDMs.length} direct messages`);
       console.log('Fetched direct messages:', fetchedDMs);
-
       setDms(fetchedDMs);
       // Removed computeTotalUnread call to prevent circular dependency
     } catch (error) {
