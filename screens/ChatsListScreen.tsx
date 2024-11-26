@@ -29,7 +29,6 @@ import { useUser } from '@/context/UserContext';
 import ScreenTitle from '@/components/ScreenTitle';
 import CustomSearchInput from '@/components/CustomSearchInput';
 import globalStyles from '@/styles/globalStyles';
-
 import ProfilePicturePicker from '@/components/ProfilePicturePicker';
 
 interface CombinedChat {
@@ -48,7 +47,7 @@ const ChatsListScreen: React.FC = () => {
   const { dms, fetchUnreadCount: fetchDMUnreadCount } = useDirectMessages();
   const { chats: groupChats, fetchUnreadCount: fetchGroupUnreadCount } =
     useCrewDateChat();
-  const { crews } = useCrews();
+  const { crews, usersCache } = useCrews();
   const { user } = useUser();
   const navigation = useNavigation<NavigationProp<NavParamList>>();
 
@@ -65,6 +64,8 @@ const ChatsListScreen: React.FC = () => {
     async (senderId: string): Promise<string> => {
       if (senderNameCache.current[senderId]) {
         return senderNameCache.current[senderId];
+      } else if (usersCache[senderId]) {
+        return usersCache[senderId].displayName;
       }
       try {
         const senderDoc = await getDoc(doc(db, 'users', senderId));
@@ -94,6 +95,10 @@ const ChatsListScreen: React.FC = () => {
     senderName: string;
     createdAt: Date;
   } | null> => {
+    if (!user) {
+      console.log('User is not logged in');
+      return null;
+    }
     try {
       const messagesRef =
         chatType === 'direct'
@@ -146,13 +151,11 @@ const ChatsListScreen: React.FC = () => {
     return crew?.iconUrl;
   };
 
-  // Combine and sort chats with unread counts
+  // Combine and sort chats with unread counts in parallel
   const combineChats = useCallback(async () => {
+    console.log('combineChats total time started');
     try {
-      const combined: CombinedChat[] = [];
-
-      // Process Direct Messages
-      for (const dm of dms) {
+      const directMessagesPromises = dms.map(async (dm) => {
         const otherParticipants = dm.participants;
         const title = otherParticipants
           .map((user) => user.displayName)
@@ -160,12 +163,11 @@ const ChatsListScreen: React.FC = () => {
         const iconUrl = otherParticipants[0]?.photoURL;
 
         const lastMsg = await fetchLastMessage(dm.id, 'direct');
-
         const unreadCount = await fetchDMUnreadCount(dm.id);
 
-        combined.push({
+        return {
           id: dm.id,
-          type: 'direct',
+          type: 'direct' as const,
           title,
           iconUrl,
           lastMessage: lastMsg?.text,
@@ -173,23 +175,21 @@ const ChatsListScreen: React.FC = () => {
           lastMessageSenderId: lastMsg?.senderId,
           lastMessageSenderName: lastMsg?.senderName,
           unreadCount,
-        });
-      }
+        };
+      });
 
-      // Process Group Chats
-      for (const gc of groupChats) {
+      const groupChatsPromises = groupChats.map(async (gc) => {
         const crewName = getCrewName(gc.id);
         const chatDate = getFormattedChatDate(gc.id);
         const title = `${crewName} (${chatDate})`;
         const iconUrl = getIconUrlForCrew(gc.id);
 
         const lastMsg = await fetchLastMessage(gc.id, 'group');
-
         const unreadCount = await fetchGroupUnreadCount(gc.id);
 
-        combined.push({
+        return {
           id: gc.id,
-          type: 'group',
+          type: 'group' as const,
           title,
           iconUrl,
           lastMessage: lastMsg?.text,
@@ -197,8 +197,15 @@ const ChatsListScreen: React.FC = () => {
           lastMessageSenderId: lastMsg?.senderId,
           lastMessageSenderName: lastMsg?.senderName,
           unreadCount,
-        });
-      }
+        };
+      });
+
+      const [directMessages, groupChatsData] = await Promise.all([
+        Promise.all(directMessagesPromises),
+        Promise.all(groupChatsPromises),
+      ]);
+
+      const combined = [...directMessages, ...groupChatsData];
 
       // Sort combined chats by lastMessageTime descending
       combined.sort((a, b) => {

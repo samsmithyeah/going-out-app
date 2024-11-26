@@ -191,7 +191,6 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [user?.uid, chats, fetchUnreadCount, activeChats]);
 
-  // Fetch crew date chats where the user is a member and has at least one message
   const fetchChats = useCallback(async () => {
     if (!user?.uid) {
       console.log('User is signed out. Clearing group chats.');
@@ -209,9 +208,9 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       );
 
       const querySnapshot = await getDocs(chatQuery);
-      const fetchedChats: CrewDateChat[] = [];
 
-      for (const docSnap of querySnapshot.docs) {
+      // Map each document snapshot to a promise that resolves to a CrewDateChat object
+      const chatPromises = querySnapshot.docs.map(async (docSnap) => {
         const chatData = docSnap.data();
 
         const memberIds: string[] = chatData.memberIds || [];
@@ -219,7 +218,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         // Exclude the current user's UID to get other members
         const otherMemberIds = memberIds.filter((id) => id !== user.uid);
 
-        // Fetch details for other members
+        // Fetch details for other members in parallel
         const otherMembers: User[] = await Promise.all(
           otherMemberIds.map((uid) => fetchUserDetails(uid)),
         );
@@ -236,15 +235,18 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           ? chatData.lastRead[user.uid] || null
           : null;
 
-        fetchedChats.push({
+        return {
           id: docSnap.id,
           crewId: crewId,
           otherMembers,
           crewName,
           avatarUrl: crew?.iconUrl,
           lastRead,
-        } as CrewDateChat);
-      }
+        } as CrewDateChat;
+      });
+
+      // Wait for all chat promises to resolve in parallel
+      const fetchedChats = await Promise.all(chatPromises);
 
       console.log(`Fetched ${fetchedChats.length} crew date chats`);
       console.log('Fetched crew date chats:', fetchedChats);
@@ -274,45 +276,59 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     const unsubscribe = onSnapshot(
       chatQuery,
       async (querySnapshot) => {
-        const fetchedChats: CrewDateChat[] = [];
+        try {
+          // Map each document snapshot to a promise that resolves to a CrewDateChat object
+          const chatPromises = querySnapshot.docs.map(async (docSnap) => {
+            const chatData = docSnap.data();
 
-        for (const docSnap of querySnapshot.docs) {
-          const chatData = docSnap.data();
+            const memberIds: string[] = chatData.memberIds || [];
 
-          const memberIds: string[] = chatData.memberIds || [];
+            // Exclude the current user's UID to get other members
+            const otherMemberIds = memberIds.filter((id) => id !== user.uid);
 
-          // Exclude the current user's UID to get other members
-          const otherMemberIds = memberIds.filter((id) => id !== user.uid);
+            // Fetch details for other members in parallel
+            const otherMembers: User[] = await Promise.all(
+              otherMemberIds.map((uid) => fetchUserDetails(uid)),
+            );
 
-          // Fetch details for other members
-          const otherMembers: User[] = await Promise.all(
-            otherMemberIds.map((uid) => fetchUserDetails(uid)),
-          );
+            // Extract crewId from chatId (document ID)
+            const [crewId] = docSnap.id.split('_');
 
-          // Extract crewId from chatId (document ID)
-          const [crewId] = docSnap.id.split('_');
+            // Fetch crewName from crews collection
+            const crew = crews.find((c) => c.id === crewId);
+            const crewName = crew ? crew.name : 'Unknown Crew';
 
-          // Fetch crewName from crews collection
-          const crew = crews.find((c) => c.id === crewId);
-          const crewName = crew ? crew.name : 'Unknown Crew';
+            // Get lastRead timestamp for current user
+            const lastRead: Timestamp | null = chatData.lastRead
+              ? chatData.lastRead[user.uid] || null
+              : null;
 
-          // Get lastRead timestamp for current user
-          const lastRead: Timestamp | null = chatData.lastRead
-            ? chatData.lastRead[user.uid] || null
-            : null;
+            return {
+              id: docSnap.id,
+              crewId: crewId,
+              otherMembers,
+              crewName,
+              avatarUrl: crew?.iconUrl,
+              lastRead,
+            } as CrewDateChat;
+          });
 
-          fetchedChats.push({
-            id: docSnap.id,
-            crewId: crewId,
-            otherMembers,
-            crewName,
-            avatarUrl: crew?.iconUrl,
-            lastRead,
-          } as CrewDateChat);
+          // Wait for all chat promises to resolve in parallel
+          const fetchedChats = await Promise.all(chatPromises);
+
+          console.log(`Fetched ${fetchedChats.length} crew date chats`);
+          console.log('Fetched crew date chats:', fetchedChats);
+
+          setChats(fetchedChats);
+          // Removed computeTotalUnread from here
+        } catch (error) {
+          console.error('Error processing real-time chat updates:', error);
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not process real-time chat updates',
+          });
         }
-
-        setChats(fetchedChats);
-        // Removed computeTotalUnread from here
       },
       (error) => {
         console.error('Error listening to chats:', error);

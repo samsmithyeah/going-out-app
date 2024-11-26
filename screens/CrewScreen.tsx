@@ -492,21 +492,27 @@ const CrewScreen: React.FC = () => {
                 accessibilityHint="Navigate to crew date chat"
               />
             </View>
-            <View style={styles.chatButton}>
-              <CustomButton
-                title="Poke the others"
-                onPress={handlePokeCrew}
-                loading={false}
-                variant="secondary" // Choose an appropriate variant
-                icon={{
-                  name: 'beer-outline',
-                  size: 24,
-                  library: 'Ionicons',
-                }}
-                accessibilityLabel="Poke Crew"
-                accessibilityHint="Send a poke to crew members who are not up for it"
-              />
-            </View>
+            {membersUpForGoingOut.length < members.length ? (
+              <View style={styles.chatButton}>
+                <CustomButton
+                  title="Poke the others"
+                  onPress={handlePokeCrew}
+                  loading={false}
+                  variant="secondary"
+                  icon={{
+                    name: 'beer-outline',
+                    size: 24,
+                    library: 'Ionicons',
+                  }}
+                  accessibilityLabel="Poke Crew"
+                  accessibilityHint="Send a poke to crew members who are not up for it"
+                />
+              </View>
+            ) : (
+              <Text style={styles.upForItText}>
+                The whole crew is up for it today! 🎉
+              </Text>
+            )}
           </View>
         )}
 
@@ -603,5 +609,13 @@ const styles = StyleSheet.create({
   },
   chatButton: {
     marginBottom: 10,
+  },
+  upForItText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+    alignSelf: 'center',
+    marginTop: 10,
   },
 });
