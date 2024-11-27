@@ -11,16 +11,8 @@ import { captureConsoleIntegration } from '@sentry/core';
 
 Sentry.init({
   dsn: 'https://ea17b86dea77e3f6b37bd8ad04223206@o4508365591281664.ingest.de.sentry.io/4508365591674960',
-  integrations: [
-    captureConsoleIntegration({ levels: ['warn', 'error'] }),
-    Sentry.mobileReplayIntegration(),
-  ],
+  integrations: [captureConsoleIntegration({ levels: ['warn', 'error'] })],
   tracesSampleRate: 1.0,
-  profilesSampleRate: 1.0,
-  _experiments: {
-    replaysSessionSampleRate: 1.0,
-    replaysOnErrorSampleRate: 1.0,
-  },
 });
 
 // Configure notification handler
@@ -90,4 +82,4 @@ const App: React.FC = () => {
   return <AppNavigator />;
 };
 
-export default Sentry.wrap(App);
+export default App;
