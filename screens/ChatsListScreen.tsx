@@ -153,7 +153,6 @@ const ChatsListScreen: React.FC = () => {
 
   // Combine and sort chats with unread counts in parallel
   const combineChats = useCallback(async () => {
-    console.log('combineChats total time started');
     try {
       const directMessagesPromises = dms.map(async (dm) => {
         const otherParticipants = dm.participants;

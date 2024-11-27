@@ -1,6 +1,6 @@
 // screens/CrewScreen.tsx
 
-import React, { useEffect, useState, useLayoutEffect } from 'react';
+import React, { useEffect, useState, useLayoutEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -252,9 +252,9 @@ const CrewScreen: React.FC = () => {
     ? statusesForSelectedDate[user.uid] || false
     : false;
 
-  // Get list of members who are up for it on the selected date
-  const membersUpForGoingOut = members.filter(
-    (member) => statusesForSelectedDate[member.uid],
+  const membersUpForGoingOut = useMemo(
+    () => members.filter((member) => statusesForSelectedDate[member.uid]),
+    [members, statusesForSelectedDate],
   );
 
   const getCrewActivity = () => {
@@ -264,14 +264,6 @@ const CrewScreen: React.FC = () => {
     return 'meeting up';
   };
 
-  // Debugging: Log the current status and members up for it
-  useEffect(() => {
-    console.log('Selected Date:', selectedDate);
-    console.log('Current User Status:', currentUserStatus);
-    console.log('Members Up For Going Out:', membersUpForGoingOut);
-  }, [membersUpForGoingOut, currentUserStatus, selectedDate]);
-
-  // Add a cog icon in the header to navigate to CrewSettingsScreen
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -284,7 +276,6 @@ const CrewScreen: React.FC = () => {
           <MaterialIcons name="settings" size={24} color="black" />
         </TouchableOpacity>
       ),
-      // Set the custom header title once crew data is loaded
       headerTitle: crew ? () => <CrewHeader crew={crew} /> : 'Crew',
       headerTitleAlign: 'left',
     });

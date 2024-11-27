@@ -248,9 +248,6 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       // Wait for all chat promises to resolve in parallel
       const fetchedChats = await Promise.all(chatPromises);
 
-      console.log(`Fetched ${fetchedChats.length} crew date chats`);
-      console.log('Fetched crew date chats:', fetchedChats);
-
       setChats(fetchedChats);
       // Removed computeTotalUnread from here
     } catch (error) {
@@ -316,9 +313,6 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           // Wait for all chat promises to resolve in parallel
           const fetchedChats = await Promise.all(chatPromises);
 
-          console.log(`Fetched ${fetchedChats.length} crew date chats`);
-          console.log('Fetched crew date chats:', fetchedChats);
-
           setChats(fetchedChats);
           // Removed computeTotalUnread from here
         } catch (error) {
@@ -347,7 +341,6 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
   }, [user?.uid, crews, fetchUserDetails]);
 
   useEffect(() => {
-    console.log('Current chats:', chats);
     computeTotalUnread();
   }, [computeTotalUnread]);
 

@@ -36,3 +36,4 @@ goingoutapp-c90b1-65d96c7159f9.json
 original.json
 truncated.json
 converter.py
+.env.local

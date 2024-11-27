@@ -320,8 +320,6 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         (dm) => dm !== null,
       );
 
-      console.log(`Fetched ${fetchedDMs.length} direct messages`);
-      console.log('Fetched direct messages:', fetchedDMs);
       const validDMs = fetchedDMs.filter(
         (dm): dm is DirectMessage => dm !== null,
       );
