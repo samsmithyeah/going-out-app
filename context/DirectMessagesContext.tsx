@@ -19,7 +19,7 @@ import {
   getDoc,
   doc,
   orderBy,
-  updateDoc,
+  setDoc,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/firebase';
@@ -147,6 +147,30 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
       if (!user?.uid) return;
 
       try {
+        const dmRef = doc(db, 'direct_messages', dmId);
+        const dmDoc = await getDoc(dmRef);
+        const otherUserUid = dmId.split('_').find((id) => id !== user.uid);
+
+        if (!dmDoc.exists()) {
+          // If DM doesn't exist, create it with participants
+          await setDoc(dmRef, {
+            participants: [user.uid, otherUserUid],
+            [`lastRead.${user.uid}`]: serverTimestamp(),
+            createdAt: serverTimestamp(),
+          });
+        } else {
+          const dmData = dmDoc.data();
+          if (!dmData.participants || !Array.isArray(dmData.participants)) {
+            await setDoc(
+              dmRef,
+              {
+                participants: [user.uid, otherUserUid],
+              },
+              { merge: true },
+            );
+          }
+        }
+        // Now, add the message
         const messagesRef = collection(db, 'direct_messages', dmId, 'messages');
         const newMessage = {
           senderId: user.uid,
@@ -166,18 +190,19 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     [user?.uid],
   );
 
-  // Update lastRead timestamp for a specific direct message
   const updateLastRead = useCallback(
     async (dmId: string) => {
       if (!user?.uid) return;
 
       try {
         const dmRef = doc(db, 'direct_messages', dmId);
-        await updateDoc(dmRef, {
-          [`lastRead.${user.uid}`]: serverTimestamp(),
-        });
-        console.log(`Updated lastRead for DM ${dmId}`);
-        // Do not call computeTotalUnread here to avoid circular dependency
+        await setDoc(
+          dmRef,
+          {
+            [`lastRead.${user.uid}`]: serverTimestamp(),
+          },
+          { merge: true },
+        );
       } catch (error) {
         console.error(`Error updating lastRead for DM ${dmId}:`, error);
         Toast.show({
@@ -189,7 +214,6 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     },
     [user?.uid],
   );
-
   // Listen to real-time updates in messages of a direct message conversation
   const listenToDMMessages = useCallback((dmId: string) => {
     const messagesRef = collection(db, 'direct_messages', dmId, 'messages');

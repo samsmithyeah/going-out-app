@@ -6,4 +6,7 @@ module.exports = {
     'react-native/no-unused-styles': 'error',
   },
   plugins: ['react-native'],
+  env: {
+    node: true,
+  },
 };

@@ -388,10 +388,13 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
 
       try {
         const chatRef = doc(db, 'crew_date_chats', chatId);
-        await updateDoc(chatRef, {
-          [`lastRead.${user.uid}`]: serverTimestamp(),
-        });
-        console.log(`Updated lastRead for chat ${chatId}`);
+        await setDoc(
+          chatRef,
+          {
+            [`lastRead.${user.uid}`]: serverTimestamp(),
+          },
+          { merge: true },
+        );
         await computeTotalUnread();
       } catch (error) {
         console.error(`Error updating lastRead for chat ${chatId}:`, error);
