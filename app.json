@@ -61,7 +61,15 @@
           "photosPermission": "This app accesses your photos to let you pick crew and profile pictures."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "flock",
+          "organization": "samlovesit"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
