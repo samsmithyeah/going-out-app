@@ -82,4 +82,4 @@ const App: React.FC = () => {
   return <AppNavigator />;
 };
 
-export default App;
+export default Sentry.wrap(App);
