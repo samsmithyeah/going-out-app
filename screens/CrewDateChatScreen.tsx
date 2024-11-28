@@ -42,6 +42,7 @@ import moment from 'moment';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import CrewHeader from '@/components/CrewHeader';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 // Define Props
 type CrewDateChatScreenProps = NativeStackScreenProps<
@@ -109,6 +110,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     useCrewDateChat();
   const { crews, usersCache } = useCrews();
   const { user, addActiveChat, removeActiveChat } = useUser();
+  const tabBarHeight = useBottomTabBarHeight();
   const [state, dispatch] = useReducer(reducer, {
     messages: [],
     isTyping: false,
@@ -446,7 +448,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
           name: user?.displayName || 'You',
           avatar: user?.photoURL || undefined,
         }}
-        bottomOffset={80}
+        bottomOffset={tabBarHeight}
         renderUsernameOnMessage
         isTyping={state.isTyping} // Current user's typing status
         onInputTextChanged={handleInputTextChanged} // Manage typing state

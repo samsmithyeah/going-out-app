@@ -40,6 +40,7 @@ import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 // Define Props
 type DMChatScreenProps = NativeStackScreenProps<NavParamList, 'DMChat'>;
@@ -104,6 +105,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   const { sendMessage, updateLastRead } = useDirectMessages(); // Import updateLastRead
   const { crews, usersCache } = useCrews();
   const isFocused = useIsFocused();
+  const tabBarHeight = useBottomTabBarHeight();
   const isFocusedRef = useRef(isFocused);
   const { user, addActiveChat, removeActiveChat } = useUser(); // Access activeChats
   const [state, dispatch] = useReducer(reducer, {
@@ -429,7 +431,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
           name: user?.displayName || 'You',
           avatar: user?.photoURL || undefined,
         }}
-        bottomOffset={80}
+        bottomOffset={tabBarHeight}
         isTyping={state.isTyping} // Using isTyping prop
         onInputTextChanged={handleInputTextChanged} // Manage typing state
         renderBubble={(props) => (
