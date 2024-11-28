@@ -34,6 +34,7 @@ import {
   serverTimestamp,
   Timestamp,
   getDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '@/firebase';
 import debounce from 'lodash/debounce';
@@ -102,12 +103,12 @@ const TYPING_TIMEOUT = 3000;
 
 const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   const { otherUserId } = route.params as RouteParams;
-  const { sendMessage, updateLastRead } = useDirectMessages(); // Import updateLastRead
+  const { sendMessage, updateLastRead } = useDirectMessages();
   const { crews, usersCache } = useCrews();
   const isFocused = useIsFocused();
   const tabBarHeight = useBottomTabBarHeight();
   const isFocusedRef = useRef(isFocused);
-  const { user, addActiveChat, removeActiveChat } = useUser(); // Access activeChats
+  const { user, addActiveChat, removeActiveChat } = useUser();
   const [state, dispatch] = useReducer(reducer, {
     messages: [],
     isTyping: false,
@@ -190,12 +191,37 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     () =>
       debounce(async (isTyping: boolean) => {
         if (!conversationId || !user?.uid) return;
+        const userUid = user.uid;
         const convoRef = doc(db, 'direct_messages', conversationId);
+        // try {
+        //   await updateDoc(convoRef, {
+        //     [`typingStatus.${user.uid}`]: isTyping,
+        //     [`typingStatus.${user.uid}LastUpdate`]: serverTimestamp(),
+        //   });
+        // } catch (error) {
+        //   console.error('Error updating typing status:', error);
+        // }
         try {
-          await updateDoc(convoRef, {
-            [`typingStatus.${user.uid}`]: isTyping,
-            [`typingStatus.${user.uid}LastUpdate`]: serverTimestamp(),
-          });
+          const chatSnap = await getDoc(convoRef);
+          if (!chatSnap.exists()) {
+            // Create the document with necessary fields
+            await setDoc(
+              convoRef,
+              {
+                typingStatus: {
+                  [userUid]: isTyping,
+                  [`${userUid}LastUpdate`]: serverTimestamp(),
+                },
+              },
+              { merge: true }, // Merge to avoid overwriting existing fields
+            );
+          } else {
+            // Update existing document
+            await updateDoc(convoRef, {
+              [`typingStatus.${userUid}`]: isTyping,
+              [`typingStatus.${userUid}LastUpdate`]: serverTimestamp(),
+            });
+          }
         } catch (error) {
           console.error('Error updating typing status:', error);
         }
@@ -357,7 +383,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
 
       // Add active chat to user's activeChats in Firestore
       const addActiveChatFunction = async () => {
-        if (!user?.uid) return;
+        if (!user?.uid || !conversationId) return;
         addActiveChat(conversationId);
       };
 

@@ -47,7 +47,7 @@ interface CrewDateChat {
   otherMembers: User[];
   crewName: string; // Fetched from crews collection
   avatarUrl?: string; // Optional: Include avatar URL
-  lastRead: Timestamp | null; // Last read timestamp for the current user
+  lastRead: { [uid: string]: Timestamp | null };
 }
 
 // Define the context properties
@@ -132,11 +132,13 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         const chatDoc = await getDoc(chatRef);
 
         if (!chatDoc.exists()) {
-          console.error(`Chat document ${chatId} does not exist.`);
+          console.warn(`Chat document ${chatId} does not exist.`);
           return 0;
         }
 
         const chatData = chatDoc.data();
+        if (!chatData) return 0;
+
         const lastRead = chatData.lastRead ? chatData.lastRead[user.uid] : null;
 
         const messagesRef = collection(
@@ -149,9 +151,11 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         let msgQuery;
         if (lastRead) {
           // Fetch messages created after lastRead
+          console.log('lastRead is not null. Fetching unread messages.');
           msgQuery = query(messagesRef, where('createdAt', '>', lastRead));
         } else {
           // If lastRead is null, all messages are unread
+          console.log('lastRead is null. Fetching all messages.');
           msgQuery = query(messagesRef);
         }
 
@@ -231,9 +235,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         const crewName = crew ? crew.name : 'Unknown Crew';
 
         // Get lastRead timestamp for current user
-        const lastRead: Timestamp | null = chatData.lastRead
-          ? chatData.lastRead[user.uid] || null
-          : null;
+        const lastRead = chatData.lastRead || {};
 
         return {
           id: docSnap.id,
@@ -296,7 +298,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
             const crewName = crew ? crew.name : 'Unknown Crew';
 
             // Get lastRead timestamp for current user
-            const lastRead: Timestamp | null = chatData.lastRead
+            const lastRead = chatData.lastRead
               ? chatData.lastRead[user.uid] || null
               : null;
 

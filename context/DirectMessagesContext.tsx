@@ -41,7 +41,7 @@ interface Message {
 interface DirectMessage {
   id: string; // e.g., 'user1_user2'
   participants: User[]; // Array of two users
-  lastRead: Timestamp | null; // Last read timestamp for the current user
+  lastRead: { [uid: string]: Timestamp | null };
 }
 
 // Define the context properties
@@ -78,38 +78,35 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
       if (!user?.uid) return 0;
 
       try {
-        const dmDoc = await getDoc(doc(db, 'direct_messages', dmId));
-        if (!dmDoc.exists()) return 0;
+        const dmRef = doc(db, 'direct_messages', dmId);
+        const dmDoc = await getDoc(dmRef);
+
+        if (!dmDoc.exists()) {
+          console.warn(`DM document ${dmId} does not exist.`);
+          return 0;
+        }
 
         const dmData = dmDoc.data();
         if (!dmData) return 0;
 
-        const lastRead = dmData.lastRead ? dmData.lastRead[user.uid] : null;
-        if (!lastRead) {
-          // If lastRead is null, all messages are unread
-          const messagesRef = collection(
-            db,
-            'direct_messages',
-            dmId,
-            'messages',
-          );
-          const msgQuery = query(messagesRef);
-          const querySnapshot = await getDocs(msgQuery);
-          return querySnapshot.size;
-        }
+        const lastRead = dmData.lastRead[user.uid];
 
         const messagesRef = collection(db, 'direct_messages', dmId, 'messages');
-        const msgQuery = query(messagesRef, where('createdAt', '>', lastRead));
-        const querySnapshot = await getDocs(msgQuery);
+        let msqQuery;
+        if (lastRead) {
+          console.log('lastRead is not null for DMss');
+          msqQuery = query(messagesRef, where('createdAt', '>', lastRead));
+        } else {
+          console.log('lastRead is null for DM');
+          msqQuery = query(messagesRef);
+        }
+
+        const querySnapshot = await getDocs(msqQuery);
+        console.log('DM unread count:', querySnapshot.size);
 
         return querySnapshot.size;
       } catch (error) {
         console.error('Error fetching unread count:', error);
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Could not fetch unread count.',
-        });
         return 0;
       }
     },
@@ -155,7 +152,10 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           // If DM doesn't exist, create it with participants
           await setDoc(dmRef, {
             participants: [user.uid, otherUserUid],
-            [`lastRead.${user.uid}`]: serverTimestamp(),
+            lastRead: {
+              [user.uid]: serverTimestamp(),
+              [otherUserUid!]: null,
+            },
             createdAt: serverTimestamp(),
           });
         } else {
@@ -326,14 +326,12 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           }
 
           // Get lastRead timestamp for current user
-          const lastRead: Timestamp | null = dmData.lastRead
-            ? dmData.lastRead[user.uid] || null
-            : null;
+          const lastRead = dmData.lastRead[user.uid];
 
           return {
             id: docSnap.id,
             participants: [otherUser],
-            lastRead,
+            lastRead: { [user.uid]: lastRead },
           } as DirectMessage;
         } catch (innerError) {
           console.error(`Error processing DM ${docSnap.id}:`, innerError);
@@ -447,14 +445,12 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
                 photoURL: '',
               };
 
-              const lastRead: Timestamp | null = dmData.lastRead
-                ? dmData.lastRead[user.uid] || null
-                : null;
+              const lastRead = dmData.lastRead[user.uid];
 
               return {
                 id: docSnap.id,
                 participants: [otherUser],
-                lastRead,
+                lastRead: { [user.uid]: lastRead },
               } as DirectMessage;
             })
             .filter((dm) => dm !== null);
