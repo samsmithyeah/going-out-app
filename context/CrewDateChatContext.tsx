@@ -391,11 +391,12 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         await setDoc(
           chatRef,
           {
-            [`lastRead.${user.uid}`]: serverTimestamp(),
+            lastRead: {
+              [user.uid]: serverTimestamp(),
+            },
           },
           { merge: true },
         );
-        await computeTotalUnread();
       } catch (error) {
         console.error(`Error updating lastRead for chat ${chatId}:`, error);
         Toast.show({
