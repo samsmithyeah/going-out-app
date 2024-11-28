@@ -55,7 +55,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             setActiveChats(activeChatsFromDB);
           } else {
             // Handle case where user document doesn't exist
-            console.warn('User document does not exist in Firestore.');
+            console.log('User document does not exist in Firestore.');
             setUser(null);
             setActiveChats(new Set());
           }

@@ -199,7 +199,9 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         await setDoc(
           dmRef,
           {
-            [`lastRead.${user.uid}`]: serverTimestamp(),
+            lastRead: {
+              [user.uid]: serverTimestamp(),
+            },
           },
           { merge: true },
         );
