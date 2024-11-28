@@ -7,6 +7,7 @@ import React, {
   useMemo,
   useLayoutEffect,
   useRef,
+  useState,
 } from 'react';
 import { View, StyleSheet, Text, AppState, AppStateStatus } from 'react-native';
 import {
@@ -32,12 +33,14 @@ import {
   updateDoc,
   serverTimestamp,
   Timestamp,
+  getDoc,
 } from 'firebase/firestore';
 import { db } from '@/firebase';
 import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 // Define Props
 type DMChatScreenProps = NativeStackScreenProps<NavParamList, 'DMChat'>;
@@ -102,6 +105,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   const { sendMessage, updateLastRead } = useDirectMessages(); // Import updateLastRead
   const { crews, usersCache } = useCrews();
   const isFocused = useIsFocused();
+  const tabBarHeight = useBottomTabBarHeight();
   const isFocusedRef = useRef(isFocused);
   const { user, addActiveChat, removeActiveChat } = useUser(); // Access activeChats
   const [state, dispatch] = useReducer(reducer, {
@@ -109,6 +113,10 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     isTyping: false,
     otherUserIsTyping: false,
   });
+  const [otherUser, setOtherUser] = useState<{
+    displayName: string;
+    photoURL?: string;
+  } | null>(null);
 
   useEffect(() => {
     isFocusedRef.current = isFocused;
@@ -123,21 +131,56 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     return generatedId;
   }, [user?.uid, otherUserId]);
 
-  // Get Other User Details
-  const otherUser = useMemo(() => {
-    if (!otherUserId) return { displayName: 'Unknown', photoURL: undefined };
-    const otherUserFromCrews = usersCache[otherUserId];
-    return (
-      otherUserFromCrews || { displayName: 'Unknown', photoURL: undefined }
-    );
+  useEffect(() => {
+    let isMounted = true; // To prevent state updates if the component is unmounted
+
+    const fetchOtherUser = async () => {
+      if (!otherUserId) {
+        console.log('No otherUserId provided');
+        if (isMounted) {
+          setOtherUser({ displayName: 'Unknown', photoURL: undefined });
+        }
+        return;
+      }
+
+      const otherUserFromCrews = usersCache[otherUserId];
+      if (otherUserFromCrews) {
+        if (isMounted) setOtherUser(otherUserFromCrews);
+      } else {
+        try {
+          // Fetch user details from Firestore
+          const userDoc = await getDoc(doc(db, 'users', otherUserId));
+          if (isMounted) {
+            setOtherUser(
+              userDoc.exists()
+                ? (userDoc.data() as { displayName: string; photoURL?: string })
+                : { displayName: 'Unknown', photoURL: undefined },
+            );
+          }
+        } catch (error) {
+          console.error('Error fetching other user:', error);
+          if (isMounted) {
+            setOtherUser({ displayName: 'Unknown', photoURL: undefined });
+          }
+        }
+      }
+    };
+
+    fetchOtherUser();
+
+    return () => {
+      isMounted = false; // Cleanup flag
+    };
   }, [crews, otherUserId, usersCache]);
 
-  // Set navigation title
+  // Set navigation title using useLayoutEffect after otherUser is fetched
   useLayoutEffect(() => {
-    navigation.setOptions({
-      title: otherUser.displayName,
-    });
-  }, [navigation, otherUser.displayName]);
+    if (otherUser) {
+      navigation.setOptions({
+        title: otherUser.displayName,
+      });
+    }
+  }, [navigation, otherUser]);
 
   // Typing Timeout Handler
   let typingTimeout: NodeJS.Timeout;
@@ -206,11 +249,11 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
               name:
                 docSnap.data().senderId === user?.uid
                   ? user?.displayName || 'You'
-                  : otherUser.displayName || 'Unknown',
+                  : otherUser?.displayName || 'Unknown',
               avatar:
                 docSnap.data().senderId === user?.uid
                   ? user?.photoURL
-                  : otherUser.photoURL,
+                  : otherUser?.photoURL,
             },
           }))
           .reverse(); // GiftedChat expects newest first
@@ -278,8 +321,8 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     user?.uid,
     user?.displayName,
     user?.photoURL,
-    otherUser.displayName,
-    otherUser.photoURL,
+    otherUser?.displayName,
+    otherUser?.photoURL,
     updateTypingStatus,
     addActiveChat,
     removeActiveChat,
@@ -388,7 +431,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
           name: user?.displayName || 'You',
           avatar: user?.photoURL || undefined,
         }}
-        bottomOffset={80}
+        bottomOffset={tabBarHeight}
         isTyping={state.isTyping} // Using isTyping prop
         onInputTextChanged={handleInputTextChanged} // Manage typing state
         renderBubble={(props) => (
@@ -413,7 +456,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
           isOtherUserTyping ? (
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                {otherUser.displayName} is typing...
+                {otherUser?.displayName} is typing...
               </Text>
             </View>
           ) : null
