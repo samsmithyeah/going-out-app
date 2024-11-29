@@ -20,7 +20,6 @@ import {
   doc,
   orderBy,
   setDoc,
-  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { useUser } from '@/context/UserContext';
@@ -98,7 +97,8 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           msqQuery = query(messagesRef, where('createdAt', '>', lastRead));
         } else {
           console.log('lastRead is null for DM');
-          msqQuery = query(messagesRef);
+          return 0;
+          //msqQuery = query(messagesRef);
         }
 
         const querySnapshot = await getDocs(msqQuery);
@@ -153,10 +153,10 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           await setDoc(dmRef, {
             participants: [user.uid, otherUserUid],
             lastRead: {
-              [user.uid]: serverTimestamp(),
-              [otherUserUid!]: null,
+              [user.uid]: Timestamp.fromDate(new Date()),
+              [otherUserUid!]: Timestamp.fromDate(new Date(Date.now() - 1000)), // Set to 1 second earlier
             },
-            createdAt: serverTimestamp(),
+            createdAt: Timestamp.fromDate(new Date()),
           });
         } else {
           const dmData = dmDoc.data();
@@ -193,6 +193,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
   const updateLastRead = useCallback(
     async (dmId: string) => {
       if (!user?.uid) return;
+      const otherUserUid = dmId.split('_').find((id) => id !== user.uid);
 
       try {
         const dmRef = doc(db, 'direct_messages', dmId);
@@ -200,18 +201,14 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           dmRef,
           {
             lastRead: {
-              [user.uid]: serverTimestamp(),
+              [user.uid]: Timestamp.fromDate(new Date()),
+              [otherUserUid!]: Timestamp.fromDate(new Date(Date.now() - 1000)), // Set to 1 second earlier
             },
           },
           { merge: true },
         );
       } catch (error) {
-        console.error(`Error updating lastRead for DM ${dmId}:`, error);
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Could not update last read status.',
-        });
+        console.warn(`Error updating lastRead for DM ${dmId}:`, error);
       }
     },
     [user?.uid],

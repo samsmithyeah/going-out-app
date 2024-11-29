@@ -400,12 +400,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           { merge: true },
         );
       } catch (error) {
-        console.error(`Error updating lastRead for chat ${chatId}:`, error);
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Could not update last read status.',
-        });
+        console.warn(`Error updating lastRead for chat ${chatId}:`, error);
       }
     },
     [user?.uid],
