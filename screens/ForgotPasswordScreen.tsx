@@ -55,9 +55,11 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordProps> = ({
           },
         ],
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password Reset Error:', error);
-      setError(error.message || 'Failed to send password reset email.');
+      if (error instanceof Error) {
+        setError(error.message || 'Failed to send password reset email.');
+      }
     } finally {
       setLoading(false);
     }

@@ -8,4 +8,5 @@ export interface User {
   expoPushToken?: string;
   activeChats?: string[];
   badgeCount?: number;
+  phoneNumber?: string;
 }

@@ -49,11 +49,11 @@ const CrewList: React.FC<CrewListProps> = ({
             .reduce((acc, name, index, array) => {
               if (index === 0) {
                 return name;
-              } else if (index === array.length - 1) {
-                return `${acc} and ${name}`;
-              } else {
-                return `${acc}, ${name}`;
               }
+              if (index === array.length - 1) {
+                return `${acc} and ${name}`;
+              }
+              return `${acc}, ${name}`;
             }, '');
 
           return (

@@ -1,4 +1,4 @@
-// SignUpScreen.tsx
+// screens/SignUpScreen.tsx
 
 import React, { useState } from 'react';
 import {
@@ -11,8 +11,6 @@ import {
   Keyboard,
   TouchableOpacity,
 } from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
 import { auth } from '@/firebase';
 import { addUserToFirestore } from '@/utils/AddUserToFirestore';
 import { useUser } from '@/context/UserContext';
@@ -24,24 +22,19 @@ import {
   User as FirebaseUser,
   updateProfile,
 } from 'firebase/auth';
-import { useNavigation } from '@react-navigation/native';
 import Colors from '@/styles/colors';
+import { NavParamList } from '@/navigation/AppNavigator';
+import GoogleLoginButton from '@/components/GoogleLoginButton';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-type NavParamList = {
-  SignUp: undefined;
-  Login: undefined;
-  Home: undefined;
-};
+type SignUpScreenNavigationProps = NativeStackScreenProps<
+  NavParamList,
+  'SignUp'
+>;
 
-type SignUpScreenNavigationProp = StackNavigationProp<NavParamList, 'SignUp'>;
-type SignUpScreenRouteProp = RouteProp<NavParamList, 'SignUp'>;
-
-type Props = {
-  navigation: SignUpScreenNavigationProp;
-  route: SignUpScreenRouteProp;
-};
-
-const SignUpScreen: React.FC<Props> = () => {
+const SignUpScreen: React.FC<SignUpScreenNavigationProps> = ({
+  navigation,
+}) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [firstName, setFirstName] = useState<string>('');
@@ -50,7 +43,6 @@ const SignUpScreen: React.FC<Props> = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const { setUser } = useUser();
   const [passwordStrength, setPasswordStrength] = useState<number>(0);
-  const navigation = useNavigation<StackNavigationProp<NavParamList>>();
 
   const evaluatePasswordStrength = (pass: string) => {
     const evaluation = zxcvbn(pass);
@@ -94,6 +86,7 @@ const SignUpScreen: React.FC<Props> = () => {
 
     setLoading(true);
     try {
+      // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email.trim(),
@@ -101,12 +94,14 @@ const SignUpScreen: React.FC<Props> = () => {
       );
       const thisUser: FirebaseUser = userCredential.user;
 
+      // Update display name
       await updateProfile(thisUser, {
         displayName: `${firstName.trim()} ${lastName.trim()}`,
       });
 
       console.log('User signed up:', thisUser);
 
+      // Add user to Firestore without phone number
       const updatedUser = {
         uid: thisUser.uid,
         email: thisUser.email || '',
@@ -114,14 +109,23 @@ const SignUpScreen: React.FC<Props> = () => {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         photoURL: thisUser.photoURL || '',
+        badgeCount: 0,
+        // phoneNumber is optional and not set here
       };
 
       await addUserToFirestore(updatedUser);
 
-      setUser(updatedUser);
-    } catch (err: any) {
+      //setUser(updatedUser);
+
+      // Navigate to PhoneVerificationScreen
+      navigation.replace('PhoneVerification', { uid: thisUser.uid });
+    } catch (err: unknown) {
       console.error('Sign Up Error:', err);
-      setFormError(err.message);
+      if (err instanceof Error) {
+        setFormError(err.message);
+      } else {
+        setFormError('An unexpected error occurred.');
+      }
     } finally {
       setLoading(false);
     }
@@ -151,6 +155,7 @@ const SignUpScreen: React.FC<Props> = () => {
               autoComplete="email"
               textContentType="username"
               importantForAutofill="yes"
+              hasBorder
             />
 
             <CustomTextInput
@@ -165,6 +170,7 @@ const SignUpScreen: React.FC<Props> = () => {
               autoCapitalize="words"
               autoComplete="name-given"
               textContentType="givenName"
+              hasBorder
             />
 
             <CustomTextInput
@@ -179,6 +185,8 @@ const SignUpScreen: React.FC<Props> = () => {
               autoCapitalize="words"
               autoComplete="name-family"
               textContentType="familyName"
+              importantForAutofill="yes"
+              hasBorder
             />
 
             <CustomTextInput
@@ -196,6 +204,7 @@ const SignUpScreen: React.FC<Props> = () => {
               autoComplete="password"
               textContentType="password"
               importantForAutofill="yes"
+              hasBorder
             />
 
             {password.length > 0 && (
@@ -237,6 +246,8 @@ const SignUpScreen: React.FC<Props> = () => {
               <View style={styles.separatorLine} />
             </View>
 
+            <GoogleLoginButton />
+
             <TouchableOpacity
               style={styles.loginContainer}
               onPress={() => navigation.navigate('Login')}
@@ -257,11 +268,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.flock,
   },
   formContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 15,
     padding: 20,
     marginHorizontal: 20,
-    marginTop: 200,
+    marginTop: 100,
   },
   passwordStrengthContainer: {
     marginBottom: 15,
@@ -299,6 +310,7 @@ const styles = StyleSheet.create({
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
+    marginTop: 20,
   },
   loginText: {
     color: '#333',

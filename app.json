@@ -69,6 +69,15 @@
           "project": "flock",
           "organization": "samlovesit"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "13.4",
+            "useFrameworks": "static"
+          }
+        }
       ]
     ],
     "experiments": {

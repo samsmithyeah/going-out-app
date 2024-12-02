@@ -87,7 +87,7 @@ const registerForPushNotificationsAsync = async (user: User) => {
   }
 };
 
-export const addUserToFirestore = async (user: User) => {
+export const addUserToFirestore = async (user: User, phoneNumber?: string) => {
   const userDocRef = doc(db, 'users', user.uid);
   try {
     const userData: User = {
@@ -98,11 +98,16 @@ export const addUserToFirestore = async (user: User) => {
       lastName: user.lastName,
       photoURL: user.photoURL,
       badgeCount: 0,
+      phoneNumber: phoneNumber || '', // Add this line
     };
     await registerForPushNotificationsAsync(user);
     const userExists = (await getDoc(userDocRef)).exists();
     if (userExists) {
       console.log('User document already exists in Firestore.');
+      if (phoneNumber) {
+        await updateDoc(userDocRef, { phoneNumber });
+        console.log('User phone number updated in Firestore.');
+      }
       return;
     }
     await setDoc(userDocRef, userData, { merge: true });
