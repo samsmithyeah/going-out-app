@@ -9,14 +9,10 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import {
-  PhoneAuthProvider,
-  ApplicationVerifier,
-  signInWithCredential,
-} from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore';
+import { PhoneAuthProvider, ApplicationVerifier } from 'firebase/auth';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import CountryPicker, { CountryCode } from 'react-native-country-picker-modal';
-
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import CustomButton from '@/components/CustomButton';
 import Toast from 'react-native-toast-message';
 import Colors from '@/styles/colors';
@@ -26,8 +22,11 @@ import {
   useBlurOnFulfill,
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
+import { useRoute } from '@react-navigation/native';
 import { firebaseConfig, auth, db } from '@/firebase';
-import { FirebaseError } from 'firebase/app';
+import { NavParamList } from '@/navigation/AppNavigator';
+import { User } from '@/types/User';
+import { useUser } from '@/context/UserContext';
 
 const CELL_COUNT = 6;
 
@@ -35,13 +34,14 @@ const PhoneVerificationScreen: React.FC = () => {
   const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
 
   const [countryCode, setCountryCode] = useState<CountryCode>('GB');
-  const [callingCode, setCallingCode] = useState<string>('1');
+  const [callingCode, setCallingCode] = useState<string>('44');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [verificationCode, setVerificationCode] = useState<string>('');
   const [verificationId, setVerificationId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>('');
   const [isCountryPickerVisible, setCountryPickerVisible] = useState(false);
+  const { setUser } = useUser();
 
   const codeRef = useBlurOnFulfill({
     value: verificationCode,
@@ -52,6 +52,12 @@ const PhoneVerificationScreen: React.FC = () => {
     setValue: setVerificationCode,
   });
 
+  const route =
+    useRoute<
+      NativeStackScreenProps<NavParamList, 'PhoneVerification'>['route']
+    >();
+  const { uid } = route.params;
+
   const handleSendVerification = async () => {
     setFormError('');
     if (!phoneNumber.trim()) {
@@ -59,7 +65,10 @@ const PhoneVerificationScreen: React.FC = () => {
       return;
     }
 
-    const fullPhoneNumber = `+${callingCode}${phoneNumber.trim()}`;
+    // Remove leading zeros from phone number
+    const sanitizedPhoneNumber = phoneNumber.trim().replace(/^0+/, '');
+
+    const fullPhoneNumber = `+${callingCode}${sanitizedPhoneNumber}`;
 
     const phoneRegex = /^\+[1-9]\d{1,14}$/; // E.164 format
     if (!phoneRegex.test(fullPhoneNumber)) {
@@ -76,8 +85,8 @@ const PhoneVerificationScreen: React.FC = () => {
       );
       setVerificationId(verId);
       Toast.show({
-        type: 'info',
-        text1: 'Verification Code Sent',
+        type: 'success',
+        text1: 'Verification code sent',
         text2: 'A verification code has been sent to your phone.',
       });
     } catch (error: unknown) {
@@ -91,7 +100,7 @@ const PhoneVerificationScreen: React.FC = () => {
   const handleVerifyCode = async () => {
     setFormError('');
     if (!verificationId) {
-      setFormError('No verification ID found. Please request a new code.');
+      setFormError('No verification ID found.');
       return;
     }
     if (!verificationCode.trim()) {
@@ -101,48 +110,28 @@ const PhoneVerificationScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      // Create a credential with the verification ID and code
-      const credential = PhoneAuthProvider.credential(
-        verificationId,
-        verificationCode,
-      );
-
-      // Sign in with the credential
-      const userCredential = await signInWithCredential(auth, credential);
-
-      // Get the authenticated user's UID
-      const uid = userCredential.user.uid;
-
-      // Update the user's phone number in Firestore
+      // Fetch user data from Firestore
       const userDocRef = doc(db, 'users', uid);
-      await updateDoc(userDocRef, {
-        phoneNumber: `+${callingCode}${phoneNumber.trim()}`,
-      });
+      const userDoc = await getDoc(userDocRef);
 
-      Toast.show({
-        type: 'success',
-        text1: 'Success',
-        text2: 'Phone number verified and updated!',
-      });
+      if (userDoc.exists()) {
+        // Update Firestore with phone number
+        await updateDoc(userDocRef, {
+          phoneNumber: `+${callingCode}${phoneNumber.trim()}`,
+        });
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Phone number verified',
+        });
 
-      // Optionally, navigate to another screen or reset the form
-      setVerificationId(null);
-      setVerificationCode('');
-      setPhoneNumber('');
-    } catch (error: unknown) {
-      if (error instanceof FirebaseError) {
-        console.error('Error verifying code:', error);
-        // Handle specific error codes if needed
-        if (error.code === 'auth/invalid-verification-code') {
-          setFormError('The verification code is invalid. Please try again.');
-        } else if (error.code === 'auth/code-expired') {
-          setFormError(
-            'The verification code has expired. Please request a new one.',
-          );
-        } else {
-          setFormError('Failed to verify the code. Please try again.');
-        }
+        const userData = userDoc.data() as User;
+
+        setUser(userData);
       }
+    } catch (error: unknown) {
+      console.error('Error verifying code:', error);
+      setFormError('Invalid verification code.');
     } finally {
       setLoading(false);
     }
