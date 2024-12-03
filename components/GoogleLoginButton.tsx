@@ -12,9 +12,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { NavParamList } from '@/navigation/AppNavigator';
 import { User } from '@/types/User';
 import { doc, getDoc } from 'firebase/firestore';
+import { useUser } from '@/context/UserContext';
 
 const GoogleLoginButton: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
+  const { setUser } = useUser();
 
   // Configure Google Auth request
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
@@ -48,12 +50,7 @@ const GoogleLoginButton: React.FC = () => {
               });
             } else {
               // User already has a verified phone number
-              Toast.show({
-                type: 'success',
-                text1: 'Success',
-                text2: 'Logged in successfully!',
-              });
-              navigation.replace('MainTabs');
+              setUser(userData);
             }
           } else {
             // User document does not exist, create one
@@ -92,7 +89,7 @@ const GoogleLoginButton: React.FC = () => {
     };
 
     handleSignIn();
-  }, [response, navigation]);
+  }, [response, navigation, setUser]);
 
   const handleGoogleSignIn = async () => {
     promptAsync();

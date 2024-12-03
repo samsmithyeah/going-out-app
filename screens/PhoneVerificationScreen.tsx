@@ -199,6 +199,7 @@ const PhoneVerificationScreen: React.FC = () => {
               title="Send verification code"
               onPress={handleSendVerification}
               loading={loading}
+              disabled={!phoneNumber.trim()}
             />
           ) : (
             <>
@@ -224,6 +225,7 @@ const PhoneVerificationScreen: React.FC = () => {
                 title="Verify code"
                 onPress={handleVerifyCode}
                 loading={loading}
+                disabled={verificationCode.length < CELL_COUNT}
               />
             </>
           )}
