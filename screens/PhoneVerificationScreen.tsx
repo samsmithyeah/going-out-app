@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -41,6 +41,7 @@ const PhoneVerificationScreen: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>('');
   const [isCountryPickerVisible, setCountryPickerVisible] = useState(false);
+  const [fullPhoneNumber, setFullPhoneNumber] = useState<string>('');
   const { setUser } = useUser();
 
   const codeRef = useBlurOnFulfill({
@@ -58,6 +59,12 @@ const PhoneVerificationScreen: React.FC = () => {
     >();
   const { uid } = route.params;
 
+  useEffect(() => {
+    const sanitized = phoneNumber.trim().replace(/^0+/, '');
+    const computedFullPhoneNumber = `+${callingCode}${sanitized}`;
+    setFullPhoneNumber(computedFullPhoneNumber);
+  }, [callingCode, phoneNumber]);
+
   const handleSendVerification = async () => {
     setFormError('');
     if (!phoneNumber.trim()) {
@@ -67,11 +74,14 @@ const PhoneVerificationScreen: React.FC = () => {
 
     // Remove leading zeros from phone number
     const sanitizedPhoneNumber = phoneNumber.trim().replace(/^0+/, '');
+    const fullPhoneNumberLocal = `+${callingCode}${sanitizedPhoneNumber}`;
 
-    const fullPhoneNumber = `+${callingCode}${sanitizedPhoneNumber}`;
+    console.log('phoneNumber', phoneNumber);
+    console.log('sanitizedPhoneNumber', sanitizedPhoneNumber);
+    console.log('fullPhoneNumberLocal', fullPhoneNumberLocal);
 
     const phoneRegex = /^\+[1-9]\d{1,14}$/; // E.164 format
-    if (!phoneRegex.test(fullPhoneNumber)) {
+    if (!phoneRegex.test(fullPhoneNumberLocal)) {
       setFormError('Please enter a valid phone number in E.164 format.');
       return;
     }
@@ -80,10 +90,12 @@ const PhoneVerificationScreen: React.FC = () => {
     try {
       const phoneProvider = new PhoneAuthProvider(auth);
       const verId = await phoneProvider.verifyPhoneNumber(
-        fullPhoneNumber,
+        fullPhoneNumberLocal,
         recaptchaVerifier.current as ApplicationVerifier,
       );
       setVerificationId(verId);
+      setFullPhoneNumber(fullPhoneNumberLocal);
+
       Toast.show({
         type: 'success',
         text1: 'Verification code sent',
@@ -116,8 +128,9 @@ const PhoneVerificationScreen: React.FC = () => {
 
       if (userDoc.exists()) {
         // Update Firestore with phone number
+        console.log('Updating phone number:', fullPhoneNumber);
         await updateDoc(userDocRef, {
-          phoneNumber: `+${callingCode}${phoneNumber.trim()}`,
+          phoneNumber: fullPhoneNumber,
         });
         Toast.show({
           type: 'success',
@@ -128,10 +141,12 @@ const PhoneVerificationScreen: React.FC = () => {
         const userData = userDoc.data() as User;
 
         setUser(userData);
+      } else {
+        setFormError('User not found.');
       }
     } catch (error: unknown) {
       console.error('Error verifying code:', error);
-      setFormError('Invalid verification code.');
+      setFormError('Invalid verification code or network issue.');
     } finally {
       setLoading(false);
     }
