@@ -101,7 +101,7 @@ const DashboardScreen: React.FC = () => {
       text2: 'Crew created successfully',
     });
     navigation.navigate('CrewsStack', {
-      screen: 'Crew',
+      screen: 'AddMembers',
       params: { crewId },
       initial: false,
     });

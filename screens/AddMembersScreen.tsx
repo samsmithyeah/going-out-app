@@ -26,6 +26,7 @@ import { NavParamList } from '@/navigation/AppNavigator';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
+import { useContacts } from '@/context/ContactsContext';
 
 interface MemberWithStatus extends User {
   status?: 'member' | 'invited' | 'available';
@@ -43,6 +44,13 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
   const { crewId } = route.params;
   const { user } = useUser();
 
+  const {
+    allContacts,
+    loading: contactsLoading,
+    error: contactsError,
+    refreshContacts,
+  } = useContacts();
+
   const [allPotentialMembers, setAllPotentialMembers] = useState<
     MemberWithStatus[]
   >([]);
@@ -53,9 +61,8 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [invitingEmail, setInvitingEmail] = useState<boolean>(false);
 
-  // Fetch all members from all of the user's crews and assign status
   useEffect(() => {
-    const fetchPotentialMembers = async () => {
+    const fetchCrewSpecificData = async () => {
       if (!user) {
         Toast.show({
           type: 'error',
@@ -67,46 +74,6 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
       }
 
       try {
-        // Fetch all crews the user is part of
-        const crewsRef = collection(db, 'crews');
-        const userCrewsQuery = query(
-          crewsRef,
-          where('memberIds', 'array-contains', user.uid),
-        );
-        const crewsSnapshot = await getDocs(userCrewsQuery);
-
-        // Collect all unique member IDs from all crews
-        const memberIdsSet = new Set<string>();
-
-        crewsSnapshot.forEach((crewDoc) => {
-          const crewData = crewDoc.data();
-          const memberIds: string[] = crewData.memberIds || [];
-          memberIds.forEach((id) => memberIdsSet.add(id));
-        });
-
-        // Convert the set to an array
-        const potentialMemberIds = Array.from(memberIdsSet);
-
-        if (potentialMemberIds.length === 0) {
-          setAllPotentialMembers([]);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch user profiles
-        const usersRef = collection(db, 'users');
-        const userDocsPromises = potentialMemberIds.map((memberId) =>
-          getDoc(doc(usersRef, memberId)),
-        );
-        const userDocs = await Promise.all(userDocsPromises);
-
-        const fetchedMembers: User[] = userDocs
-          .filter((docSnap) => docSnap.exists())
-          .map((docSnap) => ({
-            uid: docSnap.id,
-            ...(docSnap.data() as Omit<User, 'uid'>),
-          }));
-
         // Fetch pending invitations to the crew
         const invitationsRef = collection(db, 'invitations');
         const invitationsQuery = query(
@@ -135,8 +102,8 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
         const currentCrewData = currentCrewSnap.data();
         const currentCrewMemberIds: string[] = currentCrewData.memberIds || [];
 
-        // Map fetched members to include their status and exclude the current user
-        const membersWithStatus: MemberWithStatus[] = fetchedMembers
+        // Map allContacts to include their status based on the current crew
+        const membersWithStatus: MemberWithStatus[] = allContacts
           .filter((member) => member.uid !== user.uid) // Exclude the current user
           .map((member) => {
             if (currentCrewMemberIds.includes(member.uid)) {
@@ -150,28 +117,28 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
 
         setAllPotentialMembers(membersWithStatus);
       } catch (error) {
-        console.error('Error fetching potential members:', error);
+        console.error('Error fetching crew-specific data:', error);
         Toast.show({
           type: 'error',
           text1: 'Error',
-          text2: 'Could not fetch potential members',
+          text2: 'Could not fetch crew-specific data',
         });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPotentialMembers();
-  }, [crewId, user]);
+    fetchCrewSpecificData();
+  }, [crewId, user, allContacts]);
 
-  // Set up the navigation header with an "Add" button
+  // Set up the navigation header with an "Invite" button
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity
           onPress={handleAddSelectedMembers}
           disabled={selectedMemberIds.length === 0}
-          accessibilityLabel="Add Selected Members to Crew"
+          accessibilityLabel="Invite Selected Members to Crew"
           accessibilityHint="Invites the selected members to the crew"
           style={{ marginRight: 16 }}
         >
@@ -266,7 +233,7 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
         text1: 'Success',
         text2: successMessage(),
       });
-      navigation.goBack();
+      navigation.navigate('Crew', { crewId });
     } catch (error) {
       console.error('Error adding members:', error);
       Toast.show({
@@ -427,21 +394,25 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
         />
 
         {/* Members List */}
-        <MemberList
-          members={filteredMembers}
-          currentUserId={user?.uid || null}
-          selectedMemberIds={selectedMemberIds}
-          onSelectMember={handleSelectMember}
-          isLoading={loading}
-          emptyMessage={
-            searchQuery.trim() !== ''
-              ? 'No members match your search.'
-              : 'No members available to add.'
-          }
-          adminIds={[]} // Adjust if there are admins to highlight
-          onMemberPress={navigateToUserProfile}
-        />
+        <View style={styles.membersList}>
+          <MemberList
+            members={filteredMembers}
+            currentUserId={user?.uid || null}
+            selectedMemberIds={selectedMemberIds}
+            onSelectMember={handleSelectMember}
+            isLoading={loading}
+            emptyMessage={
+              searchQuery.trim() !== ''
+                ? 'No members match your search.'
+                : 'No members available to add.'
+            }
+            adminIds={[]} // Adjust if there are admins to highlight
+            onMemberPress={navigateToUserProfile}
+            scrollEnabled={true}
+          />
+        </View>
 
+        {/* Add via Email Text */}
         <Text style={styles.addViaEmailText}>
           Or add with their email address:
         </Text>
@@ -496,5 +467,8 @@ const styles = StyleSheet.create({
     marginTop: 14,
     marginBottom: 8,
     fontSize: 16,
+  },
+  membersList: {
+    flex: 1,
   },
 });

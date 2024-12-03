@@ -18,7 +18,7 @@ import CustomButton from '@/components/CustomButton';
 type ContactsScreenProp = NativeStackNavigationProp<NavParamList, 'Contacts'>;
 
 const ContactsScreen: React.FC = () => {
-  const { matchedUsers, loading, error, refreshContacts } = useContacts();
+  const { allContacts, loading, error, refreshContacts } = useContacts();
   const navigation = useNavigation<ContactsScreenProp>();
 
   const [searchQuery, setSearchQuery] = useState<string>(''); // State for search
@@ -26,14 +26,14 @@ const ContactsScreen: React.FC = () => {
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
-      setFilteredUsers(matchedUsers);
+      setFilteredUsers(allContacts);
     } else {
-      const filtered = matchedUsers.filter((user) =>
+      const filtered = allContacts.filter((user) =>
         user.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setFilteredUsers(filtered);
     }
-  }, [searchQuery, matchedUsers]);
+  }, [searchQuery, allContacts]);
 
   const handleContactPress = (contact: User) => {
     // Navigate to the member's profile or perform another action

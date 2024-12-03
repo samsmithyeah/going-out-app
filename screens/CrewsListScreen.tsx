@@ -115,7 +115,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
       text1: 'Success',
       text2: 'Crew created successfully',
     });
-    navigation.navigate('Crew', { crewId });
+    navigation.navigate('AddMembers', { crewId });
   };
 
   // Render the empty state UI

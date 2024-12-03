@@ -13,14 +13,23 @@ import {
   requestContactsPermission,
   sanitizePhoneNumber,
 } from '@/utils/contactsUtils';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/firebase'; // Adjust the path based on your project structure
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+} from 'firebase/firestore';
+import { db } from '@/firebase';
 import { User } from '@/types/User';
 import { useUser } from '@/context/UserContext';
 
 interface ContactsContextValue {
   contacts: Contact[];
-  matchedUsers: User[];
+  matchedUsersFromContacts: User[];
+  matchedUsersFromCrews: User[];
+  allContacts: User[]; // Combined list
   loading: boolean;
   error: string | null;
   refreshContacts: () => Promise<void>;
@@ -34,40 +43,47 @@ export const ContactsProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [matchedUsers, setMatchedUsers] = useState<User[]>([]);
+  const [matchedUsersFromContacts, setMatchedUsersFromContacts] = useState<
+    User[]
+  >([]);
+  const [matchedUsersFromCrews, setMatchedUsersFromCrews] = useState<User[]>(
+    [],
+  );
+  const [allContacts, setAllContacts] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
 
-  // Assume default country is 'GB' for UK users. Modify as needed for international support.
   const defaultCountry = 'GB';
 
   const loadContacts = async () => {
+    console.log('🔄 Starting to load contacts...');
     try {
       setLoading(true);
       setError(null);
 
+      // Fetch phone contacts
       const hasPermission = await requestContactsPermission();
       if (!hasPermission) {
+        console.warn('🚫 Permission to access contacts was denied.');
         setError('Permission to access contacts was denied.');
         setLoading(false);
         return;
       }
+      console.log('✅ Contacts permission granted.');
 
       const deviceContacts = await getAllContacts();
+      console.log(`📇 Fetched ${deviceContacts.length} device contacts.`);
 
-      // Normalize and format contacts
+      // Normalize and format phone contacts
       const formattedContacts: Contact[] = deviceContacts
         .map((contact) => {
-          // Ensure contact.id is defined
           if (!contact.id) {
-            console.warn(
-              `Contact without ID skipped: ${JSON.stringify(contact)}`,
+            console.log(
+              `⚠️ Contact without ID skipped: ${JSON.stringify(contact)}`,
             );
             return null;
           }
-
-          console.log('Contact:', contact);
 
           // Ensure phoneNumbers is defined and contains valid numbers
           const sanitizedPhoneNumbers =
@@ -80,11 +96,9 @@ export const ContactsProvider: React.FC<{ children: ReactNode }> = ({
               .map((number) => sanitizePhoneNumber(number, defaultCountry))
               .filter((number) => number !== '') || [];
 
-          console.log('Sanitized phone numbers:', sanitizedPhoneNumbers);
           if (sanitizedPhoneNumbers.length === 0) {
             console.log(
-              'Skipping contact without valid phone numbers:',
-              contact,
+              `⚠️ Contact "${contact.name || 'Unnamed Contact'}" skipped due to no valid phone numbers.`,
             );
             return null; // Skip contacts without valid phone numbers
           }
@@ -100,6 +114,9 @@ export const ContactsProvider: React.FC<{ children: ReactNode }> = ({
             contact !== null && contact.phoneNumbers.length > 0,
         );
 
+      console.log(
+        `✅ Formatted contacts: ${formattedContacts.length} contacts with valid phone numbers.`,
+      );
       setContacts(formattedContacts);
 
       // Extract unique phone numbers
@@ -107,27 +124,71 @@ export const ContactsProvider: React.FC<{ children: ReactNode }> = ({
         (contact) => contact.phoneNumbers,
       );
       const uniquePhoneNumbers = Array.from(new Set(allPhoneNumbers));
+      console.log(
+        `📞 Extracted ${uniquePhoneNumbers.length} unique phone numbers.`,
+      );
 
-      if (uniquePhoneNumbers.length === 0) {
-        setMatchedUsers([]);
-        setLoading(false);
-        return;
+      // Fetch matched users from phone contacts
+      let matchedFromContacts: User[] = [];
+      if (uniquePhoneNumbers.length > 0) {
+        console.log('🔍 Fetching matched users from phone contacts...');
+        matchedFromContacts = await fetchMatchedUsers(uniquePhoneNumbers);
+        console.log(
+          `✅ Matched ${matchedFromContacts.length} users from phone contacts.`,
+        );
+      } else {
+        console.log('ℹ️ No unique phone numbers to match from contacts.');
       }
+      setMatchedUsersFromContacts(matchedFromContacts);
 
-      console.log('Unique phone numbers:', uniquePhoneNumbers);
+      // Fetch matched users from crews
+      let matchedFromCrews: User[] = [];
+      if (user) {
+        matchedFromCrews = await fetchCrewMembers(user.uid);
+        console.log(`✅ Matched ${matchedFromCrews.length} users from crews.`);
+      }
+      setMatchedUsersFromCrews(matchedFromCrews);
 
-      // Fetch matched users from Firestore
-      const matched = await fetchMatchedUsers(uniquePhoneNumbers);
-      setMatchedUsers(matched);
+      // Combine both lists, avoiding duplicates
+      const combinedMap = new Map<string, User>();
+
+      matchedFromContacts.forEach((user) => {
+        combinedMap.set(user.uid, user);
+      });
+
+      matchedFromCrews.forEach((user) => {
+        combinedMap.set(user.uid, user);
+      });
+
+      // Exclude the current user from the combined list
+      const combinedList = Array.from(combinedMap.values()).filter(
+        (u) => u.uid !== user?.uid,
+      );
+      console.log(
+        `📋 Combined contacts count (excluding current user): ${combinedList.length}`,
+      );
+
+      // Order the combined list by displayName
+      combinedList.sort((a, b) =>
+        a.displayName.localeCompare(b.displayName, 'en', {
+          sensitivity: 'base',
+        }),
+      );
+
+      setAllContacts(combinedList);
     } catch (err) {
-      console.error('Error loading contacts:', err);
+      console.error('❌ Error loading contacts:', err);
       setError('Failed to load contacts.');
     } finally {
       setLoading(false);
+      console.log('🔄 Finished loading contacts.');
     }
   };
 
   const fetchMatchedUsers = async (phoneNumbers: string[]): Promise<User[]> => {
+    console.log(
+      `🔄 Starting fetchMatchedUsers with ${phoneNumbers.length} phone numbers.`,
+    );
     const usersRef = collection(db, 'users');
     const batchSize = 10; // Firestore 'in' queries allow max 10 elements
     const batches = [];
@@ -137,45 +198,136 @@ export const ContactsProvider: React.FC<{ children: ReactNode }> = ({
       batches.push(batch);
     }
 
+    console.log(`🔢 Divided phone numbers into ${batches.length} batches.`);
+
     const matched: User[] = [];
 
-    const queryPromises = batches.map(async (batch) => {
+    const queryPromises = batches.map(async (batch, index) => {
+      console.log(`📄 Processing batch ${index + 1}/${batches.length}:`, batch);
       const q = query(usersRef, where('phoneNumber', 'in', batch));
-      const querySnapshot = await getDocs(q);
-      for (const doc of querySnapshot.docs) {
-        const data = doc.data();
-        matched.push({
-          uid: doc.id,
-          displayName: data.displayName,
-          phoneNumber: data.phoneNumber,
-          photoURL: data.photoURL || undefined,
-          email: data.email,
-        });
+      try {
+        const querySnapshot = await getDocs(q);
+        console.log(
+          `✅ Batch ${index + 1}: Found ${querySnapshot.docs.length} matched users.`,
+        );
+        for (const docSnap of querySnapshot.docs) {
+          const data = docSnap.data();
+          matched.push({
+            uid: docSnap.id,
+            displayName: data.displayName,
+            phoneNumber: data.phoneNumber,
+            photoURL: data.photoURL || undefined,
+            email: data.email,
+          });
+        }
+      } catch (error) {
+        console.error(`❌ Error in batch ${index + 1}:`, error);
       }
     });
 
     await Promise.all(queryPromises);
+    console.log(`🔍 Total matched users from contacts: ${matched.length}`);
 
     // Filter out the current user from the matched users
     const filteredMatched = matched.filter(
       (matchedUser) => matchedUser.uid !== user?.uid,
     );
+    console.log(
+      `🚫 Excluded current user. Matched users count after exclusion: ${filteredMatched.length}`,
+    );
 
     return filteredMatched;
   };
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  const fetchCrewMembers = async (currentUserId: string): Promise<User[]> => {
+    console.log(`🔄 Starting fetchCrewMembers for user ID: ${currentUserId}`);
+    try {
+      // Fetch all crews the user is part of
+      const crewsRef = collection(db, 'crews');
+      const userCrewsQuery = query(
+        crewsRef,
+        where('memberIds', 'array-contains', currentUserId),
+      );
+      const crewsSnapshot = await getDocs(userCrewsQuery);
+
+      console.log(
+        `📄 Found ${crewsSnapshot.size} crews for user ID: ${currentUserId}`,
+      );
+
+      if (crewsSnapshot.empty) {
+        console.log('ℹ️ User is not part of any crews.');
+        return [];
+      }
+
+      // Collect all unique member IDs from all crews
+      const memberIdsSet = new Set<string>();
+
+      crewsSnapshot.forEach((crewDoc) => {
+        const crewData = crewDoc.data();
+        const memberIds: string[] = crewData.memberIds || [];
+        memberIds.forEach((id) => memberIdsSet.add(id));
+      });
+
+      // Remove the current user's ID
+      memberIdsSet.delete(currentUserId);
+
+      const potentialMemberIds = Array.from(memberIdsSet);
+      console.log(
+        `🔢 Potential crew member IDs count: ${potentialMemberIds.length}`,
+      );
+
+      if (potentialMemberIds.length === 0) {
+        console.log('ℹ️ No other members found in the crews.');
+        return [];
+      }
+
+      // Fetch user profiles
+      const usersRef = collection(db, 'users');
+      const userDocsPromises = potentialMemberIds.map((memberId) =>
+        getDoc(doc(usersRef, memberId)),
+      );
+
+      const userDocs = await Promise.all(userDocsPromises);
+      console.log(`📄 Fetched ${userDocs.length} user documents from crews.`);
+
+      const fetchedMembers: User[] = userDocs
+        .filter((docSnap) => docSnap.exists())
+        .map((docSnap) => ({
+          uid: docSnap.id,
+          ...(docSnap.data() as Omit<User, 'uid'>),
+        }));
+
+      console.log(`✅ Fetched ${fetchedMembers.length} valid crew members.`);
+
+      return fetchedMembers;
+    } catch (error) {
+      console.error('❌ Error fetching crew members:', error);
+      return [];
+    }
+  };
+
   useEffect(() => {
+    console.log('🔁 useEffect triggered: Calling loadContacts.');
     loadContacts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const refreshContacts = async () => {
+    console.log('🔄 Refreshing contacts...');
     await loadContacts();
   };
 
   return (
     <ContactsContext.Provider
-      value={{ contacts, matchedUsers, loading, error, refreshContacts }}
+      value={{
+        contacts,
+        matchedUsersFromContacts,
+        matchedUsersFromCrews,
+        allContacts,
+        loading,
+        error,
+        refreshContacts,
+      }}
     >
       {children}
     </ContactsContext.Provider>
