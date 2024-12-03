@@ -1,5 +1,6 @@
 import { UserProvider } from '@/context/UserContext';
 import { CrewsProvider } from '@/context/CrewsContext';
+import { ContactsProvider } from '@/context/ContactsContext';
 import { InvitationsProvider } from '@/context/InvitationsContext';
 import { CrewDateChatProvider } from '@/context/CrewDateChatContext';
 import { DirectMessagesProvider } from '@/context/DirectMessagesContext';
@@ -72,17 +73,19 @@ const Root: React.FC = () => {
   return (
     <>
       <UserProvider>
-        <CrewsProvider>
-          <InvitationsProvider>
-            <CrewDateChatProvider>
-              <DirectMessagesProvider>
-                <BadgeCountProvider>
-                  <App />
-                </BadgeCountProvider>
-              </DirectMessagesProvider>
-            </CrewDateChatProvider>
-          </InvitationsProvider>
-        </CrewsProvider>
+        <ContactsProvider>
+          <CrewsProvider>
+            <InvitationsProvider>
+              <CrewDateChatProvider>
+                <DirectMessagesProvider>
+                  <BadgeCountProvider>
+                    <App />
+                  </BadgeCountProvider>
+                </DirectMessagesProvider>
+              </CrewDateChatProvider>
+            </InvitationsProvider>
+          </CrewsProvider>
+        </ContactsProvider>
       </UserProvider>
       <Toast config={toastConfig} />
     </>

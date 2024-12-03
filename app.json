@@ -18,6 +18,7 @@
       "bundleIdentifier": "com.samlovesit.GoingOutApp",
       "infoPlist": {
         "NSUserNotificationUsageDescription": "This app uses push notifications to notify you of updates.",
+        "NSContactsUsageDescription": "This app requires access to your contacts to find friends who are already using the app.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         },
@@ -38,6 +39,7 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": ["READ_CONTACTS"],
       "package": "com.samlovesit.GoingOutApp"
     },
     "web": {

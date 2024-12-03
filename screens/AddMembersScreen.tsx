@@ -194,9 +194,8 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
     setSelectedMemberIds((prevSelected) => {
       if (prevSelected.includes(memberId)) {
         return prevSelected.filter((id) => id !== memberId);
-      } else {
-        return [...prevSelected, memberId];
       }
+      return [...prevSelected, memberId];
     });
   };
 

@@ -61,6 +61,7 @@ export type NavParamList = {
         initial: boolean;
       }
     | undefined;
+  Contacts: undefined;
 };
 
 const Stack = createStackNavigator<NavParamList>();

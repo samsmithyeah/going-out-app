@@ -127,6 +127,7 @@ const MemberList: React.FC<MemberListProps> = ({
     return (
       <View style={styles.container}>
         {[...Array(6)].map((_, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
           <SkeletonUserItem key={index} />
         ))}
       </View>
