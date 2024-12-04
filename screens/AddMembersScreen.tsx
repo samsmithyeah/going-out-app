@@ -44,17 +44,11 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
   const { crewId } = route.params;
   const { user } = useUser();
 
-  const {
-    allContacts,
-    loading: contactsLoading,
-    error: contactsError,
-    refreshContacts,
-  } = useContacts();
+  const { allContacts, loading: contactsLoading } = useContacts();
 
   const [allPotentialMembers, setAllPotentialMembers] = useState<
     MemberWithStatus[]
   >([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [emailToAdd, setEmailToAdd] = useState<string>('');
@@ -69,7 +63,6 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
           text1: 'Error',
           text2: 'User not authenticated',
         });
-        setLoading(false);
         return;
       }
 
@@ -96,7 +89,6 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
             text1: 'Error',
             text2: 'Crew not found',
           });
-          setLoading(false);
           return;
         }
         const currentCrewData = currentCrewSnap.data();
@@ -123,8 +115,6 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
           text1: 'Error',
           text2: 'Could not fetch crew-specific data',
         });
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -385,7 +375,7 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
 
   return (
     <>
-      {loading && <LoadingOverlay />}
+      {contactsLoading && <LoadingOverlay />}
       <View style={styles.container}>
         {/* Search Input */}
         <CustomSearchInput
@@ -400,7 +390,7 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
             currentUserId={user?.uid || null}
             selectedMemberIds={selectedMemberIds}
             onSelectMember={handleSelectMember}
-            isLoading={loading}
+            isLoading={contactsLoading}
             emptyMessage={
               searchQuery.trim() !== ''
                 ? 'No members match your search.'

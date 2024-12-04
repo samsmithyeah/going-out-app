@@ -307,10 +307,12 @@ export const ContactsProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   useEffect(() => {
-    console.log('🔁 useEffect triggered: Calling loadContacts.');
-    loadContacts();
+    if (user) {
+      console.log('🔁 useEffect triggered: Calling loadContacts.');
+      loadContacts();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user]);
 
   const refreshContacts = async () => {
     console.log('🔄 Refreshing contacts...');

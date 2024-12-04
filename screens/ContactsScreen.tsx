@@ -13,7 +13,6 @@ import globalStyles from '@/styles/globalStyles';
 import CustomSearchInput from '@/components/CustomSearchInput';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { Ionicons } from '@expo/vector-icons';
-import CustomButton from '@/components/CustomButton';
 
 type ContactsScreenProp = NativeStackNavigationProp<NavParamList, 'Contacts'>;
 
@@ -50,50 +49,51 @@ const ContactsScreen: React.FC = () => {
   );
 
   return (
-    <View style={globalStyles.container}>
+    <>
       {/* Loading Overlay */}
       {loading && <LoadingOverlay />}
+      <View style={globalStyles.container}>
+        {/* Error State */}
+        {error && !loading && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity
+              onPress={refreshContacts}
+              style={styles.retryButton}
+            >
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-      {/* Error State */}
-      {error && !loading && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity
-            onPress={refreshContacts}
-            style={styles.retryButton}
-          >
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        {/* Main Content */}
+        {!loading && !error && (
+          <>
+            {/* Screen Title */}
+            <ScreenTitle title="Contacts" />
 
-      {/* Main Content */}
-      {!loading && !error && (
-        <>
-          {/* Screen Title */}
-          <ScreenTitle title="Contacts" />
-
-          {/* Search Bar */}
-          <CustomSearchInput
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-          />
-
-          {/* Conditional Rendering based on filtered users */}
-          {filteredUsers.length === 0 ? (
-            renderEmptyState()
-          ) : (
-            <MemberList
-              members={filteredUsers}
-              currentUserId={''}
-              onMemberPress={handleContactPress}
-              isLoading={loading}
-              emptyMessage="No registered contacts found."
+            {/* Search Bar */}
+            <CustomSearchInput
+              searchQuery={searchQuery}
+              onSearchQueryChange={setSearchQuery}
             />
-          )}
-        </>
-      )}
-    </View>
+
+            {/* Conditional Rendering based on filtered users */}
+            {filteredUsers.length === 0 ? (
+              renderEmptyState()
+            ) : (
+              <MemberList
+                members={filteredUsers}
+                currentUserId={''}
+                onMemberPress={handleContactPress}
+                isLoading={loading}
+                emptyMessage="No registered contacts found."
+              />
+            )}
+          </>
+        )}
+      </View>
+    </>
   );
 };
 
