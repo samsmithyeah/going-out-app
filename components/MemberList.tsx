@@ -27,6 +27,7 @@ interface MemberListProps {
   adminIds?: string[];
   selectedMemberIds?: string[]; // For selection
   onSelectMember?: (memberId: string) => void; // For selection handler
+  scrollEnabled?: boolean;
 }
 
 const MemberList: React.FC<MemberListProps> = ({
@@ -38,6 +39,7 @@ const MemberList: React.FC<MemberListProps> = ({
   adminIds = [],
   selectedMemberIds = [],
   onSelectMember,
+  scrollEnabled = false,
 }) => {
   // Memoize the sorted members to avoid unnecessary re-sorting on each render
   const sortedMembers = useMemo(() => {
@@ -127,6 +129,7 @@ const MemberList: React.FC<MemberListProps> = ({
     return (
       <View style={styles.container}>
         {[...Array(6)].map((_, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
           <SkeletonUserItem key={index} />
         ))}
       </View>
@@ -142,7 +145,7 @@ const MemberList: React.FC<MemberListProps> = ({
         ListEmptyComponent={
           <Text style={styles.emptyText}>{emptyMessage}</Text>
         }
-        scrollEnabled={false}
+        scrollEnabled={scrollEnabled}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
     </View>

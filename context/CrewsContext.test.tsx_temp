@@ -1,0 +1,123 @@
+// context/CrewsContext.test.tsx
+
+import React from 'react';
+import { View, Button, Text } from 'react-native';
+import { render, waitFor, act, fireEvent } from '@testing-library/react-native';
+import { CrewsProvider, useCrews } from './CrewsContext';
+import { useUser } from '@/context/UserContext';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  doc,
+  setDoc,
+} from 'firebase/firestore';
+
+// Mock Firebase Firestore
+jest.mock('@/firebase', () => ({
+  db: {},
+}));
+
+jest.mock('firebase/firestore', () => ({
+  collection: jest.fn(),
+  query: jest.fn(),
+  where: jest.fn(),
+  getDocs: jest.fn(),
+  getDoc: jest.fn(),
+  doc: jest.fn(),
+  setDoc: jest.fn(),
+  // Add other Firestore functions if needed
+}));
+
+jest.mock('@/context/UserContext', () => ({
+  useUser: jest.fn(),
+}));
+
+const mockUseUser = useUser as jest.Mock;
+
+const TestComponent: React.FC = () => {
+  const { crewIds, crews, loadingCrews, toggleStatusForCrew } = useCrews();
+
+  return (
+    <View>
+      <Text testID="crew-ids">{crewIds.join(',')}</Text>
+      <Text testID="crews">{crews.length}</Text>
+      <Text testID="loading-crews">{loadingCrews.toString()}</Text>
+      <Button
+        title="Toggle Status"
+        onPress={() => toggleStatusForCrew('crew1', '2023-10-10', true)}
+      />
+    </View>
+  );
+};
+
+describe('CrewsContext', () => {
+  beforeEach(() => {
+    mockUseUser.mockReturnValue({
+      user: { uid: 'user1' },
+    });
+
+    (collection as jest.Mock).mockReturnValue('mockCollection');
+    (where as jest.Mock).mockReturnValue('mockWhere');
+    (query as jest.Mock).mockReturnValue('mockQuery');
+    (doc as jest.Mock).mockReturnValue('mockDoc');
+
+    (getDocs as jest.Mock).mockResolvedValue({
+      docs: [
+        { id: 'crew1', data: () => ({ memberIds: ['user1'] }) },
+        { id: 'crew2', data: () => ({ memberIds: ['user1'] }) },
+      ],
+    });
+
+    (getDoc as jest.Mock).mockResolvedValue({
+      exists: () => true,
+      id: 'crew1',
+      data: () => ({ name: 'Crew One' }),
+    });
+
+    (setDoc as jest.Mock).mockResolvedValue({});
+  });
+
+  it('should provide default values', async () => {
+    const { getByTestId } = render(
+      <CrewsProvider>
+        <TestComponent />
+      </CrewsProvider>,
+    );
+
+    expect(getByTestId('crew-ids').props.children).toBe('');
+    expect(getByTestId('loading-crews').props.children).toBe('true');
+
+    await waitFor(() => {
+      expect(getByTestId('crew-ids').props.children).toBe('crew1,crew2');
+      expect(getByTestId('crews').props.children).toBe(2);
+      expect(getByTestId('loading-crews').props.children).toBe('false');
+    });
+  });
+
+  it('should toggle status for a crew', async () => {
+    const { getByText } = render(
+      <CrewsProvider>
+        <TestComponent />
+      </CrewsProvider>,
+    );
+
+    const toggleButton = getByText('Toggle Status');
+
+    await act(async () => {
+      fireEvent.press(toggleButton);
+    });
+
+    await waitFor(() => {
+      expect(setDoc).toHaveBeenCalledWith(
+        'mockDoc',
+        { status: true },
+        { merge: true },
+      );
+    });
+  });
+
+  // Add more tests for other functions and states
+});

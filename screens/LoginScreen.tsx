@@ -1,6 +1,6 @@
-// LoginScreen.tsx
+// screens/LoginScreen.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,7 +9,7 @@ import {
   Keyboard,
   TouchableOpacity,
 } from 'react-native';
-import { auth } from '@/firebase';
+import { auth, db } from '@/firebase';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import * as WebBrowser from 'expo-web-browser';
@@ -20,6 +20,9 @@ import { useUser } from '@/context/UserContext';
 import CustomButton from '@/components/CustomButton';
 import CustomTextInput from '@/components/CustomTextInput';
 import Colors from '@/styles/colors';
+import { doc, getDoc } from 'firebase/firestore';
+import { User } from '@/types/User';
+import { FirebaseError } from 'firebase/app';
 
 type LoginScreenProps = NativeStackScreenProps<NavParamList, 'Login'>;
 
@@ -30,14 +33,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>('');
-  const { user } = useUser();
-
-  useEffect(() => {
-    if (user) {
-      console.log('User logged in, redirecting to MainTabs');
-      navigation.replace('MainTabs');
-    }
-  }, [user]);
+  const { setUser } = useUser();
 
   const handleEmailLogin = async () => {
     setFormError('');
@@ -55,21 +51,46 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
-    } catch (error: any) {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password,
+      );
+      const thisUser = userCredential.user;
+
+      // Fetch user data from Firestore
+      const userDocRef = doc(db, 'users', thisUser.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data() as User;
+
+        if (!userData.phoneNumber) {
+          // Redirect to PhoneVerificationScreen
+          navigation.replace('PhoneVerification', { uid: thisUser.uid });
+        } else {
+          // Proceed to main app
+          setUser(userData);
+        }
+      } else {
+        setFormError('User data not found.');
+      }
+    } catch (error: unknown) {
       console.error('Login Error:', error);
-      switch (error.code) {
-        case 'auth/user-not-found':
-          setFormError('No account found for this email.');
-          break;
-        case 'auth/wrong-password':
-          setFormError('Incorrect password.');
-          break;
-        case 'auth/invalid-email':
-          setFormError('Invalid email address.');
-          break;
-        default:
-          setFormError('Failed to log in. Please try again.');
+      if (error instanceof FirebaseError) {
+        switch (error.code) {
+          case 'auth/user-not-found':
+            setFormError('No account found for this email.');
+            break;
+          case 'auth/wrong-password':
+            setFormError('Incorrect password.');
+            break;
+          case 'auth/invalid-email':
+            setFormError('Invalid email address.');
+            break;
+          default:
+            setFormError('Failed to log in. Please try again.');
+        }
       }
     } finally {
       setLoading(false);
@@ -104,6 +125,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             autoComplete="email"
             textContentType="username"
             importantForAutofill="yes"
+            hasBorder
           />
 
           <CustomTextInput
@@ -120,6 +142,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             autoComplete="password"
             textContentType="password"
             importantForAutofill="yes"
+            hasBorder
           />
 
           <TouchableOpacity
@@ -174,10 +197,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   formContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 15,
     padding: 20,
     marginHorizontal: 20,
+    marginTop: 50,
   },
   forgotPasswordContainer: {
     alignItems: 'flex-end',

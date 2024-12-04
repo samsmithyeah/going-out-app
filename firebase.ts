@@ -78,4 +78,4 @@ const pokeCrew = (crewId: string, date: string, userId: string) => {
   return pokeCrewCallable({ crewId, date, userId });
 };
 
-export { auth, db, functions, storage, deleteCrew, pokeCrew };
+export { auth, db, functions, storage, deleteCrew, pokeCrew, firebaseConfig };

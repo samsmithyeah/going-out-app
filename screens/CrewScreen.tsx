@@ -181,12 +181,12 @@ const CrewScreen: React.FC = () => {
       userStatusesRef,
       (snapshot) => {
         const newStatuses: { [userId: string]: boolean } = {};
-        snapshot.forEach((docSnap) => {
+        for (const docSnap of snapshot.docs) {
           const statusData = docSnap.data() as Status;
           const userId = docSnap.id;
           newStatuses[userId] = statusData.upForGoingOutTonight || false;
           console.log(`User ID: ${userId}, Status: ${newStatuses[userId]}`);
-        });
+        }
         console.log(`All Statuses for ${selectedDate}:`, newStatuses);
         setStatusesForSelectedDate(newStatuses);
       },

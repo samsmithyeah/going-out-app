@@ -8,7 +8,7 @@ import { User } from '@/types/User';
 import Toast from 'react-native-toast-message';
 
 const registerForPushNotificationsAsync = async (user: User) => {
-  let token;
+  let token: string | undefined;
 
   if (isDevice) {
     const { status: existingStatus } =
@@ -87,7 +87,7 @@ const registerForPushNotificationsAsync = async (user: User) => {
   }
 };
 
-export const addUserToFirestore = async (user: User) => {
+export const addUserToFirestore = async (user: User, phoneNumber?: string) => {
   const userDocRef = doc(db, 'users', user.uid);
   try {
     const userData: User = {
@@ -98,16 +98,21 @@ export const addUserToFirestore = async (user: User) => {
       lastName: user.lastName,
       photoURL: user.photoURL,
       badgeCount: 0,
+      phoneNumber: phoneNumber || '', // Add this line
     };
     await registerForPushNotificationsAsync(user);
     const userExists = (await getDoc(userDocRef)).exists();
     if (userExists) {
       console.log('User document already exists in Firestore.');
+      if (phoneNumber) {
+        await updateDoc(userDocRef, { phoneNumber });
+        console.log('User phone number updated in Firestore.');
+      }
       return;
     }
     await setDoc(userDocRef, userData, { merge: true });
     console.log('User document added to Firestore.');
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error adding user document:', err);
   }
 };

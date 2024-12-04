@@ -69,17 +69,16 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
                 uid: userDoc.id,
                 ...(userDoc.data() as Omit<User, 'uid'>),
               } as User;
-            } else {
-              // Handle case where user document doesn't exist
-              return {
-                uid,
-                displayName: 'Unknown User',
-                email: '',
-                firstName: 'Unknown', // Assuming these fields
-                lastName: '',
-                photoURL: '',
-              } as User;
             }
+            // Handle case where user document doesn't exist
+            return {
+              uid,
+              displayName: 'Unknown User',
+              email: '',
+              firstName: 'Unknown', // Assuming these fields
+              lastName: '',
+              photoURL: '',
+            } as User;
           });
 
           const usersData = await Promise.all(userPromises);
@@ -116,7 +115,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
       text1: 'Success',
       text2: 'Crew created successfully',
     });
-    navigation.navigate('Crew', { crewId });
+    navigation.navigate('AddMembers', { crewId });
   };
 
   // Render the empty state UI

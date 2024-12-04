@@ -3,7 +3,6 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useUser } from '@/context/UserContext';
-import SignUpScreen from '@/screens/SignUpScreen';
 import TabNavigator from '@/navigation/TabNavigator';
 import LoginStackNavigator from '@/navigation/LoginStackNavigator';
 
@@ -54,6 +53,15 @@ export type NavParamList = {
   NewDM: undefined;
   CrewDateChat: { crewId?: string; date?: string; id?: string };
   ChatsList: undefined;
+  PhoneVerification: { uid: string };
+  DashboardStack:
+    | {
+        screen: string;
+        params?: { crewId?: string; date?: string };
+        initial: boolean;
+      }
+    | undefined;
+  Contacts: undefined;
 };
 
 const Stack = createStackNavigator<NavParamList>();
@@ -66,7 +74,6 @@ const AppNavigator: React.FC = () => {
       {!user ? (
         <>
           <Stack.Screen name="LoginStack" component={LoginStackNavigator} />
-          <Stack.Screen name="SignUp" component={SignUpScreen} />
         </>
       ) : (
         <Stack.Screen name="MainTabs" component={TabNavigator} />

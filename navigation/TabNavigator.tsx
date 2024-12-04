@@ -11,10 +11,12 @@ import { useInvitations } from '@/context/InvitationsContext';
 import ChatsStackNavigator from '@/navigation/ChatsStackNavigator';
 import { useDirectMessages } from '@/context/DirectMessagesContext';
 import { useCrewDateChat } from '@/context/CrewDateChatContext';
+import ContactsStackNavigator from '@/navigation/ContactsStackNavigator';
 
 export type TabsParamList = {
   DashboardStack: undefined;
   CrewsStack: { screen: string; params: { crewId: string } };
+  ContactsStack: undefined;
   Invitations: undefined;
   ChatsStack: undefined;
   UserProfileStack: undefined;
@@ -53,6 +55,16 @@ const TabNavigator: React.FC = () => {
           title: 'Crews',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="ContactsStack"
+        component={ContactsStackNavigator}
+        options={{
+          title: 'Contacts',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-add-outline" size={size} color={color} />
           ),
         }}
       />
