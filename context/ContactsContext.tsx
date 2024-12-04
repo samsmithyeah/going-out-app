@@ -13,6 +13,7 @@ import {
   requestContactsPermission,
   sanitizePhoneNumber,
 } from '@/utils/contactsUtils';
+import { CountryCode } from 'libphonenumber-js';
 import {
   collection,
   query,
@@ -52,9 +53,12 @@ export const ContactsProvider: React.FC<{ children: ReactNode }> = ({
   const [allContacts, setAllContacts] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [country, setCountry] = useState<CountryCode>('GB');
   const { user } = useUser();
 
-  const defaultCountry = 'GB';
+  useEffect(() => {
+    setCountry((user?.country ?? 'GB') as CountryCode);
+  }, [user]);
 
   const loadContacts = async () => {
     console.log('🔄 Starting to load contacts...');
@@ -93,7 +97,7 @@ export const ContactsProvider: React.FC<{ children: ReactNode }> = ({
                 (number): number is string =>
                   typeof number === 'string' && number.trim() !== '',
               )
-              .map((number) => sanitizePhoneNumber(number, defaultCountry))
+              .map((number) => sanitizePhoneNumber(number, country))
               .filter((number) => number !== '') || [];
 
           if (sanitizedPhoneNumbers.length === 0) {

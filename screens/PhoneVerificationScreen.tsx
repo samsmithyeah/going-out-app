@@ -147,6 +147,7 @@ const PhoneVerificationScreen: React.FC = () => {
         console.log('Updating phone number:', fullPhoneNumber);
         await updateDoc(userDocRef, {
           phoneNumber: fullPhoneNumber,
+          country: selectedCountry.country_code,
         });
         Toast.show({
           type: 'success',
