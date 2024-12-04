@@ -11,7 +11,6 @@ import {
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { PhoneAuthProvider, ApplicationVerifier } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import CountryPicker, { CountryCode } from 'react-native-country-picker-modal';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import CustomButton from '@/components/CustomButton';
 import Toast from 'react-native-toast-message';
@@ -27,20 +26,20 @@ import { firebaseConfig, auth, db } from '@/firebase';
 import { NavParamList } from '@/navigation/AppNavigator';
 import { User } from '@/types/User';
 import { useUser } from '@/context/UserContext';
+import { CountryPicker } from 'react-native-country-codes-picker';
 
 const CELL_COUNT = 6;
 
 const PhoneVerificationScreen: React.FC = () => {
   const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
 
-  const [countryCode, setCountryCode] = useState<CountryCode>('GB');
-  const [callingCode, setCallingCode] = useState<string>('44');
+  const [countryCode, setCountryCode] = useState<string>('+44'); // Default to UK
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [verificationCode, setVerificationCode] = useState<string>('');
   const [verificationId, setVerificationId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>('');
-  const [isCountryPickerVisible, setCountryPickerVisible] = useState(false);
+  const [showCountryPicker, setShowCountryPicker] = useState<boolean>(false);
   const [fullPhoneNumber, setFullPhoneNumber] = useState<string>('');
   const { setUser } = useUser();
 
@@ -61,9 +60,9 @@ const PhoneVerificationScreen: React.FC = () => {
 
   useEffect(() => {
     const sanitized = phoneNumber.trim().replace(/^0+/, '');
-    const computedFullPhoneNumber = `+${callingCode}${sanitized}`;
+    const computedFullPhoneNumber = `${countryCode}${sanitized}`;
     setFullPhoneNumber(computedFullPhoneNumber);
-  }, [callingCode, phoneNumber]);
+  }, [countryCode, phoneNumber]);
 
   const handleSendVerification = async () => {
     setFormError('');
@@ -74,7 +73,7 @@ const PhoneVerificationScreen: React.FC = () => {
 
     // Remove leading zeros from phone number
     const sanitizedPhoneNumber = phoneNumber.trim().replace(/^0+/, '');
-    const fullPhoneNumberLocal = `+${callingCode}${sanitizedPhoneNumber}`;
+    const fullPhoneNumberLocal = `${countryCode}${sanitizedPhoneNumber}`;
 
     console.log('phoneNumber', phoneNumber);
     console.log('sanitizedPhoneNumber', sanitizedPhoneNumber);
@@ -166,22 +165,11 @@ const PhoneVerificationScreen: React.FC = () => {
           {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
           <View style={styles.countryPickerContainer}>
-            <CountryPicker
-              countryCode={countryCode}
-              withFilter
-              withFlag
-              withCallingCode
-              onSelect={(country) => {
-                setCountryCode(country.cca2);
-                setCallingCode(country.callingCode[0]);
-              }}
-              visible={isCountryPickerVisible}
-              onClose={() => setCountryPickerVisible(false)}
-            />
             <TouchableOpacity
-              onPress={() => setCountryPickerVisible(true)} // Open CountryPicker when Text is clicked
+              onPress={() => setShowCountryPicker(true)}
+              style={styles.countryPickerButton}
             >
-              <Text style={styles.callingCode}>+{callingCode}</Text>
+              <Text style={styles.countryCodeText}>{countryCode}</Text>
             </TouchableOpacity>
             {/* TODO: Convert this to CustomTextInput */}
             <TextInput
@@ -193,7 +181,15 @@ const PhoneVerificationScreen: React.FC = () => {
               keyboardType="phone-pad"
             />
           </View>
-
+          <CountryPicker
+            show={showCountryPicker}
+            pickerButtonOnPress={(item: any) => {
+              setCountryCode(item.dial_code);
+              setShowCountryPicker(false);
+            }}
+            lang="en"
+            style={{ modal: { height: '92%' } }}
+          />
           {!verificationId ? (
             <CustomButton
               title="Send verification code"
@@ -264,8 +260,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  callingCode: {
-    marginLeft: 10,
+  countryPickerButton: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  countryCodeText: {
     fontSize: 16,
     color: '#444',
   },
@@ -280,6 +283,8 @@ const styles = StyleSheet.create({
   },
   codeFieldRoot: {
     marginBottom: 20,
+    width: '100%',
+    justifyContent: 'center',
   },
   cell: {
     width: 40,
@@ -290,6 +295,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     textAlign: 'center',
     borderRadius: 5,
+    marginHorizontal: 5,
   },
   focusCell: {
     borderColor: '#000',
