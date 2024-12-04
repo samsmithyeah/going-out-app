@@ -20,6 +20,7 @@ import {
   doc,
   orderBy,
   setDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { useUser } from '@/context/UserContext';
@@ -153,10 +154,12 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           await setDoc(dmRef, {
             participants: [user.uid, otherUserUid],
             lastRead: {
-              [user.uid]: Timestamp.fromDate(new Date()),
-              [otherUserUid!]: Timestamp.fromDate(new Date(Date.now() - 1000)), // Set to 1 second earlier
+              [user.uid]: serverTimestamp(),
+              [otherUserUid!]: Timestamp.fromDate(
+                new Date(Date.now() - 86400000), // Set to 1 day earlier
+              ),
             },
-            createdAt: Timestamp.fromDate(new Date()),
+            createdAt: serverTimestamp(),
           });
         } else {
           const dmData = dmDoc.data();
@@ -175,7 +178,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         const newMessage = {
           senderId: user.uid,
           text,
-          createdAt: Timestamp.fromDate(new Date()),
+          createdAt: serverTimestamp(),
         };
         await addDoc(messagesRef, newMessage);
       } catch (error) {
@@ -201,8 +204,10 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           dmRef,
           {
             lastRead: {
-              [user.uid]: Timestamp.fromDate(new Date()),
-              [otherUserUid!]: Timestamp.fromDate(new Date(Date.now() - 1000)), // Set to 1 second earlier
+              [user.uid]: serverTimestamp(),
+              [otherUserUid!]: Timestamp.fromDate(
+                new Date(Date.now() - 86400000), // Set to 1 day earlier
+              ),
             },
           },
           { merge: true },

@@ -193,14 +193,6 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
         if (!conversationId || !user?.uid) return;
         const userUid = user.uid;
         const convoRef = doc(db, 'direct_messages', conversationId);
-        // try {
-        //   await updateDoc(convoRef, {
-        //     [`typingStatus.${user.uid}`]: isTyping,
-        //     [`typingStatus.${user.uid}LastUpdate`]: serverTimestamp(),
-        //   });
-        // } catch (error) {
-        //   console.error('Error updating typing status:', error);
-        // }
         try {
           const chatSnap = await getDoc(convoRef);
           if (!chatSnap.exists()) {
@@ -213,13 +205,15 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
                   [`${userUid}LastUpdate`]: serverTimestamp(),
                 },
               },
-              { merge: true }, // Merge to avoid overwriting existing fields
+              { merge: true },
             );
           } else {
             // Update existing document
             await updateDoc(convoRef, {
-              [`typingStatus.${userUid}`]: isTyping,
-              [`typingStatus.${userUid}LastUpdate`]: serverTimestamp(),
+              typingStatus: {
+                [userUid]: isTyping,
+                [`${userUid}LastUpdate`]: serverTimestamp(),
+              },
             });
           }
         } catch (error) {
