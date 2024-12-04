@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { NavParamList } from './AppNavigator';
 import ContactsScreen from '@/screens/ContactsScreen';
 import OtherUserProfileScreen from '@/screens/OtherUserProfileScreen';
+import DMChatScreen from '@/screens/DMChatScreen';
 
 const Stack = createStackNavigator<NavParamList>();
 
@@ -19,6 +20,14 @@ const ContactsStackNavigator: React.FC = () => {
       <Stack.Screen
         name="OtherUserProfile"
         component={OtherUserProfileScreen}
+        options={{
+          headerBackTitleVisible: false,
+          headerStatusBarHeight: 0,
+        }}
+      />
+      <Stack.Screen
+        name="DMChat"
+        component={DMChatScreen}
         options={{
           headerBackTitleVisible: false,
           headerStatusBarHeight: 0,

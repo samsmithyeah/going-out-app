@@ -9,4 +9,5 @@ export interface User {
   activeChats?: string[];
   badgeCount?: number;
   phoneNumber?: string;
+  country?: string;
 }

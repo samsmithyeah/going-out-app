@@ -11,7 +11,6 @@ import {
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { PhoneAuthProvider, ApplicationVerifier } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import CountryPicker, { CountryCode } from 'react-native-country-picker-modal';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import CustomButton from '@/components/CustomButton';
 import Toast from 'react-native-toast-message';
@@ -27,20 +26,37 @@ import { firebaseConfig, auth, db } from '@/firebase';
 import { NavParamList } from '@/navigation/AppNavigator';
 import { User } from '@/types/User';
 import { useUser } from '@/context/UserContext';
+import { CountryPicker } from 'react-native-country-codes-picker';
 
 const CELL_COUNT = 6;
+
+// Helper function to convert country code to flag emoji
+const getFlagEmoji = (countryCode: string): string => {
+  return countryCode
+    .toUpperCase()
+    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+};
 
 const PhoneVerificationScreen: React.FC = () => {
   const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
 
-  const [countryCode, setCountryCode] = useState<CountryCode>('GB');
-  const [callingCode, setCallingCode] = useState<string>('44');
+  // Update state to include country code and country ISO code
+  const [selectedCountry, setSelectedCountry] = useState<{
+    dial_code: string;
+    country_code: string;
+    name: string;
+  }>({
+    dial_code: '+44', // Default to UK
+    country_code: 'GB',
+    name: 'United Kingdom',
+  });
+
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [verificationCode, setVerificationCode] = useState<string>('');
   const [verificationId, setVerificationId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>('');
-  const [isCountryPickerVisible, setCountryPickerVisible] = useState(false);
+  const [showCountryPicker, setShowCountryPicker] = useState<boolean>(false);
   const [fullPhoneNumber, setFullPhoneNumber] = useState<string>('');
   const { setUser } = useUser();
 
@@ -61,9 +77,9 @@ const PhoneVerificationScreen: React.FC = () => {
 
   useEffect(() => {
     const sanitized = phoneNumber.trim().replace(/^0+/, '');
-    const computedFullPhoneNumber = `+${callingCode}${sanitized}`;
+    const computedFullPhoneNumber = `${selectedCountry.dial_code}${sanitized}`;
     setFullPhoneNumber(computedFullPhoneNumber);
-  }, [callingCode, phoneNumber]);
+  }, [selectedCountry, phoneNumber]);
 
   const handleSendVerification = async () => {
     setFormError('');
@@ -74,7 +90,7 @@ const PhoneVerificationScreen: React.FC = () => {
 
     // Remove leading zeros from phone number
     const sanitizedPhoneNumber = phoneNumber.trim().replace(/^0+/, '');
-    const fullPhoneNumberLocal = `+${callingCode}${sanitizedPhoneNumber}`;
+    const fullPhoneNumberLocal = `${selectedCountry.dial_code}${sanitizedPhoneNumber}`;
 
     console.log('phoneNumber', phoneNumber);
     console.log('sanitizedPhoneNumber', sanitizedPhoneNumber);
@@ -131,6 +147,7 @@ const PhoneVerificationScreen: React.FC = () => {
         console.log('Updating phone number:', fullPhoneNumber);
         await updateDoc(userDocRef, {
           phoneNumber: fullPhoneNumber,
+          country: selectedCountry.country_code,
         });
         Toast.show({
           type: 'success',
@@ -166,22 +183,17 @@ const PhoneVerificationScreen: React.FC = () => {
           {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
           <View style={styles.countryPickerContainer}>
-            <CountryPicker
-              countryCode={countryCode}
-              withFilter
-              withFlag
-              withCallingCode
-              onSelect={(country) => {
-                setCountryCode(country.cca2);
-                setCallingCode(country.callingCode[0]);
-              }}
-              visible={isCountryPickerVisible}
-              onClose={() => setCountryPickerVisible(false)}
-            />
             <TouchableOpacity
-              onPress={() => setCountryPickerVisible(true)} // Open CountryPicker when Text is clicked
+              onPress={() => setShowCountryPicker(true)}
+              style={styles.countryPickerButton}
             >
-              <Text style={styles.callingCode}>+{callingCode}</Text>
+              <Text style={styles.flagText}>
+                {getFlagEmoji(selectedCountry.country_code)}
+              </Text>
+              <Text style={styles.countryCodeText}>
+                {selectedCountry.dial_code}
+              </Text>
+              <Text style={styles.dropdownArrow}>▼</Text>
             </TouchableOpacity>
             {/* TODO: Convert this to CustomTextInput */}
             <TextInput
@@ -193,7 +205,19 @@ const PhoneVerificationScreen: React.FC = () => {
               keyboardType="phone-pad"
             />
           </View>
-
+          <CountryPicker
+            show={showCountryPicker}
+            pickerButtonOnPress={(item: any) => {
+              setSelectedCountry({
+                dial_code: item.dial_code,
+                country_code: item.code,
+                name: item.name,
+              });
+              setShowCountryPicker(false);
+            }}
+            lang="en"
+            style={{ modal: { height: '92%' } }}
+          />
           {!verificationId ? (
             <CustomButton
               title="Send verification code"
@@ -264,22 +288,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  callingCode: {
-    marginLeft: 10,
+  countryPickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    marginRight: 10,
+  },
+  flagText: {
+    fontSize: 24,
+    marginRight: 5,
+  },
+  countryCodeText: {
     fontSize: 16,
     color: '#444',
   },
   phoneInput: {
     flex: 1,
-    marginLeft: 10,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
     paddingHorizontal: 10,
     height: 40,
+    color: '#000',
   },
   codeFieldRoot: {
     marginBottom: 20,
+    width: '100%',
+    justifyContent: 'center',
   },
   cell: {
     width: 40,
@@ -290,6 +325,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     textAlign: 'center',
     borderRadius: 5,
+    marginHorizontal: 5,
   },
   focusCell: {
     borderColor: '#000',
@@ -298,6 +334,12 @@ const styles = StyleSheet.create({
     color: 'red',
     textAlign: 'center',
     marginBottom: 15,
+  },
+  dropdownArrow: {
+    fontSize: 9,
+    color: '#444',
+    marginLeft: 2,
+    marginTop: 9,
   },
 });
 
