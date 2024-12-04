@@ -30,10 +30,27 @@ import { CountryPicker } from 'react-native-country-codes-picker';
 
 const CELL_COUNT = 6;
 
+// Helper function to convert country code to flag emoji
+const getFlagEmoji = (countryCode: string): string => {
+  return countryCode
+    .toUpperCase()
+    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+};
+
 const PhoneVerificationScreen: React.FC = () => {
   const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
 
-  const [countryCode, setCountryCode] = useState<string>('+44'); // Default to UK
+  // Update state to include country code and country ISO code
+  const [selectedCountry, setSelectedCountry] = useState<{
+    dial_code: string;
+    country_code: string;
+    name: string;
+  }>({
+    dial_code: '+44', // Default to UK
+    country_code: 'GB',
+    name: 'United Kingdom',
+  });
+
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [verificationCode, setVerificationCode] = useState<string>('');
   const [verificationId, setVerificationId] = useState<string | null>(null);
@@ -60,9 +77,9 @@ const PhoneVerificationScreen: React.FC = () => {
 
   useEffect(() => {
     const sanitized = phoneNumber.trim().replace(/^0+/, '');
-    const computedFullPhoneNumber = `${countryCode}${sanitized}`;
+    const computedFullPhoneNumber = `${selectedCountry.dial_code}${sanitized}`;
     setFullPhoneNumber(computedFullPhoneNumber);
-  }, [countryCode, phoneNumber]);
+  }, [selectedCountry, phoneNumber]);
 
   const handleSendVerification = async () => {
     setFormError('');
@@ -73,7 +90,7 @@ const PhoneVerificationScreen: React.FC = () => {
 
     // Remove leading zeros from phone number
     const sanitizedPhoneNumber = phoneNumber.trim().replace(/^0+/, '');
-    const fullPhoneNumberLocal = `${countryCode}${sanitizedPhoneNumber}`;
+    const fullPhoneNumberLocal = `${selectedCountry.dial_code}${sanitizedPhoneNumber}`;
 
     console.log('phoneNumber', phoneNumber);
     console.log('sanitizedPhoneNumber', sanitizedPhoneNumber);
@@ -169,7 +186,13 @@ const PhoneVerificationScreen: React.FC = () => {
               onPress={() => setShowCountryPicker(true)}
               style={styles.countryPickerButton}
             >
-              <Text style={styles.countryCodeText}>{countryCode}</Text>
+              <Text style={styles.flagText}>
+                {getFlagEmoji(selectedCountry.country_code)}
+              </Text>
+              <Text style={styles.countryCodeText}>
+                {selectedCountry.dial_code}
+              </Text>
+              <Text style={styles.dropdownArrow}>▼</Text>
             </TouchableOpacity>
             {/* TODO: Convert this to CustomTextInput */}
             <TextInput
@@ -184,7 +207,11 @@ const PhoneVerificationScreen: React.FC = () => {
           <CountryPicker
             show={showCountryPicker}
             pickerButtonOnPress={(item: any) => {
-              setCountryCode(item.dial_code);
+              setSelectedCountry({
+                dial_code: item.dial_code,
+                country_code: item.code,
+                name: item.name,
+              });
               setShowCountryPicker(false);
             }}
             lang="en"
@@ -261,12 +288,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   countryPickerButton: {
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    padding: 10,
+    marginRight: 10,
+  },
+  flagText: {
+    fontSize: 24,
+    marginRight: 5,
   },
   countryCodeText: {
     fontSize: 16,
@@ -274,12 +303,12 @@ const styles = StyleSheet.create({
   },
   phoneInput: {
     flex: 1,
-    marginLeft: 10,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
     paddingHorizontal: 10,
     height: 40,
+    color: '#000',
   },
   codeFieldRoot: {
     marginBottom: 20,
@@ -304,6 +333,12 @@ const styles = StyleSheet.create({
     color: 'red',
     textAlign: 'center',
     marginBottom: 15,
+  },
+  dropdownArrow: {
+    fontSize: 9,
+    color: '#444',
+    marginLeft: 2,
+    marginTop: 9,
   },
 });
 
