@@ -14,3 +14,6 @@ local.properties
 
 # Bundle artifacts
 *.jsbundle
+
+# Sentry
+sentry.properties
