@@ -111,11 +111,17 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   const { crews, usersCache } = useCrews();
   const { user, addActiveChat, removeActiveChat } = useUser();
   const tabBarHeight = useBottomTabBarHeight();
+  const isFocused = useIsFocused();
+  const isFocusedRef = useRef(isFocused);
   const [state, dispatch] = useReducer(reducer, {
     messages: [],
     isTyping: false,
     otherUsersTyping: {},
   });
+
+  useEffect(() => {
+    isFocusedRef.current = isFocused;
+  }, [isFocused]);
 
   const getChatId = () => {
     if (id) {
@@ -233,14 +239,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     },
     [updateTypingStatus],
   );
-
-  // Track if the screen is focused
-  const isFocused = useIsFocused();
-  const isFocusedRef = useRef(isFocused);
-
-  useEffect(() => {
-    isFocusedRef.current = isFocused;
-  }, [isFocused]);
 
   // Set up Firestore listener for messages and typing status
   useEffect(() => {
