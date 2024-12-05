@@ -35,6 +35,8 @@ import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { User } from '@/types/User';
+import ProfilePicturePicker from '@/components/ProfilePicturePicker';
 
 // Define Props
 type DMChatScreenProps = NativeStackScreenProps<NavParamList, 'DMChat'>;
@@ -54,10 +56,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   const tabBarHeight = useBottomTabBarHeight();
   const isFocusedRef = useRef(isFocused);
   const { user, addActiveChat, removeActiveChat } = useUser();
-  const [otherUser, setOtherUser] = useState<{
-    displayName: string;
-    photoURL?: string;
-  } | null>(null);
+  const [otherUser, setOtherUser] = useState<User | null>(null);
 
   useEffect(() => {
     isFocusedRef.current = isFocused;
@@ -79,7 +78,12 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
       if (!otherUserId) {
         console.log('No otherUserId provided');
         if (isMounted) {
-          setOtherUser({ displayName: 'Unknown', photoURL: undefined });
+          setOtherUser({
+            displayName: 'Unknown',
+            photoURL: undefined,
+            uid: '',
+            email: '',
+          });
         }
         return;
       }
@@ -94,14 +98,24 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
           if (isMounted) {
             setOtherUser(
               userDoc.exists()
-                ? (userDoc.data() as { displayName: string; photoURL?: string })
-                : { displayName: 'Unknown', photoURL: undefined },
+                ? (userDoc.data() as User)
+                : {
+                    displayName: 'Unknown',
+                    photoURL: undefined,
+                    uid: '',
+                    email: '',
+                  },
             );
           }
         } catch (error) {
           console.error('Error fetching other user:', error);
           if (isMounted) {
-            setOtherUser({ displayName: 'Unknown', photoURL: undefined });
+            setOtherUser({
+              displayName: 'Unknown',
+              photoURL: undefined,
+              uid: '',
+              email: '',
+            });
           }
         }
       }
@@ -183,11 +197,6 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
 
   // Fetch messages for this conversation from context
   const conversationMessages = messages[conversationId] || [];
-
-  // Log messages to debug
-  useEffect(() => {
-    console.log('Conversation Messages:', conversationMessages);
-  }, [conversationMessages]);
 
   const giftedChatMessages: IMessage[] = useMemo(() => {
     return conversationMessages
@@ -298,6 +307,17 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     };
   }, [conversationId, addActiveChat, removeActiveChat]);
 
+  const renderAvatar = useCallback(() => {
+    return (
+      <ProfilePicturePicker
+        imageUrl={otherUser?.photoURL || null}
+        onImageUpdate={() => {}}
+        editable={false}
+        size={40}
+      />
+    );
+  }, [otherUser]);
+
   if (!conversationId) {
     return <LoadingOverlay />;
   }
@@ -324,6 +344,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
         bottomOffset={tabBarHeight}
         isTyping={false} // Control isTyping via custom logic
         onInputTextChanged={handleInputTextChanged} // Manage typing state
+        renderAvatar={renderAvatar}
         renderBubble={(props) => (
           <Bubble
             {...props}

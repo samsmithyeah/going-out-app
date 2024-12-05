@@ -15,6 +15,7 @@ import {
   Bubble,
   Send,
   SendProps,
+  AvatarProps,
 } from 'react-native-gifted-chat';
 import { useUser } from '@/context/UserContext';
 import { useCrewDateChat } from '@/context/CrewDateChatContext';
@@ -35,9 +36,8 @@ import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import Toast from 'react-native-toast-message';
-import { storage } from '@/storage'; // MMKV storage instance
 import { User } from '@/types/User';
+import ProfilePicturePicker from '@/components/ProfilePicturePicker';
 
 // Define Props
 type CrewDateChatScreenProps = NativeStackScreenProps<
@@ -58,14 +58,9 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   navigation,
 }) => {
   const { crewId, date, id } = route.params as RouteParams;
-  const {
-    sendMessage,
-    updateLastRead,
-    messages,
-    listenToMessages,
-    getChatParticipantsCount,
-  } = useCrewDateChat();
-  const { crews, usersCache } = useCrews();
+  const { sendMessage, updateLastRead, messages, listenToMessages } =
+    useCrewDateChat();
+  const { crews } = useCrews();
   const isFocused = useIsFocused();
   const tabBarHeight = useBottomTabBarHeight();
   const isFocusedRef = useRef(isFocused);
@@ -247,11 +242,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   // Fetch messages for this chat from context
   const conversationMessages = messages[chatId || ''] || [];
 
-  // Log messages to debug
-  useEffect(() => {
-    console.log('Conversation Messages:', conversationMessages);
-  }, [conversationMessages]);
-
   const giftedChatMessages: IMessage[] = useMemo(() => {
     return conversationMessages
       .map((message) => ({
@@ -367,6 +357,25 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     );
   }, [conversationMessages, otherMembers]);
 
+  const renderAvatar = useCallback(
+    (props: AvatarProps<IMessage>) => {
+      const messageUserId = props.currentMessage.user._id;
+      const messageUser = otherMembers.find(
+        (member) => member.uid === messageUserId,
+      );
+      if (!messageUser) return null;
+      return (
+        <ProfilePicturePicker
+          imageUrl={messageUser.photoURL || null}
+          onImageUpdate={() => {}}
+          editable={false}
+          size={40}
+        />
+      );
+    },
+    [otherMembers],
+  );
+
   // Conditional return must be after all hooks
   if (!chatId) {
     return <LoadingOverlay />;
@@ -385,6 +394,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
         bottomOffset={tabBarHeight}
         isTyping={false} // Control isTyping via custom logic
         onInputTextChanged={handleInputTextChanged} // Manage typing state
+        renderAvatar={renderAvatar}
         renderBubble={(props) => (
           <Bubble
             {...props}
