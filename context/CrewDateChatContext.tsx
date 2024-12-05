@@ -7,6 +7,7 @@ import React, {
   useContext,
   ReactNode,
   useCallback,
+  useRef,
 } from 'react';
 import {
   collection,
@@ -30,14 +31,15 @@ import { useUser } from '@/context/UserContext';
 import { User } from '@/types/User';
 import { useCrews } from '@/context/CrewsContext';
 import Toast from 'react-native-toast-message';
+import { storage } from '@/storage'; // MMKV storage instance
 
-// Define the Message interface
+// Define the Message interface with createdAt as Date
 interface Message {
   id: string;
   senderId: string;
   text: string;
-  createdAt: Timestamp;
-  senderName?: string; // Optional: Include sender's name
+  createdAt: Date; // Ensure it's Date
+  senderName?: string;
 }
 
 // Extend the CrewDateChat interface to include member details, crewName, and lastRead
@@ -76,12 +78,13 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { user, activeChats } = useUser(); // Access activeChats from UserContext
+  const { crews, usersCache, setUsersCache } = useCrews();
   const [chats, setChats] = useState<CrewDateChat[]>([]);
   const [messages, setMessages] = useState<{ [chatId: string]: Message[] }>({});
-  const { crews, usersCache, setUsersCache } = useCrews();
-
-  // New state for total unread messages
   const [totalUnread, setTotalUnread] = useState<number>(0);
+
+  // Ref to keep track of message listeners
+  const listenersRef = useRef<{ [chatId: string]: () => void }>({});
 
   // Helper function to fetch user details by UID with caching
   const fetchUserDetails = useCallback(
@@ -119,7 +122,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         };
       }
     },
-    [usersCache],
+    [usersCache, setUsersCache],
   );
 
   // Fetch unread count for a specific chat
@@ -179,7 +182,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
 
     try {
       const unreadPromises = chats
-        .filter((chat) => !activeChats.has(chat.id))
+        .filter((chat) => !activeChats.has(chat.id)) // Exclude active chats
         .map((chat) => fetchUnreadCount(chat.id));
       const unreadCounts = await Promise.all(unreadPromises);
       const total = unreadCounts.reduce((acc, count) => acc + count, 0);
@@ -195,9 +198,10 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [user?.uid, chats, fetchUnreadCount, activeChats]);
 
+  // Fetch chats
   const fetchChats = useCallback(async () => {
     if (!user?.uid) {
-      console.log('User is signed out. Clearing group chats.');
+      console.log('User is signed out. Clearing crew date chats.');
       setChats([]);
       setMessages({});
       setTotalUnread(0);
@@ -251,7 +255,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
       const fetchedChats = await Promise.all(chatPromises);
 
       setChats(fetchedChats);
-      // Removed computeTotalUnread from here
+      // computeTotalUnread will handle updating totalUnread
     } catch (error) {
       console.error('Error fetching crew date chats:', error);
       Toast.show({
@@ -262,7 +266,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [user?.uid, crews, fetchUserDetails]);
 
-  // Listen to real-time updates in crew date chats where the user is a member and has at least one message
+  // Listen to real-time updates in crew date chats
   const listenToChats = useCallback(() => {
     if (!user?.uid) return () => {};
 
@@ -316,7 +320,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           const fetchedChats = await Promise.all(chatPromises);
 
           setChats(fetchedChats);
-          // Removed computeTotalUnread from here
+          // computeTotalUnread will handle updating totalUnread
         } catch (error) {
           console.error('Error processing real-time chat updates:', error);
           Toast.show({
@@ -342,9 +346,33 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, [user?.uid, crews, fetchUserDetails]);
 
+  // Listen to real-time updates in crew date chats
+  useEffect(() => {
+    fetchChats();
+
+    const unsubscribe = listenToChats();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+      console.log('CrewDateChatContext unmounted.');
+    };
+  }, [fetchChats, listenToChats]);
+
+  // Compute total unread messages whenever chats or activeChats change
   useEffect(() => {
     computeTotalUnread();
   }, [computeTotalUnread]);
+
+  // Cleanup listeners on unmount
+  useEffect(() => {
+    return () => {
+      // Cleanup all message listeners
+      Object.values(listenersRef.current).forEach((unsubscribe) =>
+        unsubscribe(),
+      );
+      listenersRef.current = {};
+    };
+  }, []);
 
   // Send a message in a crew date chat
   const sendMessage = useCallback(
@@ -361,7 +389,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         const newMessage = {
           senderId: user.uid,
           text,
-          createdAt: Timestamp.fromDate(new Date()),
+          createdAt: serverTimestamp(),
         };
         await addDoc(messagesRef, newMessage);
 
@@ -406,6 +434,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     [user?.uid],
   );
 
+  // Add a member to a chat
   const addMemberToChat = useCallback(
     async (chatId: string, uid: string): Promise<void> => {
       try {
@@ -423,6 +452,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           await setDoc(chatRef, {
             memberIds: [uid], // Initialize the array
             createdAt: serverTimestamp(), // Optionally track when the chat was created
+            hasMessages: false,
           });
           console.log(
             `Created new chat and added member ${uid} to chat ${chatId}`,
@@ -440,7 +470,7 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     [],
   );
 
-  // Remove a member from the chat's memberIds array
+  // Remove a member from a chat
   const removeMemberFromChat = useCallback(
     async (chatId: string, uid: string): Promise<void> => {
       try {
@@ -469,16 +499,30 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     (chatId: string) => {
       if (!user?.uid) return () => {};
       const messagesRef = collection(db, 'crew_date_chats', chatId, 'messages');
-      const msgQuery = query(messagesRef, orderBy('createdAt', 'desc')); // Optimize ordering
+      const msgQuery = query(messagesRef, orderBy('createdAt', 'asc')); // Order ascending for GiftedChat
+
+      // Load cached messages if available
+      const cachedMessages = storage.getString(`messages_${chatId}`);
+      if (cachedMessages) {
+        const parsedCachedMessages: Message[] = JSON.parse(
+          cachedMessages,
+          (key, value) => {
+            if (key === 'createdAt' && typeof value === 'string') {
+              return new Date(value);
+            }
+            return value;
+          },
+        );
+        setMessages((prev) => ({
+          ...prev,
+          [chatId]: parsedCachedMessages,
+        }));
+      }
 
       const unsubscribe = onSnapshot(
         msgQuery,
         async (querySnapshot) => {
           try {
-            console.log(
-              `Real-time update: Fetched ${querySnapshot.size} messages for chat ${chatId}`,
-            );
-
             const fetchedMessages: Message[] = await Promise.all(
               querySnapshot.docs.map(async (docSnap) => {
                 const msgData = docSnap.data();
@@ -489,7 +533,9 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
                   id: docSnap.id,
                   senderId,
                   text: msgData.text,
-                  createdAt: msgData.createdAt,
+                  createdAt: msgData.createdAt
+                    ? msgData.createdAt.toDate()
+                    : new Date(), // Convert Timestamp to Date
                   senderName: sender.displayName, // Include sender's name
                 };
               }),
@@ -499,6 +545,13 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
               ...prev,
               [chatId]: fetchedMessages,
             }));
+
+            // Save messages to MMKV with createdAt as ISO string
+            const messagesToCache = fetchedMessages.map((msg) => ({
+              ...msg,
+              createdAt: msg.createdAt.toISOString(),
+            }));
+            storage.set(`messages_${chatId}`, JSON.stringify(messagesToCache));
           } catch (error) {
             console.error('Error processing messages snapshot:', error);
             Toast.show({
@@ -518,9 +571,18 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         },
       );
 
-      return unsubscribe;
+      // Store the unsubscribe function
+      listenersRef.current[chatId] = unsubscribe;
+
+      return () => {
+        // Clean up the listener
+        if (listenersRef.current[chatId]) {
+          listenersRef.current[chatId]();
+          delete listenersRef.current[chatId];
+        }
+      };
     },
-    [fetchUserDetails],
+    [fetchUserDetails, user?.uid],
   );
 
   // Get count of chat participants
@@ -528,18 +590,6 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     const chat = chats.find((chat) => chat.id === chatId);
     return chat ? chat.otherMembers.length + 1 : 0;
   };
-
-  // Fetch chats and set up real-time listeners on mount
-  useEffect(() => {
-    fetchChats();
-
-    const unsubscribe = listenToChats();
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-      console.log('CrewDateChatContext unmounted.');
-    };
-  }, [fetchChats, listenToChats]);
 
   return (
     <CrewDateChatContext.Provider
