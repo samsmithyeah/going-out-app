@@ -69,7 +69,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { user, activeChats } = useUser();
-  const { usersCache } = useCrews();
+  const { usersCache, setUsersCache } = useCrews(); // Destructure setUsersCache
   const [dms, setDms] = useState<DirectMessage[]>([]);
   const [messages, setMessages] = useState<{ [dmId: string]: Message[] }>({});
   const [totalUnread, setTotalUnread] = useState<number>(0);
@@ -94,15 +94,22 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         const dmData = dmDoc.data();
         if (!dmData) return 0;
 
-        const lastRead = dmData.lastRead[user.uid];
+        const lastRead = dmData.lastRead ? dmData.lastRead[user.uid] : null;
+
+        if (!lastRead) {
+          // If there's no lastRead, all messages are considered unread
+          const messagesRef = collection(
+            db,
+            'direct_messages',
+            dmId,
+            'messages',
+          );
+          const allMessages = await getDocs(messagesRef);
+          return allMessages.size;
+        }
 
         const messagesRef = collection(db, 'direct_messages', dmId, 'messages');
-        let msqQuery;
-        if (lastRead) {
-          msqQuery = query(messagesRef, where('createdAt', '>', lastRead));
-        } else {
-          return 0;
-        }
+        const msqQuery = query(messagesRef, where('createdAt', '>', lastRead));
 
         const querySnapshot = await getDocs(msqQuery);
         return querySnapshot.size;
@@ -138,60 +145,6 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [user?.uid, dms, fetchUnreadCount, activeChats]);
 
-  // Send a message in a direct message conversation
-  const sendMessage = useCallback(
-    async (dmId: string, text: string) => {
-      if (!user?.uid) return;
-
-      try {
-        const dmRef = doc(db, 'direct_messages', dmId);
-        const dmDoc = await getDoc(dmRef);
-        const otherUserUid = dmId.split('_').find((id) => id !== user.uid);
-
-        if (!dmDoc.exists()) {
-          // If DM doesn't exist, create it with participants
-          await setDoc(dmRef, {
-            participants: [user.uid, otherUserUid],
-            lastRead: {
-              [user.uid]: serverTimestamp(),
-              [otherUserUid!]: Timestamp.fromDate(
-                new Date(Date.now() - 86400000), // Set to 1 day earlier
-              ),
-            },
-            createdAt: serverTimestamp(),
-          });
-        } else {
-          const dmData = dmDoc.data();
-          if (!dmData.participants || !Array.isArray(dmData.participants)) {
-            await setDoc(
-              dmRef,
-              {
-                participants: [user.uid, otherUserUid],
-              },
-              { merge: true },
-            );
-          }
-        }
-        // Now, add the message
-        const messagesRef = collection(db, 'direct_messages', dmId, 'messages');
-        const newMessage = {
-          senderId: user.uid,
-          text,
-          createdAt: serverTimestamp(),
-        };
-        await addDoc(messagesRef, newMessage);
-      } catch (error) {
-        console.error('Error sending message:', error);
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: 'Could not send message.',
-        });
-      }
-    },
-    [user?.uid],
-  );
-
   const updateLastRead = useCallback(
     async (dmId: string) => {
       if (!user?.uid) return;
@@ -214,85 +167,183 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     [user?.uid],
   );
 
-  // Helper function to fetch a user's details
-  const fetchUserDetails = async (uid: string): Promise<User> => {
-    const userDoc = await getDoc(doc(db, 'users', uid));
-    if (userDoc.exists()) {
-      const userData = userDoc.data();
-      return {
-        uid: userDoc.id,
-        displayName: userData.displayName || 'Unnamed User',
-        email: userData.email || '',
-        photoURL: userData.photoURL || '',
-      };
-    } else {
-      return {
-        uid,
-        displayName: 'Unknown User',
-        email: 'unknown@example.com',
-        photoURL: '',
-      };
-    }
-  };
+  // Send a message in a direct message conversation
+  const sendMessage = useCallback(
+    async (dmId: string, text: string) => {
+      if (!user?.uid) return;
 
-  // Helper function to fetch multiple users' details
-  const fetchUserDetailsBatch = async (userIds: string[]) => {
-    const usersRef = collection(db, 'users');
+      try {
+        const dmRef = doc(db, 'direct_messages', dmId);
+        const dmDoc = await getDoc(dmRef);
+        const otherUserUid = dmId.split('_').find((id) => id !== user.uid);
 
-    // Firestore limits 'in' queries to 10 items
-    const batches = [];
-    while (userIds.length) {
-      const batchIds = userIds.splice(0, 10);
-      const q = query(usersRef, where('__name__', 'in', batchIds));
-      batches.push(getDocs(q));
-    }
+        if (!otherUserUid) {
+          console.error('Other user UID not found in DM ID.');
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Invalid DM ID.',
+          });
+          return;
+        }
 
-    const results = await Promise.all(batches);
+        if (!dmDoc.exists()) {
+          // If DM doesn't exist, create it with participants
+          await setDoc(
+            dmRef,
+            {
+              participants: [user.uid, otherUserUid],
+              lastRead: {
+                [user.uid]: serverTimestamp(),
+                [otherUserUid!]: Timestamp.fromDate(
+                  new Date(Date.now() - 86400000), // Set to 1 day earlier
+                ),
+              },
+              createdAt: serverTimestamp(),
+            },
+            { merge: true },
+          );
+        } else {
+          const dmData = dmDoc.data();
+          if (!dmData.participants || !Array.isArray(dmData.participants)) {
+            await setDoc(
+              dmRef,
+              {
+                participants: [user.uid, otherUserUid],
+              },
+              { merge: true },
+            );
+          }
+        }
 
-    const users: Record<string, User> = {};
-
-    results.forEach((querySnapshot) => {
-      querySnapshot.forEach((docSnap) => {
-        const userData = docSnap.data();
-        users[docSnap.id] = {
-          uid: docSnap.id,
-          displayName: userData.displayName || 'Unnamed User',
-          email: userData.email || '',
-          photoURL: userData.photoURL || '',
+        // Now, add the message
+        const messagesRef = collection(db, 'direct_messages', dmId, 'messages');
+        const newMessage = {
+          senderId: user.uid,
+          text,
+          createdAt: serverTimestamp(),
         };
-      });
-    });
+        await addDoc(messagesRef, newMessage);
 
-    return userIds.map(
-      (uid) =>
-        users[uid] || {
+        // Optionally, update 'lastRead' for the sender
+        await updateLastRead(dmId);
+      } catch (error) {
+        console.error('Error sending message:', error);
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not send message.',
+        });
+      }
+    },
+    [user?.uid, updateLastRead],
+  );
+
+  // Helper function to fetch a user's details
+  const fetchUserDetails = useCallback(
+    async (uid: string): Promise<User> => {
+      // Check if user details are already cached
+      if (usersCache[uid]) {
+        return usersCache[uid];
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, 'users', uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const fetchedUser: User = {
+            uid: userDoc.id,
+            displayName: userData.displayName || 'Unnamed User',
+            email: userData.email || '',
+            photoURL: userData.photoURL || '',
+          };
+          // Update usersCache
+          setUsersCache((prev) => ({ ...prev, [uid]: fetchedUser }));
+          return fetchedUser;
+        } else {
+          // Handle case where user data does not exist
+          return {
+            uid,
+            displayName: 'Unknown User',
+            email: 'unknown@example.com',
+            photoURL: '',
+          };
+        }
+      } catch (error) {
+        console.error(`Error fetching user data for UID ${uid}:`, error);
+        return {
           uid,
-          displayName: 'Unknown User',
-          email: 'unknown@example.com',
+          displayName: 'Error Fetching User',
+          email: 'error@example.com',
           photoURL: '',
-        },
-    );
-  };
+        };
+      }
+    },
+    [usersCache, setUsersCache],
+  );
+
+  // Helper function to fetch multiple users' details and cache them
+  const fetchUserDetailsBatch = useCallback(
+    async (userIds: string[]) => {
+      const usersRef = collection(db, 'users');
+
+      // Firestore limits 'in' queries to 10 items
+      const batches = [];
+      while (userIds.length) {
+        const batchIds = userIds.splice(0, 10);
+        const q = query(usersRef, where('__name__', 'in', batchIds));
+        batches.push(getDocs(q));
+      }
+
+      const results = await Promise.all(batches);
+
+      const fetchedUsers: User[] = [];
+
+      results.forEach((querySnapshot) => {
+        querySnapshot.forEach((docSnap) => {
+          const userData = docSnap.data();
+          const fetchedUser: User = {
+            uid: docSnap.id,
+            displayName: userData.displayName || 'Unnamed User',
+            email: userData.email || '',
+            photoURL: userData.photoURL || '',
+          };
+          fetchedUsers.push(fetchedUser);
+        });
+      });
+
+      // Update usersCache with fetched users
+      if (fetchedUsers.length > 0) {
+        const updatedCache: Record<string, User> = {};
+        fetchedUsers.forEach((user) => {
+          updatedCache[user.uid] = user;
+        });
+        setUsersCache((prev) => ({ ...prev, ...updatedCache }));
+      }
+
+      return fetchedUsers;
+    },
+    [setUsersCache],
+  );
 
   // Listen to real-time updates in messages of a direct message conversation
   const listenToDMMessages = useCallback(
     (dmId: string) => {
-      if (listenersRef.current[dmId]) {
-        // Listener already exists
-        return listenersRef.current[dmId];
-      }
-
+      if (!user?.uid) return () => {};
       const messagesRef = collection(db, 'direct_messages', dmId, 'messages');
       const msgQuery = query(messagesRef, orderBy('createdAt', 'asc'));
 
       // Load cached messages if available
       const cachedMessages = storage.getString(`messages_${dmId}`);
       if (cachedMessages) {
-        const parsedCachedMessages: Message[] = JSON.parse(cachedMessages).map(
-          (msg: any) => ({
-            ...msg,
-            createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
-          }),
+        const parsedCachedMessages: Message[] = JSON.parse(
+          cachedMessages,
+          (key, value) => {
+            if (key === 'createdAt' && typeof value === 'string') {
+              return new Date(value);
+            }
+            return value;
+          },
         );
         setMessages((prev) => ({
           ...prev,
@@ -310,15 +361,13 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
                 const senderId: string = msgData.senderId;
                 let senderName = 'Unknown';
 
-                if (senderId === user?.uid) {
-                  senderName = user?.displayName || 'You';
+                if (senderId === user.uid) {
+                  senderName = user.displayName || 'You';
                 } else if (usersCache[senderId]) {
                   senderName = usersCache[senderId].displayName || 'Unknown';
                 } else {
-                  const senderDoc = await getDoc(doc(db, 'users', senderId));
-                  if (senderDoc.exists()) {
-                    senderName = senderDoc.data().displayName || 'Unknown';
-                  }
+                  const fetchedUser = await fetchUserDetails(senderId);
+                  senderName = fetchedUser.displayName || 'Unknown';
                 }
 
                 return {
@@ -374,7 +423,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         }
       };
     },
-    [user?.uid, user?.displayName, usersCache],
+    [user?.uid, user?.displayName, usersCache, fetchUserDetails],
   );
 
   // Listen to real-time updates in direct messages
@@ -444,7 +493,9 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
                 photoURL: '',
               };
 
-              const lastRead = dmData.lastRead[user.uid];
+              const lastRead = dmData.lastRead
+                ? dmData.lastRead[user.uid]
+                : null;
 
               return {
                 id: docSnap.id,
@@ -479,7 +530,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     );
 
     return unsubscribe;
-  }, [user?.uid, usersCache]);
+  }, [user?.uid, usersCache, fetchUserDetailsBatch]);
 
   // Fetch direct messages involving the current user
   const fetchDirectMessages = useCallback(async () => {
@@ -518,7 +569,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           }
 
           // Get lastRead timestamp for current user
-          const lastRead = dmData.lastRead[user.uid];
+          const lastRead = dmData.lastRead ? dmData.lastRead[user.uid] : null;
 
           return {
             id: docSnap.id,
@@ -548,7 +599,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         text2: 'Could not fetch direct messages.',
       });
     }
-  }, [user?.uid, usersCache]);
+  }, [user?.uid, usersCache, fetchUserDetails]);
 
   // Listen to real-time updates in direct messages
   useEffect(() => {
@@ -577,6 +628,21 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
       listenersRef.current = {};
     };
   }, []);
+
+  // Listen to real-time updates in messages for each DM
+  useEffect(() => {
+    dms.forEach((dm) => {
+      listenToDMMessages(dm.id);
+    });
+
+    // Cleanup listeners when DMs change
+    return () => {
+      Object.values(listenersRef.current).forEach((unsubscribe) =>
+        unsubscribe(),
+      );
+      listenersRef.current = {};
+    };
+  }, [dms, listenToDMMessages]);
 
   return (
     <DirectMessagesContext.Provider
