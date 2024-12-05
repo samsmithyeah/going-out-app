@@ -30,12 +30,12 @@ import Toast from 'react-native-toast-message';
 import { useCrews } from './CrewsContext';
 import { storage } from '@/storage'; // MMKV storage instance
 
-// Define the Message interface
+// Define the Message interface with createdAt as Date
 interface Message {
   id: string;
   senderId: string;
   text: string;
-  createdAt: Timestamp;
+  createdAt: Date; // Ensure it's Date
   senderName?: string;
 }
 
@@ -214,166 +214,6 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     [user?.uid],
   );
 
-  // Listen to real-time updates in messages of a direct message conversation
-  const listenToDMMessages = useCallback(
-    (dmId: string) => {
-      if (listenersRef.current[dmId]) {
-        // Listener already exists
-        return listenersRef.current[dmId];
-      }
-
-      const messagesRef = collection(db, 'direct_messages', dmId, 'messages');
-      const msgQuery = query(messagesRef, orderBy('createdAt', 'asc'));
-
-      // Load cached messages if available
-      const cachedMessages = storage.getString(`messages_${dmId}`);
-      if (cachedMessages) {
-        setMessages((prev) => ({
-          ...prev,
-          [dmId]: JSON.parse(cachedMessages),
-        }));
-      }
-
-      const unsubscribe = onSnapshot(
-        msgQuery,
-        async (querySnapshot) => {
-          try {
-            const fetchedMessages: Message[] = await Promise.all(
-              querySnapshot.docs.map(async (docSnap) => {
-                const msgData = docSnap.data();
-                const senderId: string = msgData.senderId;
-                let senderName = 'Unknown';
-
-                if (senderId === user?.uid) {
-                  senderName = user?.displayName || 'You';
-                } else if (usersCache[senderId]) {
-                  senderName = usersCache[senderId].displayName || 'Unknown';
-                } else {
-                  const senderDoc = await getDoc(doc(db, 'users', senderId));
-                  if (senderDoc.exists()) {
-                    senderName = senderDoc.data().displayName || 'Unknown';
-                  }
-                }
-
-                return {
-                  id: docSnap.id,
-                  senderId,
-                  text: msgData.text,
-                  createdAt: msgData.createdAt,
-                  senderName,
-                };
-              }),
-            );
-
-            setMessages((prev) => ({
-              ...prev,
-              [dmId]: fetchedMessages,
-            }));
-
-            // Save messages to MMKV
-            storage.set(`messages_${dmId}`, JSON.stringify(fetchedMessages));
-          } catch (error) {
-            console.error('Error processing messages snapshot:', error);
-            Toast.show({
-              type: 'error',
-              text1: 'Error',
-              text2: 'Could not process messages updates.',
-            });
-          }
-        },
-        (error) => {
-          console.error('Error listening to DM messages:', error);
-          Toast.show({
-            type: 'error',
-            text1: 'Error',
-            text2: 'Could not listen to messages.',
-          });
-        },
-      );
-
-      // Store the unsubscribe function
-      listenersRef.current[dmId] = unsubscribe;
-
-      return () => {
-        // Clean up the listener
-        if (listenersRef.current[dmId]) {
-          listenersRef.current[dmId]();
-          delete listenersRef.current[dmId];
-        }
-      };
-    },
-    [user?.uid, user?.displayName, usersCache],
-  );
-
-  // Fetch direct messages involving the current user
-  const fetchDirectMessages = useCallback(async () => {
-    if (!user?.uid) {
-      console.log('User is not logged in. Clearing DMs.');
-      setDms([]);
-      setMessages({});
-      setTotalUnread(0);
-      return;
-    }
-
-    try {
-      const dmQuery = query(
-        collection(db, 'direct_messages'),
-        where('participants', 'array-contains', user.uid),
-      );
-      const querySnapshot = await getDocs(dmQuery);
-
-      // Map each document snapshot to a promise that resolves to a DirectMessage object
-      const dmPromises = querySnapshot.docs.map(async (docSnap) => {
-        const dmData = docSnap.data();
-        const participantIds: string[] = dmData.participants || [];
-
-        // Exclude the current user's UID to get the other participant
-        const otherParticipantId = participantIds.find((id) => id !== user.uid);
-        if (!otherParticipantId) return null; // Skip if no other participant
-
-        try {
-          // Fetch other user's details
-          let otherUser: User;
-          if (usersCache[otherParticipantId]) {
-            otherUser = usersCache[otherParticipantId];
-          } else {
-            const userData = await fetchUserDetails(otherParticipantId);
-            otherUser = userData;
-          }
-
-          // Get lastRead timestamp for current user
-          const lastRead = dmData.lastRead[user.uid];
-
-          return {
-            id: docSnap.id,
-            participants: [otherUser],
-            lastRead: { [user.uid]: lastRead },
-          } as DirectMessage;
-        } catch (innerError) {
-          console.error(`Error processing DM ${docSnap.id}:`, innerError);
-          return null; // Skip this DM if there's an error
-        }
-      });
-
-      // Wait for all DM promises to resolve in parallel
-      const fetchedDMs = (await Promise.all(dmPromises)).filter(
-        (dm) => dm !== null,
-      );
-
-      const validDMs = fetchedDMs.filter(
-        (dm): dm is DirectMessage => dm !== null,
-      );
-      setDms(validDMs);
-    } catch (error) {
-      console.error('Error fetching direct messages:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Could not fetch direct messages.',
-      });
-    }
-  }, [user?.uid, usersCache]);
-
   // Helper function to fetch a user's details
   const fetchUserDetails = async (uid: string): Promise<User> => {
     const userDoc = await getDoc(doc(db, 'users', uid));
@@ -433,6 +273,109 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         },
     );
   };
+
+  // Listen to real-time updates in messages of a direct message conversation
+  const listenToDMMessages = useCallback(
+    (dmId: string) => {
+      if (listenersRef.current[dmId]) {
+        // Listener already exists
+        return listenersRef.current[dmId];
+      }
+
+      const messagesRef = collection(db, 'direct_messages', dmId, 'messages');
+      const msgQuery = query(messagesRef, orderBy('createdAt', 'asc'));
+
+      // Load cached messages if available
+      const cachedMessages = storage.getString(`messages_${dmId}`);
+      if (cachedMessages) {
+        const parsedCachedMessages: Message[] = JSON.parse(cachedMessages).map(
+          (msg: any) => ({
+            ...msg,
+            createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
+          }),
+        );
+        setMessages((prev) => ({
+          ...prev,
+          [dmId]: parsedCachedMessages,
+        }));
+      }
+
+      const unsubscribe = onSnapshot(
+        msgQuery,
+        async (querySnapshot) => {
+          try {
+            const fetchedMessages: Message[] = await Promise.all(
+              querySnapshot.docs.map(async (docSnap) => {
+                const msgData = docSnap.data();
+                const senderId: string = msgData.senderId;
+                let senderName = 'Unknown';
+
+                if (senderId === user?.uid) {
+                  senderName = user?.displayName || 'You';
+                } else if (usersCache[senderId]) {
+                  senderName = usersCache[senderId].displayName || 'Unknown';
+                } else {
+                  const senderDoc = await getDoc(doc(db, 'users', senderId));
+                  if (senderDoc.exists()) {
+                    senderName = senderDoc.data().displayName || 'Unknown';
+                  }
+                }
+
+                return {
+                  id: docSnap.id,
+                  senderId,
+                  text: msgData.text,
+                  createdAt: msgData.createdAt
+                    ? msgData.createdAt.toDate()
+                    : new Date(), // Convert Timestamp to Date
+                  senderName,
+                };
+              }),
+            );
+
+            setMessages((prev) => ({
+              ...prev,
+              [dmId]: fetchedMessages,
+            }));
+
+            // Save messages to MMKV with createdAt as ISO string
+            const messagesToCache = fetchedMessages.map((msg) => ({
+              ...msg,
+              createdAt: msg.createdAt.toISOString(),
+            }));
+            storage.set(`messages_${dmId}`, JSON.stringify(messagesToCache));
+          } catch (error) {
+            console.error('Error processing messages snapshot:', error);
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'Could not process messages updates.',
+            });
+          }
+        },
+        (error) => {
+          console.error('Error listening to DM messages:', error);
+          Toast.show({
+            type: 'error',
+            text1: 'Error',
+            text2: 'Could not listen to messages.',
+          });
+        },
+      );
+
+      // Store the unsubscribe function
+      listenersRef.current[dmId] = unsubscribe;
+
+      return () => {
+        // Clean up the listener
+        if (listenersRef.current[dmId]) {
+          listenersRef.current[dmId]();
+          delete listenersRef.current[dmId];
+        }
+      };
+    },
+    [user?.uid, user?.displayName, usersCache],
+  );
 
   // Listen to real-time updates in direct messages
   const listenToDirectMessages = useCallback(() => {
@@ -538,7 +481,76 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     return unsubscribe;
   }, [user?.uid, usersCache]);
 
-  // Fetch DMs and set up real-time listeners on mount
+  // Fetch direct messages involving the current user
+  const fetchDirectMessages = useCallback(async () => {
+    if (!user?.uid) {
+      console.log('User is not logged in. Clearing DMs.');
+      setDms([]);
+      setMessages({});
+      setTotalUnread(0);
+      return;
+    }
+
+    try {
+      const dmQuery = query(
+        collection(db, 'direct_messages'),
+        where('participants', 'array-contains', user.uid),
+      );
+      const querySnapshot = await getDocs(dmQuery);
+
+      // Map each document snapshot to a promise that resolves to a DirectMessage object
+      const dmPromises = querySnapshot.docs.map(async (docSnap) => {
+        const dmData = docSnap.data();
+        const participantIds: string[] = dmData.participants || [];
+
+        // Exclude the current user's UID to get the other participant
+        const otherParticipantId = participantIds.find((id) => id !== user.uid);
+        if (!otherParticipantId) return null; // Skip if no other participant
+
+        try {
+          // Fetch other user's details
+          let otherUser: User;
+          if (usersCache[otherParticipantId]) {
+            otherUser = usersCache[otherParticipantId];
+          } else {
+            const userData = await fetchUserDetails(otherParticipantId);
+            otherUser = userData;
+          }
+
+          // Get lastRead timestamp for current user
+          const lastRead = dmData.lastRead[user.uid];
+
+          return {
+            id: docSnap.id,
+            participants: [otherUser],
+            lastRead: { [user.uid]: lastRead },
+          } as DirectMessage;
+        } catch (innerError) {
+          console.error(`Error processing DM ${docSnap.id}:`, innerError);
+          return null; // Skip this DM if there's an error
+        }
+      });
+
+      // Wait for all DM promises to resolve in parallel
+      const fetchedDMs = (await Promise.all(dmPromises)).filter(
+        (dm) => dm !== null,
+      );
+
+      const validDMs = fetchedDMs.filter(
+        (dm): dm is DirectMessage => dm !== null,
+      );
+      setDms(validDMs);
+    } catch (error) {
+      console.error('Error fetching direct messages:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not fetch direct messages.',
+      });
+    }
+  }, [user?.uid, usersCache]);
+
+  // Listen to real-time updates in direct messages
   useEffect(() => {
     fetchDirectMessages();
 
