@@ -354,6 +354,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
       const unsubscribe = onSnapshot(
         msgQuery,
         async (querySnapshot) => {
+          if (!user?.uid) return () => {};
           try {
             const fetchedMessages: Message[] = await Promise.all(
               querySnapshot.docs.map(async (docSnap) => {
@@ -403,12 +404,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           }
         },
         (error) => {
-          console.error('Error listening to DM messages:', error);
-          Toast.show({
-            type: 'error',
-            text1: 'Error',
-            text2: 'Could not listen to messages.',
-          });
+          console.warn('Error listening to DM messages:', error);
         },
       );
 

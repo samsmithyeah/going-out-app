@@ -122,7 +122,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
 
   // Fetch other members' details
   useEffect(() => {
-    if (!chatId) return;
+    if (!chatId || !user?.uid) return;
 
     const fetchMembers = async () => {
       try {

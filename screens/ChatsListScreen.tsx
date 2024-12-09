@@ -1,12 +1,6 @@
 // screens/ChatsListScreen.tsx
 
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  useMemo,
-} from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -36,7 +30,6 @@ import ScreenTitle from '@/components/ScreenTitle';
 import CustomSearchInput from '@/components/CustomSearchInput';
 import globalStyles from '@/styles/globalStyles';
 import ProfilePicturePicker from '@/components/ProfilePicturePicker';
-import { storage } from '@/storage'; // MMKV storage instance
 import Toast from 'react-native-toast-message';
 
 // Define CombinedChat interface
@@ -53,16 +46,9 @@ interface CombinedChat {
 }
 
 const ChatsListScreen: React.FC = () => {
-  const {
-    dms,
-    messages: dmMessages,
-    fetchUnreadCount: fetchDMUnreadCount,
-  } = useDirectMessages();
-  const {
-    chats: groupChats,
-    messages: groupMessages,
-    fetchUnreadCount: fetchGroupUnreadCount,
-  } = useCrewDateChat();
+  const { dms, fetchUnreadCount: fetchDMUnreadCount } = useDirectMessages();
+  const { chats: groupChats, fetchUnreadCount: fetchGroupUnreadCount } =
+    useCrewDateChat();
   const { crews, usersCache } = useCrews();
   const { user } = useUser();
   const navigation = useNavigation<NavigationProp<NavParamList>>();
