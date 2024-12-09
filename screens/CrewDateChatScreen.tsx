@@ -40,6 +40,7 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { User } from '@/types/User';
 import ProfilePicturePicker from '@/components/ProfilePicturePicker';
 import { throttle } from 'lodash';
+import moment from 'moment';
 
 type CrewDateChatScreenProps = NativeStackScreenProps<
   NavParamList,
@@ -156,7 +157,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   useLayoutEffect(() => {
     if (crew) {
       navigation.setOptions({
-        headerTitle: crew.name,
+        headerTitle: `${crew.name} - ${moment(date).format('MMM Do')}`,
       });
     }
   }, [navigation, crew]);
