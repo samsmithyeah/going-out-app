@@ -98,16 +98,16 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
       title="Create a new crew"
       buttons={[
         {
-          label: 'Create',
-          onPress: createCrew,
-          disabled: loading || !newCrewName.trim(),
-          variant: 'primary',
-        },
-        {
           label: 'Cancel',
           onPress: handleCancel,
           disabled: loading,
           variant: 'secondary',
+        },
+        {
+          label: 'Create',
+          onPress: createCrew,
+          disabled: loading || !newCrewName.trim(),
+          variant: 'primary',
         },
       ]}
       loading={loading}
