@@ -29,14 +29,15 @@ import {
   setDoc,
   updateDoc,
   serverTimestamp,
+  onSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/firebase';
-import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { User } from '@/types/User';
 import ProfilePicturePicker from '@/components/ProfilePicturePicker';
+import { throttle } from 'lodash';
 
 // Define Props
 type DMChatScreenProps = NativeStackScreenProps<NavParamList, 'DMChat'>;
@@ -45,7 +46,7 @@ type RouteParams = {
   otherUserId: string;
 };
 
-const TYPING_TIMEOUT = 3000;
+const TYPING_TIMEOUT = 1000;
 
 const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   const { otherUserId } = route.params as RouteParams;
@@ -57,10 +58,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   const isFocusedRef = useRef(isFocused);
   const { user, addActiveChat, removeActiveChat } = useUser();
   const [otherUser, setOtherUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    isFocusedRef.current = isFocused;
-  }, [isFocused]);
+  const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
 
   // Generate conversationId using both user IDs
   const conversationId = useMemo(() => {
@@ -70,6 +68,36 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     console.log('Generated conversationId:', generatedId);
     return generatedId;
   }, [user?.uid, otherUserId]);
+
+  useEffect(() => {
+    isFocusedRef.current = isFocused;
+  }, [isFocused]);
+
+  useEffect(() => {
+    if (!conversationId) return;
+
+    const convoRef = doc(db, 'direct_messages', conversationId);
+    const unsubscribe = onSnapshot(convoRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // typingStatus is an object: { [userUid]: boolean, [`${userUid}LastUpdate`]: Timestamp }
+        // You only need to check the otherUserId's boolean here:
+        if (data.typingStatus) {
+          const otherUserTyping = data.typingStatus[otherUserId] || false;
+          setIsOtherUserTyping(Boolean(otherUserTyping));
+        } else {
+          setIsOtherUserTyping(false);
+        }
+      } else {
+        // No doc means no conversation or no typing status
+        setIsOtherUserTyping(false);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [conversationId, otherUserId]);
 
   useEffect(() => {
     let isMounted = true; // To prevent state updates if the component is unmounted
@@ -140,10 +168,10 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   // Typing Timeout Handler
   let typingTimeout: NodeJS.Timeout;
 
-  // Debounced function to update typing status in Firestore
+  // Throttled function to update typing status in Firestore
   const updateTypingStatus = useMemo(
     () =>
-      debounce(async (isTyping: boolean) => {
+      throttle(async (isTyping: boolean) => {
         if (!conversationId || !user?.uid) return;
         const userUid = user.uid;
         const convoRef = doc(db, 'direct_messages', conversationId);
@@ -321,15 +349,6 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   if (!conversationId) {
     return <LoadingOverlay />;
   }
-
-  // Determine if the other user is typing
-  // Adjust this logic based on how typing status is managed in your context
-  const isOtherUserTyping =
-    messages[conversationId]?.some(
-      (msg) =>
-        msg.senderId === otherUserId &&
-        msg.text.toLowerCase().includes('typing...'),
-    ) || false;
 
   return (
     <View style={styles.container}>

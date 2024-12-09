@@ -30,16 +30,17 @@ import {
   setDoc,
   updateDoc,
   serverTimestamp,
+  onSnapshot,
+  Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/firebase';
-import debounce from 'lodash/debounce';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { User } from '@/types/User';
 import ProfilePicturePicker from '@/components/ProfilePicturePicker';
+import { throttle } from 'lodash';
 
-// Define Props
 type CrewDateChatScreenProps = NativeStackScreenProps<
   NavParamList,
   'CrewDateChat'
@@ -47,11 +48,11 @@ type CrewDateChatScreenProps = NativeStackScreenProps<
 
 type RouteParams = {
   crewId: string;
-  date: string; // Assuming date is a string
-  id?: string; // Optional: If chat ID is provided
+  date: string;
+  id?: string;
 };
 
-const TYPING_TIMEOUT = 3000;
+const TYPING_TIMEOUT = 1000;
 
 const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   route,
@@ -66,10 +67,12 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
   const isFocusedRef = useRef(isFocused);
   const { user, addActiveChat, removeActiveChat } = useUser();
   const [otherMembers, setOtherMembers] = useState<User[]>([]);
-  const [crew, setCrew] = useState<{
-    name: string;
-    iconUrl?: string;
-  } | null>(null);
+  const [crew, setCrew] = useState<{ name: string; iconUrl?: string } | null>(
+    null,
+  );
+  const [otherUsersTyping, setOtherUsersTyping] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   useEffect(() => {
     isFocusedRef.current = isFocused;
@@ -98,7 +101,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
       if (crewData) {
         setCrew({ name: crewData.name, iconUrl: crewData.iconUrl });
       } else {
-        // Optionally fetch from Firestore if not found in cache
         try {
           const crewDoc = await getDoc(doc(db, 'crews', crewId));
           if (crewDoc.exists()) {
@@ -150,7 +152,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     fetchMembers();
   }, [chatId, user?.uid, fetchUserDetails]);
 
-  // Set navigation title using useLayoutEffect after crew is fetched
+  // Set navigation title after crew is fetched
   useLayoutEffect(() => {
     if (crew) {
       navigation.setOptions({
@@ -183,20 +185,20 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
       };
     }
   }
+
   // Typing Timeout Handler
   let typingTimeout: NodeJS.Timeout;
 
-  // Debounced function to update typing status in Firestore
+  // Throttled function to update typing status in Firestore
   const updateTypingStatus = useMemo(
     () =>
-      debounce(async (isTyping: boolean) => {
+      throttle(async (isTyping: boolean) => {
         if (!chatId || !user?.uid) return;
         const userUid = user.uid;
         const chatRef = doc(db, 'crew_date_chats', chatId);
         try {
           const chatSnap = await getDoc(chatRef);
           if (!chatSnap.exists()) {
-            // Create the document with necessary fields
             await setDoc(
               chatRef,
               {
@@ -208,7 +210,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
               { merge: true },
             );
           } else {
-            // Update existing document
             await updateDoc(chatRef, {
               [`typingStatus.${userUid}`]: isTyping,
               [`typingStatus.${userUid}LastUpdate`]: serverTimestamp(),
@@ -239,7 +240,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     [updateTypingStatus],
   );
 
-  // Fetch messages for this chat from context
+  // Get conversation messages
   const conversationMessages = messages[chatId || ''] || [];
 
   const giftedChatMessages: IMessage[] = useMemo(() => {
@@ -250,7 +251,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
         createdAt:
           message.createdAt instanceof Date
             ? message.createdAt
-            : new Date(message.createdAt), // Convert string to Date if necessary
+            : new Date(message.createdAt),
         user: {
           _id: message.senderId,
           name:
@@ -265,7 +266,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
                   ?.photoURL,
         },
       }))
-      .reverse(); // GiftedChat expects newest first
+      .reverse();
   }, [
     conversationMessages,
     user?.uid,
@@ -274,35 +275,84 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     otherMembers,
   ]);
 
-  // Set up listener for messages via context
+  // Listen to messages
   useEffect(() => {
     if (!chatId) return;
 
     const unsubscribeMessages = listenToMessages(chatId);
-
     return () => {
       unsubscribeMessages();
     };
   }, [chatId, listenToMessages]);
 
-  // Handle sending messages
+  // Other users typing logic: Listen to typingStatus field
+  useEffect(() => {
+    if (!chatId || !user?.uid) return;
+
+    const chatRef = doc(db, 'crew_date_chats', chatId);
+
+    const unsubscribeTyping = onSnapshot(
+      chatRef,
+      (docSnapshot) => {
+        if (!user?.uid) return;
+        if (docSnapshot.exists()) {
+          const data = docSnapshot.data();
+          if (data.typingStatus) {
+            const updatedTypingStatus: { [key: string]: boolean } = {};
+            Object.keys(data.typingStatus).forEach((key) => {
+              if (key.endsWith('LastUpdate')) return; // Skip lastUpdate fields
+              const userId = key;
+              const isTyping = data.typingStatus[userId];
+              const lastUpdate = data.typingStatus[`${userId}LastUpdate`];
+              if (isTyping && lastUpdate) {
+                const now = Date.now();
+                const lastUpdateMillis = (lastUpdate as Timestamp).toMillis();
+                if (now - lastUpdateMillis < TYPING_TIMEOUT) {
+                  updatedTypingStatus[userId] = true;
+                } else {
+                  updatedTypingStatus[userId] = false;
+                }
+              } else {
+                updatedTypingStatus[userId] = false;
+              }
+            });
+            // Remove current user's typing status
+            if (user?.uid) {
+              delete updatedTypingStatus[user.uid];
+            }
+            setOtherUsersTyping(updatedTypingStatus);
+          } else {
+            setOtherUsersTyping({});
+          }
+        } else {
+          setOtherUsersTyping({});
+        }
+      },
+      (error) => {
+        console.error('Error listening to typing status (group):', error);
+      },
+    );
+
+    return () => {
+      unsubscribeTyping();
+    };
+  }, [chatId, user?.uid]);
+
   const onSend = useCallback(
-    async (messages: IMessage[] = []) => {
-      const text = messages[0].text;
+    async (msgs: IMessage[] = []) => {
+      const text = msgs[0].text;
       if (text && text.trim() !== '') {
         await sendMessage(chatId!, text.trim());
 
         // Reset typing status after sending
         updateTypingStatus(false);
 
-        // Update lastRead since the user has viewed the latest message
         await updateLastRead(chatId!);
       }
     },
     [chatId, sendMessage, updateTypingStatus, updateLastRead],
   );
 
-  // Update lastRead and manage active chats when screen focus changes
   useEffect(() => {
     if (isFocused && chatId) {
       updateLastRead(chatId);
@@ -312,7 +362,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     }
   }, [isFocused, chatId, updateLastRead, addActiveChat, removeActiveChat]);
 
-  // AppState Listener to handle app backgrounding and foregrounding
   const appState = useRef<AppStateStatus>(AppState.currentState);
 
   useEffect(() => {
@@ -321,7 +370,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
         appState.current.match(/active/) &&
         nextAppState.match(/inactive|background/)
       ) {
-        // App has moved to the background or is inactive
         if (chatId) {
           removeActiveChat(chatId);
         }
@@ -329,7 +377,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
         appState.current.match(/inactive|background/) &&
         nextAppState === 'active'
       ) {
-        // App has come to the foreground
         if (isFocusedRef.current && chatId) {
           addActiveChat(chatId);
         }
@@ -347,15 +394,19 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     };
   }, [chatId, addActiveChat, removeActiveChat]);
 
-  // Determine if other users are typing
-  const isOtherUsersTyping = useMemo(() => {
-    // Check if any message from other members includes 'typing...'
-    return conversationMessages.some(
-      (msg) =>
-        otherMembers.some((member) => member.uid === msg.senderId) &&
-        msg.text.toLowerCase().includes('typing...'),
-    );
-  }, [conversationMessages, otherMembers]);
+  // Determine which users are typing
+  const typingUserIds = useMemo(
+    () => Object.keys(otherUsersTyping).filter((uid) => otherUsersTyping[uid]),
+    [otherUsersTyping],
+  );
+
+  // Map typing user IDs to display names
+  const typingDisplayNames = useMemo(() => {
+    return typingUserIds.map((uid) => {
+      const member = otherMembers.find((m) => m.uid === uid);
+      return member ? member.displayName : 'Someone';
+    });
+  }, [typingUserIds, otherMembers]);
 
   const renderAvatar = useCallback(
     (props: AvatarProps<IMessage>) => {
@@ -376,7 +427,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     [otherMembers],
   );
 
-  // Conditional return must be after all hooks
   if (!chatId) {
     return <LoadingOverlay />;
   }
@@ -392,8 +442,8 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
           avatar: user?.photoURL || undefined,
         }}
         bottomOffset={tabBarHeight}
-        isTyping={false} // Control isTyping via custom logic
-        onInputTextChanged={handleInputTextChanged} // Manage typing state
+        isTyping={false} // Only for current user
+        onInputTextChanged={handleInputTextChanged}
         renderAvatar={renderAvatar}
         renderBubble={(props) => (
           <Bubble
@@ -414,29 +464,11 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
           </Send>
         )}
         renderFooter={() =>
-          isOtherUsersTyping ? (
+          typingDisplayNames.length > 0 ? (
             <View style={styles.footerContainer}>
               <Text style={styles.footerText}>
-                {otherMembers
-                  .filter((member) =>
-                    conversationMessages.some(
-                      (msg) =>
-                        msg.senderId === member.uid &&
-                        msg.text.toLowerCase().includes('typing...'),
-                    ),
-                  )
-                  .map((member) => member.displayName)
-                  .join(', ')}{' '}
-                {otherMembers.filter((member) =>
-                  conversationMessages.some(
-                    (msg) =>
-                      msg.senderId === member.uid &&
-                      msg.text.toLowerCase().includes('typing...'),
-                  ),
-                ).length === 1
-                  ? 'is'
-                  : 'are'}{' '}
-                typing...
+                {typingDisplayNames.join(', ')}{' '}
+                {typingDisplayNames.length === 1 ? 'is' : 'are'} typing...
               </Text>
             </View>
           ) : null

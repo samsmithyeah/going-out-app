@@ -55,7 +55,6 @@ interface ChatMetadata {
   lastMessageTime?: string;
   lastMessageSenderId?: string;
   lastMessageSenderName?: string;
-  // We removed unreadCount caching to avoid stale data
 }
 
 const ChatsListScreen: React.FC = () => {
@@ -245,13 +244,13 @@ const ChatsListScreen: React.FC = () => {
     [fetchDMUnreadCount, fetchGroupUnreadCount],
   );
 
-  const fetchUnread = useCallback(
-    async (chatId: string, chatType: 'direct' | 'group') => {
-      // Directly fetch fresh unread count from Firestore every time
-      return await fetchUnreadFromFirestore(chatId, chatType);
-    },
-    [fetchUnreadFromFirestore],
-  );
+  // const fetchUnread = useCallback(
+  //   async (chatId: string, chatType: 'direct' | 'group') => {
+  //     // Directly fetch fresh unread count from Firestore every time
+  //     return await fetchUnreadFromFirestore(chatId, chatType);
+  //   },
+  //   [fetchUnreadFromFirestore],
+  // );
 
   const getCrewName = useCallback(
     (chatId: string): string => {
@@ -291,7 +290,7 @@ const ChatsListScreen: React.FC = () => {
         const title = otherParticipants.map((p) => p.displayName).join(', ');
         const iconUrl = otherParticipants[0]?.photoURL;
         const lastMsg = await fetchLastMessage(dm.id, 'direct');
-        const unreadCount = await fetchUnread(dm.id, 'direct');
+        const unreadCount = await fetchUnreadFromFirestore(dm.id, 'direct');
 
         return {
           id: dm.id,
@@ -313,7 +312,7 @@ const ChatsListScreen: React.FC = () => {
         const iconUrl = getIconUrlForCrew(gc.id);
 
         const lastMsg = await fetchLastMessage(gc.id, 'group');
-        const unreadCount = await fetchUnread(gc.id, 'group');
+        const unreadCount = await fetchUnreadFromFirestore(gc.id, 'group');
 
         return {
           id: gc.id,
@@ -374,7 +373,7 @@ const ChatsListScreen: React.FC = () => {
     getFormattedChatDate,
     getIconUrlForCrew,
     fetchLastMessage,
-    fetchUnread,
+    fetchUnreadFromFirestore,
     loadCachedChatData,
     saveCachedChatData,
     searchQuery,
