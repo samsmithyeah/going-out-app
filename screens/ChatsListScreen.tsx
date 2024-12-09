@@ -8,7 +8,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  AppState,
 } from 'react-native';
 import { useDirectMessages } from '@/context/DirectMessagesContext';
 import { useCrewDateChat } from '@/context/CrewDateChatContext';

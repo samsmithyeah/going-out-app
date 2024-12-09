@@ -76,6 +76,9 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
   const [matchesNeedsRefresh, setMatchesNeedsRefresh] = useState(false);
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const memoizedCrews = useMemo(() => crews, [crews]);
+  const memoizedUsersCache = useMemo(() => usersCache, [usersCache]);
+
   const weekDates = useMemo(() => {
     const dates: string[] = [];
     for (let i = 0; i < 7; i++) {
@@ -520,12 +523,12 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
       value={{
         crewIds,
         setCrewIds,
-        crews,
+        crews: memoizedCrews,
         setCrews,
         dateCounts,
         dateMatches,
         dateMatchingCrews,
-        usersCache,
+        usersCache: memoizedUsersCache,
         toggleStatusForCrew,
         toggleStatusForDateAllCrews,
         setUsersCache,
