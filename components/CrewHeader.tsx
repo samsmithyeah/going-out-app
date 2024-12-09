@@ -1,7 +1,7 @@
 // components/CrewHeader.tsx
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Crew } from '@/types/Crew';
 import ProfilePicturePicker from '@/components/ProfilePicturePicker'; // Reuse existing component
 
@@ -9,31 +9,35 @@ interface CrewHeaderProps {
   crew: Crew;
   customCrewName?: string;
   customMemberCount?: number;
+  onPress?: () => void;
 }
 
 const CrewHeader: React.FC<CrewHeaderProps> = ({
   crew,
   customCrewName,
   customMemberCount,
+  onPress,
 }) => {
   const crewName = customCrewName || crew.name;
   const memberCount = customMemberCount || crew.memberIds.length;
 
   return (
     <View style={styles.container}>
-      <ProfilePicturePicker
-        imageUrl={crew.iconUrl || null}
-        iconName="people-outline"
-        onImageUpdate={() => {}}
-        editable={false}
-        size={35}
-      />
-      <View style={styles.textContainer}>
-        <Text style={styles.crewName}>{crewName}</Text>
-        <Text style={styles.memberCount}>
-          {memberCount} {memberCount === 1 ? 'member' : 'members'}
-        </Text>
-      </View>
+      <TouchableOpacity onPress={onPress} style={styles.container}>
+        <ProfilePicturePicker
+          imageUrl={crew.iconUrl || null}
+          iconName="people-outline"
+          onImageUpdate={() => {}}
+          editable={false}
+          size={35}
+        />
+        <View style={styles.textContainer}>
+          <Text style={styles.crewName}>{crewName}</Text>
+          <Text style={styles.memberCount}>
+            {memberCount} {memberCount === 1 ? 'member' : 'members'}
+          </Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };

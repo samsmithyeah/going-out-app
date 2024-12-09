@@ -98,16 +98,16 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
       title="Create a new crew"
       buttons={[
         {
-          label: 'Create',
-          onPress: createCrew,
-          disabled: loading || !newCrewName.trim(),
-          variant: 'primary',
-        },
-        {
           label: 'Cancel',
           onPress: handleCancel,
           disabled: loading,
           variant: 'secondary',
+        },
+        {
+          label: 'Create',
+          onPress: createCrew,
+          disabled: loading || !newCrewName.trim(),
+          variant: 'primary',
         },
       ]}
       loading={loading}
@@ -117,7 +117,7 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
         placeholderTextColor="#666"
         value={newCrewName}
         onChangeText={setNewCrewName}
-        autoCapitalize="words"
+        autoCapitalize="sentences"
         hasBorder={true}
       />
     </CustomModal>

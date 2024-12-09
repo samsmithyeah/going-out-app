@@ -421,13 +421,13 @@ const AddMembersScreen: React.FC<AddMembersScreenRouteProp> = ({
           onClose={closeEmailModal}
           title="Add a new member"
           buttons={[
+            { label: 'Cancel', onPress: closeEmailModal, variant: 'secondary' },
             {
               label: 'Invite',
               onPress: handleAddByEmail,
               variant: 'primary',
               disabled: !emailToAdd.trim(),
             },
-            { label: 'Cancel', onPress: closeEmailModal, variant: 'secondary' },
           ]}
           loading={invitingEmail}
         >

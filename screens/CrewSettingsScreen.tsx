@@ -285,6 +285,14 @@ const CrewSettingsScreen: React.FC = () => {
                   memberIds: updatedMemberIds,
                 });
 
+                // Remove the crew from local state
+                setCrews((prevCrews) =>
+                  prevCrews.filter((crew) => crew.id !== crewId),
+                );
+
+                // Remove the crew ID from the user's list
+                setCrewIds((prevIds) => prevIds.filter((id) => id !== crewId));
+
                 navigation.navigate('CrewsList');
                 Toast.show({
                   type: 'success',
@@ -454,7 +462,7 @@ const CrewSettingsScreen: React.FC = () => {
                 }
               }
             }}
-            editable={user?.uid === crew.ownerId}
+            editable
             storagePath={`crews/${crewId}/icon.jpg`}
             size={120}
           />
@@ -550,13 +558,6 @@ const CrewSettingsScreen: React.FC = () => {
           title="Edit crew name"
           buttons={[
             {
-              label: 'Update',
-              onPress: handleUpdateCrewName,
-              variant: 'primary',
-              disabled:
-                isUpdatingName || isUpdatingActivity || !newCrewName.trim(),
-            },
-            {
               label: 'Cancel',
               onPress: () => {
                 setIsEditNameModalVisible(false);
@@ -564,6 +565,13 @@ const CrewSettingsScreen: React.FC = () => {
               },
               variant: 'secondary',
               disabled: isUpdatingName || isUpdatingActivity,
+            },
+            {
+              label: 'Update',
+              onPress: handleUpdateCrewName,
+              variant: 'primary',
+              disabled:
+                isUpdatingName || isUpdatingActivity || !newCrewName.trim(),
             },
           ]}
           loading={isUpdatingName}
@@ -588,12 +596,6 @@ const CrewSettingsScreen: React.FC = () => {
           title="Edit crew activity"
           buttons={[
             {
-              label: 'Update',
-              onPress: handleUpdateActivity,
-              variant: 'primary',
-              disabled: isUpdatingActivity || !newActivity.trim(),
-            },
-            {
               label: 'Cancel',
               onPress: () => {
                 setIsEditActivityModalVisible(false);
@@ -602,6 +604,12 @@ const CrewSettingsScreen: React.FC = () => {
               },
               variant: 'secondary',
               disabled: isUpdatingActivity,
+            },
+            {
+              label: 'Update',
+              onPress: handleUpdateActivity,
+              variant: 'primary',
+              disabled: isUpdatingActivity || !newActivity.trim(),
             },
           ]}
           loading={isUpdatingActivity}

@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import { auth } from '@/firebase';
 import { addUserToFirestore } from '@/utils/AddUserToFirestore';
-import { useUser } from '@/context/UserContext';
 import CustomButton from '@/components/CustomButton';
 import CustomTextInput from '@/components/CustomTextInput';
 import zxcvbn from 'zxcvbn';
@@ -41,7 +40,6 @@ const SignUpScreen: React.FC<SignUpScreenNavigationProps> = ({
   const [lastName, setLastName] = useState<string>('');
   const [formError, setFormError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const { setUser } = useUser();
   const [passwordStrength, setPasswordStrength] = useState<number>(0);
 
   const evaluatePasswordStrength = (pass: string) => {

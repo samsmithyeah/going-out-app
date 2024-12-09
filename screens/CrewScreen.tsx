@@ -276,7 +276,14 @@ const CrewScreen: React.FC = () => {
           <MaterialIcons name="settings" size={24} color="black" />
         </TouchableOpacity>
       ),
-      headerTitle: crew ? () => <CrewHeader crew={crew} /> : 'Crew',
+      headerTitle: crew
+        ? () => (
+            <CrewHeader
+              crew={crew}
+              onPress={() => navigation.navigate('CrewSettings', { crewId })}
+            />
+          )
+        : 'Crew',
       headerTitleAlign: 'left',
     });
   }, [navigation, crew, crewId]);

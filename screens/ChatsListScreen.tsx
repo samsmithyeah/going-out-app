@@ -12,16 +12,20 @@ import {
 import { useDirectMessages } from '@/context/DirectMessagesContext';
 import { useCrewDateChat } from '@/context/CrewDateChatContext';
 import { useCrews } from '@/context/CrewsContext';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import {
+  useNavigation,
+  NavigationProp,
+  useIsFocused,
+} from '@react-navigation/native';
 import { NavParamList } from '@/navigation/AppNavigator';
 import {
-  collection,
-  query,
-  orderBy,
-  limit,
-  getDocs,
   getDoc,
   doc,
+  collection,
+  getDocs,
+  limit,
+  orderBy,
+  query,
 } from 'firebase/firestore';
 import { db } from '@/firebase';
 import moment from 'moment';
@@ -30,6 +34,8 @@ import ScreenTitle from '@/components/ScreenTitle';
 import CustomSearchInput from '@/components/CustomSearchInput';
 import globalStyles from '@/styles/globalStyles';
 import ProfilePicturePicker from '@/components/ProfilePicturePicker';
+import Toast from 'react-native-toast-message';
+import { storage } from '@/storage';
 
 interface CombinedChat {
   id: string;
@@ -39,8 +45,15 @@ interface CombinedChat {
   lastMessage?: string;
   lastMessageTime?: Date;
   lastMessageSenderId?: string;
-  lastMessageSenderName?: string; // New field for sender's displayName
+  lastMessageSenderName?: string;
   unreadCount: number;
+}
+
+interface ChatMetadata {
+  lastMessage?: string;
+  lastMessageTime?: string;
+  lastMessageSenderId?: string;
+  lastMessageSenderName?: string;
 }
 
 const ChatsListScreen: React.FC = () => {
@@ -50,21 +63,21 @@ const ChatsListScreen: React.FC = () => {
   const { crews, usersCache } = useCrews();
   const { user } = useUser();
   const navigation = useNavigation<NavigationProp<NavParamList>>();
+  const isFocused = useIsFocused();
 
   const [combinedChats, setCombinedChats] = useState<CombinedChat[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
-  const [filteredChats, setFilteredChats] = useState<CombinedChat[]>([]); // State for filtered chats
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filteredChats, setFilteredChats] = useState<CombinedChat[]>([]);
 
-  // Cache to store senderId and displayName
   const senderNameCache = useRef<{ [senderId: string]: string }>({});
 
-  // Function to fetch sender's displayName with caching
   const getSenderName = useCallback(
     async (senderId: string): Promise<string> => {
       if (senderNameCache.current[senderId]) {
         return senderNameCache.current[senderId];
       } else if (usersCache[senderId]) {
+        senderNameCache.current[senderId] = usersCache[senderId].displayName;
         return usersCache[senderId].displayName;
       }
       try {
@@ -77,92 +90,206 @@ const ChatsListScreen: React.FC = () => {
         } else {
           return 'Unknown';
         }
-      } catch (error) {
-        console.error(`Error fetching sender name for ${senderId}:`, error);
+      } catch {
         return 'Unknown';
       }
     },
-    [],
+    [usersCache],
   );
 
-  // Helper function to fetch the last message along with sender's displayName
-  const fetchLastMessage = async (
-    chatId: string,
-    chatType: 'direct' | 'group',
-  ): Promise<{
-    text: string;
-    senderId: string;
-    senderName: string;
-    createdAt: Date;
-  } | null> => {
-    if (!user) {
-      console.log('User is not logged in');
-      return null;
-    }
+  const loadCachedChatData = useCallback((): CombinedChat[] => {
+    const cachedDataString = storage.getString('combinedChats');
+    if (!cachedDataString) return [];
     try {
-      const messagesRef =
-        chatType === 'direct'
-          ? collection(db, 'direct_messages', chatId, 'messages')
-          : collection(db, 'crew_date_chats', chatId, 'messages');
-      const messagesQuery = query(
-        messagesRef,
-        orderBy('createdAt', 'desc'),
-        limit(1),
-      );
-      const querySnapshot = await getDocs(messagesQuery);
+      const cachedData = JSON.parse(cachedDataString) as CombinedChat[];
+      return cachedData.map((chat) => ({
+        ...chat,
+        lastMessageTime: chat.lastMessageTime
+          ? new Date(chat.lastMessageTime)
+          : undefined,
+      }));
+    } catch {
+      return [];
+    }
+  }, []);
 
-      if (!querySnapshot.empty) {
-        const docSnap = querySnapshot.docs[0];
-        const msgData = docSnap.data();
-        const senderId: string = msgData.senderId;
-        const senderName = await getSenderName(senderId);
+  const saveCachedChatData = useCallback((chats: CombinedChat[]) => {
+    const dataToCache = chats.map((chat) => ({
+      ...chat,
+      lastMessageTime: chat.lastMessageTime
+        ? chat.lastMessageTime.toISOString()
+        : null,
+    }));
+    storage.set('combinedChats', JSON.stringify(dataToCache));
+  }, []);
 
-        return {
-          text: msgData.text,
-          senderId,
-          senderName,
-          createdAt: msgData.createdAt.toDate(),
-        };
-      } else {
+  const getChatMetadata = useCallback((chatId: string): ChatMetadata | null => {
+    const dataString = storage.getString(`chatMetadata_${chatId}`);
+    if (!dataString) return null;
+    return JSON.parse(dataString) as ChatMetadata;
+  }, []);
+
+  const saveChatMetadata = useCallback((chatId: string, data: ChatMetadata) => {
+    storage.set(`chatMetadata_${chatId}`, JSON.stringify(data));
+  }, []);
+
+  const fetchLastMessageFromFirestore = useCallback(
+    async (
+      chatId: string,
+      chatType: 'direct' | 'group',
+    ): Promise<{
+      text: string;
+      senderId: string;
+      senderName: string;
+      createdAt: Date;
+    } | null> => {
+      if (!user) return null;
+      try {
+        const messagesRef =
+          chatType === 'direct'
+            ? collection(db, 'direct_messages', chatId, 'messages')
+            : collection(db, 'crew_date_chats', chatId, 'messages');
+        const messagesQuery = query(
+          messagesRef,
+          orderBy('createdAt', 'desc'),
+          limit(1),
+        );
+        const querySnapshot = await getDocs(messagesQuery);
+
+        if (!querySnapshot.empty) {
+          const docSnap = querySnapshot.docs[0];
+          const msgData = docSnap.data();
+          const senderId: string = msgData.senderId;
+          const senderName = await getSenderName(senderId);
+
+          return {
+            text: msgData.text,
+            senderId,
+            senderName,
+            createdAt: msgData.createdAt
+              ? msgData.createdAt.toDate()
+              : new Date(),
+          };
+        } else {
+          return null;
+        }
+      } catch {
         return null;
       }
-    } catch (error) {
-      console.error(`Error fetching last message for chat ${chatId}:`, error);
-      return null;
-    }
-  };
+    },
+    [user, getSenderName],
+  );
 
-  // Helper function to get crew name from crewId
-  const getCrewName = (chatId: string): string => {
-    const crewId = chatId.split('_')[0];
-    const crew = crews.find((c) => c.id === crewId);
-    return crew ? crew.name : 'Unknown Crew';
-  };
+  const fetchLastMessage = useCallback(
+    async (chatId: string, chatType: 'direct' | 'group') => {
+      const cached = getChatMetadata(chatId);
+      if (
+        cached?.lastMessage &&
+        cached?.lastMessageTime &&
+        cached.lastMessageSenderId
+      ) {
+        const cachedResult = {
+          text: cached.lastMessage,
+          senderId: cached.lastMessageSenderId,
+          senderName: cached.lastMessageSenderName ?? 'Unknown',
+          createdAt: new Date(cached.lastMessageTime),
+        };
+        // Update in background
+        (async () => {
+          const updated = await fetchLastMessageFromFirestore(chatId, chatType);
+          if (
+            updated &&
+            (updated.text !== cachedResult.text ||
+              updated.senderId !== cachedResult.senderId ||
+              updated.senderName !== cachedResult.senderName ||
+              updated.createdAt.getTime() !== cachedResult.createdAt.getTime())
+          ) {
+            saveChatMetadata(chatId, {
+              ...cached,
+              lastMessage: updated.text,
+              lastMessageTime: updated.createdAt.toISOString(),
+              lastMessageSenderId: updated.senderId,
+              lastMessageSenderName: updated.senderName,
+            });
+          }
+        })();
+        return cachedResult;
+      } else {
+        // No cache
+        const result = await fetchLastMessageFromFirestore(chatId, chatType);
+        if (result) {
+          saveChatMetadata(chatId, {
+            lastMessage: result.text,
+            lastMessageTime: result.createdAt.toISOString(),
+            lastMessageSenderId: result.senderId,
+            lastMessageSenderName: result.senderName,
+          });
+        }
+        return result;
+      }
+    },
+    [getChatMetadata, saveChatMetadata, fetchLastMessageFromFirestore],
+  );
 
-  const getFormattedChatDate = (chatId: string): string => {
+  // Always fetch unread from Firestore to ensure correctness after lastRead updates
+  const fetchUnreadFromFirestore = useCallback(
+    async (chatId: string, chatType: 'direct' | 'group'): Promise<number> => {
+      if (chatType === 'direct') {
+        return await fetchDMUnreadCount(chatId);
+      } else {
+        return await fetchGroupUnreadCount(chatId);
+      }
+    },
+    [fetchDMUnreadCount, fetchGroupUnreadCount],
+  );
+
+  // const fetchUnread = useCallback(
+  //   async (chatId: string, chatType: 'direct' | 'group') => {
+  //     // Directly fetch fresh unread count from Firestore every time
+  //     return await fetchUnreadFromFirestore(chatId, chatType);
+  //   },
+  //   [fetchUnreadFromFirestore],
+  // );
+
+  const getCrewName = useCallback(
+    (chatId: string): string => {
+      const crewId = chatId.split('_')[0];
+      const crew = crews.find((c) => c.id === crewId);
+      return crew ? crew.name : 'Unknown Crew';
+    },
+    [crews],
+  );
+
+  const getFormattedChatDate = useCallback((chatId: string): string => {
     const date = chatId.split('_')[1];
-    const formattedDate = moment(date).format('MMM Do');
-    return formattedDate;
-  };
+    return moment(date).format('MMM Do');
+  }, []);
 
-  const getIconUrlForCrew = (chatId: string): string | undefined => {
-    const crewId = chatId.split('_')[0];
-    const crew = crews.find((c) => c.id === crewId);
-    return crew?.iconUrl;
-  };
+  const getIconUrlForCrew = useCallback(
+    (chatId: string): string | undefined => {
+      const crewId = chatId.split('_')[0];
+      const crew = crews.find((c) => c.id === crewId);
+      return crew?.iconUrl;
+    },
+    [crews],
+  );
 
-  // Combine and sort chats with unread counts in parallel
   const combineChats = useCallback(async () => {
+    // Attempt immediate load from cache (for UI snappiness)
+    const cachedCombined = loadCachedChatData();
+    if (cachedCombined.length > 0 && !isFocused) {
+      setCombinedChats(cachedCombined);
+      setFilteredChats(cachedCombined);
+      setLoading(false);
+    }
+
     try {
       const directMessagesPromises = dms.map(async (dm) => {
         const otherParticipants = dm.participants;
-        const title = otherParticipants
-          .map((user) => user.displayName)
-          .join(', ');
+        const title = otherParticipants.map((p) => p.displayName).join(', ');
         const iconUrl = otherParticipants[0]?.photoURL;
-
         const lastMsg = await fetchLastMessage(dm.id, 'direct');
-        const unreadCount = await fetchDMUnreadCount(dm.id);
+        const unreadCount = await fetchUnreadFromFirestore(dm.id, 'direct');
 
         return {
           id: dm.id,
@@ -184,7 +311,7 @@ const ChatsListScreen: React.FC = () => {
         const iconUrl = getIconUrlForCrew(gc.id);
 
         const lastMsg = await fetchLastMessage(gc.id, 'group');
-        const unreadCount = await fetchGroupUnreadCount(gc.id);
+        const unreadCount = await fetchUnreadFromFirestore(gc.id, 'group');
 
         return {
           id: gc.id,
@@ -206,7 +333,6 @@ const ChatsListScreen: React.FC = () => {
 
       const combined = [...directMessages, ...groupChatsData];
 
-      // Sort combined chats by lastMessageTime descending
       combined.sort((a, b) => {
         if (a.lastMessageTime && b.lastMessageTime) {
           return b.lastMessageTime.getTime() - a.lastMessageTime.getTime();
@@ -220,22 +346,39 @@ const ChatsListScreen: React.FC = () => {
       });
 
       setCombinedChats(combined);
+      setFilteredChats((prev) =>
+        searchQuery.trim()
+          ? combined.filter((chat) =>
+              chat.title.toLowerCase().includes(searchQuery.toLowerCase()),
+            )
+          : combined,
+      );
+
+      saveCachedChatData(combined);
     } catch (error) {
       console.error('Error combining chats:', error);
-      // Optionally, display an alert or notification
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Could not combine chats.',
+      });
     } finally {
       setLoading(false);
     }
   }, [
     dms,
     groupChats,
-    crews,
-    fetchDMUnreadCount,
-    fetchGroupUnreadCount,
-    getSenderName,
+    getCrewName,
+    getFormattedChatDate,
+    getIconUrlForCrew,
+    fetchLastMessage,
+    fetchUnreadFromFirestore,
+    loadCachedChatData,
+    saveCachedChatData,
+    searchQuery,
+    isFocused,
   ]);
 
-  // Filter chats based on search query
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setFilteredChats(combinedChats);
@@ -247,85 +390,28 @@ const ChatsListScreen: React.FC = () => {
     }
   }, [searchQuery, combinedChats]);
 
-  const handleNavigation = (chatId: string, chatType: 'direct' | 'group') => {
-    console.log('Navigating to chat:', chatId, chatType);
-    if (chatType === 'direct') {
-      const otherUserId = chatId.split('_').find((uid) => uid !== user?.uid);
-      if (otherUserId) {
-        navigation.navigate('DMChat', { otherUserId });
+  const handleNavigation = useCallback(
+    (chatId: string, chatType: 'direct' | 'group') => {
+      if (chatType === 'direct') {
+        const otherUserId = chatId.split('_').find((uid) => uid !== user?.uid);
+        if (otherUserId) {
+          navigation.navigate('DMChat', { otherUserId });
+        }
       } else {
-        console.error('Error: otherUserId is undefined');
+        const crewId = chatId.split('_')[0];
+        const date = chatId.split('_')[1];
+        navigation.navigate('CrewDateChat', { crewId, date, id: chatId });
       }
-    } else {
-      const crewId = chatId.split('_')[0];
-      const date = chatId.split('_')[1];
-      navigation.navigate('CrewDateChat', { crewId, date, id: chatId });
-    }
-  };
+    },
+    [navigation, user?.uid],
+  );
 
+  // Re-fetch chats whenever screen is focused to ensure unread counts are correct
   useEffect(() => {
-    combineChats();
-  }, [dms, groupChats, crews, combineChats]);
-
-  // Render each chat item with unread count and sender's name
-  const renderItem = ({ item }: { item: CombinedChat }) => {
-    return (
-      <TouchableOpacity
-        style={styles.chatItem}
-        onPress={() => handleNavigation(item.id, item.type)}
-      >
-        {/* Avatar */}
-        <View style={styles.avatar}>
-          <ProfilePicturePicker
-            size={55}
-            imageUrl={item.iconUrl ?? null}
-            iconName="people-outline"
-            editable={false}
-            onImageUpdate={() => {}}
-          />
-        </View>
-
-        {/* Chat Details */}
-        <View style={styles.chatDetails}>
-          <View style={styles.chatHeader}>
-            <Text style={styles.chatTitle} numberOfLines={1}>
-              {item.title}
-            </Text>
-            {item.lastMessageTime && (
-              <Text style={styles.chatTimestamp}>
-                {moment(item.lastMessageTime).fromNow()}
-              </Text>
-            )}
-          </View>
-          <Text style={styles.chatLastMessage} numberOfLines={1}>
-            {item.lastMessage ? (
-              item.lastMessageSenderName ? (
-                <>
-                  <Text style={styles.senderName}>
-                    {item.lastMessageSenderName}:{' '}
-                  </Text>
-                  {item.lastMessage}
-                </>
-              ) : (
-                item.lastMessage
-              )
-            ) : (
-              'No messages yet.'
-            )}
-          </Text>
-        </View>
-
-        {/* Unread Count Badge */}
-        {item.unreadCount > 0 && (
-          <View style={styles.unreadBadge}>
-            <Text style={styles.unreadText}>
-              {item.unreadCount > 99 ? '99+' : item.unreadCount}
-            </Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
+    if (isFocused) {
+      combineChats();
+    }
+  }, [isFocused, combineChats]);
 
   if (loading) {
     return (
@@ -335,11 +421,64 @@ const ChatsListScreen: React.FC = () => {
     );
   }
 
+  const renderItem = ({ item }: { item: CombinedChat }) => (
+    <TouchableOpacity
+      style={styles.chatItem}
+      onPress={() => handleNavigation(item.id, item.type)}
+    >
+      <View style={styles.avatar}>
+        <ProfilePicturePicker
+          size={55}
+          imageUrl={item.iconUrl ?? null}
+          iconName={
+            item.type === 'direct' ? 'person-outline' : 'people-outline'
+          }
+          editable={false}
+          onImageUpdate={() => {}}
+        />
+      </View>
+      <View style={styles.chatDetails}>
+        <View style={styles.chatHeader}>
+          <Text style={styles.chatTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          {item.lastMessageTime && (
+            <Text style={styles.chatTimestamp}>
+              {moment(item.lastMessageTime).fromNow()}
+            </Text>
+          )}
+        </View>
+        <Text style={styles.chatLastMessage} numberOfLines={1}>
+          {item.lastMessage ? (
+            item.lastMessageSenderName ? (
+              <>
+                <Text style={styles.senderName}>
+                  {item.lastMessageSenderName}:{' '}
+                </Text>
+                {item.lastMessage}
+              </>
+            ) : (
+              item.lastMessage
+            )
+          ) : (
+            'No messages yet.'
+          )}
+        </Text>
+      </View>
+      {item.unreadCount > 0 && (
+        <View style={styles.unreadBadge}>
+          <Text style={styles.unreadText}>
+            {item.unreadCount > 99 ? '99+' : item.unreadCount}
+          </Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+
   return (
     <View style={globalStyles.container}>
       <ScreenTitle title="Chats" />
 
-      {/* Search Bar */}
       <CustomSearchInput
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
@@ -374,7 +513,6 @@ const styles = StyleSheet.create({
   chatHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
     position: 'relative',
     paddingRight: 20,
   },
