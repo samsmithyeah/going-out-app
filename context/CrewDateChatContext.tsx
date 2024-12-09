@@ -345,17 +345,19 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, [user?.uid, crews, fetchUserDetails]);
 
-  // Listen to real-time updates in crew date chats
+  // Runs when user uid changes to fetch initial chats
   useEffect(() => {
-    fetchChats();
+    fetchChats(); // Just fetch once when user changes
+  }, [user?.uid, fetchChats]);
 
+  // Separate effect that listens to real-time updates
+  useEffect(() => {
+    if (!user?.uid) return;
     const unsubscribe = listenToChats();
-
     return () => {
-      if (unsubscribe) unsubscribe();
-      console.log('CrewDateChatContext unmounted.');
+      unsubscribe && unsubscribe();
     };
-  }, [fetchChats, listenToChats]);
+  }, [user?.uid, listenToChats]);
 
   // Compute total unread messages whenever chats or activeChats change
   useEffect(() => {

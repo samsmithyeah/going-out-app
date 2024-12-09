@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useEffect,
   useCallback,
+  useMemo,
 } from 'react';
 import { auth, db } from '@/firebase'; // Ensure correct import paths
 import { User } from '@/types/User';
@@ -34,6 +35,8 @@ type UserProviderProps = {
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [activeChats, setActiveChats] = useState<Set<string>>(new Set());
+
+  const memoizedActiveChats = useMemo(() => activeChats, [activeChats]);
 
   useEffect(() => {
     // Listen for authentication state changes
@@ -171,7 +174,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         user,
         setUser,
         logout,
-        activeChats,
+        activeChats: memoizedActiveChats,
         addActiveChat,
         removeActiveChat,
         setBadgeCount, // Expose setBadgeCount

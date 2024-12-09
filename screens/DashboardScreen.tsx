@@ -1,6 +1,4 @@
-// screens/DashboardScreen.tsx
-
-import React from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,19 +10,19 @@ import { useCrews } from '@/context/CrewsContext';
 import DateCard from '@/components/DateCard';
 import moment from 'moment';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { NavParamList } from '@/navigation/AppNavigator'; // Adjust the path as necessary
-import { useNavigation } from '@react-navigation/native'; // Hook for navigation
+import { NavParamList } from '@/navigation/AppNavigator';
+import { useNavigation } from '@react-navigation/native';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 import ScreenTitle from '@/components/ScreenTitle';
-import CreateCrewModal from '@/components/CreateCrewModal'; // Import your modal
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Example icon library
+import CreateCrewModal from '@/components/CreateCrewModal';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import globalStyles from '@/styles/globalStyles';
 
 const getDotColor = (count: number, total: number): string => {
-  if (count === total && total > 0) return '#32CD32'; // Green
-  if (count > 0 && count < total) return '#FFA500'; // Orange
-  return '#D3D3D3'; // Grey
+  if (count === total && total > 0) return '#32CD32';
+  if (count > 0 && count < total) return '#FFA500';
+  return '#D3D3D3';
 };
 
 type DashboardScreenNavigationProp = NativeStackNavigationProp<
@@ -42,27 +40,39 @@ const DashboardScreen: React.FC = () => {
     loadingStatuses,
     loadingMatches,
   } = useCrews();
-  const [isLoadingUsers, setIsLoadingUsers] = React.useState<boolean>(false);
+
+  const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(false);
   const [isCreateModalVisible, setIsCreateModalVisible] =
-    React.useState<boolean>(false); // State for modal
+    useState<boolean>(false);
+  const [today, setToday] = useState<string>(moment().format('YYYY-MM-DD'));
 
   const navigation = useNavigation<DashboardScreenNavigationProp>();
 
-  // Generate week dates
-  const weekDates = React.useMemo(() => {
+  // Update "today" at midnight
+  useEffect(() => {
+    const now = moment();
+    const midnight = moment().endOf('day').add(1, 'millisecond');
+    const timeoutMs = midnight.diff(now);
+
+    const timeoutId = setTimeout(() => {
+      setToday(moment().format('YYYY-MM-DD'));
+    }, timeoutMs);
+
+    return () => clearTimeout(timeoutId);
+  }, [today]);
+
+  const weekDates = useMemo(() => {
     const dates: string[] = [];
     for (let i = 0; i < 7; i++) {
-      dates.push(moment().add(i, 'days').format('YYYY-MM-DD'));
+      dates.push(moment(today).add(i, 'days').format('YYYY-MM-DD'));
     }
     return dates;
-  }, []);
+  }, [today]);
 
-  // Determine if overall loading is needed
   const isLoading = loadingCrews || loadingStatuses || isLoadingUsers;
 
-  // Handle toggle actions with loading state
   const handleToggle = async (date: string, toggleTo: boolean) => {
-    setIsLoadingUsers(true); // Start loading
+    setIsLoadingUsers(true);
     try {
       await toggleStatusForDateAllCrews(date, toggleTo);
     } catch (error) {
@@ -73,27 +83,23 @@ const DashboardScreen: React.FC = () => {
         text2: 'Failed to update status',
       });
     } finally {
-      setIsLoadingUsers(false); // End loading
+      setIsLoadingUsers(false);
     }
   };
 
-  // Handle pressing the matches chip
   const handlePressMatches = (date: string) => {
     navigation.navigate('MatchesList', { date });
   };
 
-  // Handle opening the CreateCrewModal
   const openCreateCrewModal = () => {
     setIsCreateModalVisible(true);
   };
 
-  // Handle closing the CreateCrewModal
   const closeCreateCrewModal = () => {
     setIsCreateModalVisible(false);
   };
 
   const handleCrewCreated = (crewId: string) => {
-    console.log('Crew created:', crewId);
     closeCreateCrewModal();
     Toast.show({
       type: 'success',
@@ -107,7 +113,6 @@ const DashboardScreen: React.FC = () => {
     });
   };
 
-  // Render a single day item using DateCard component
   const renderDayItem = ({ item }: { item: string }) => {
     const count = dateCounts[item] || 0;
     const matches = dateMatches[item] || 0;
@@ -123,9 +128,9 @@ const DashboardScreen: React.FC = () => {
         total={total}
         isDisabled={isDisabled}
         statusColor={statusColor}
-        isLoading={loadingMatches} // Pass loadingMatches to DateCard
+        isLoading={loadingMatches}
         onToggle={handleToggle}
-        onPressMatches={handlePressMatches} // Pass the handler
+        onPressMatches={handlePressMatches}
       />
     );
   };
@@ -134,9 +139,7 @@ const DashboardScreen: React.FC = () => {
     <>
       {isLoading && <LoadingOverlay />}
       <View style={globalStyles.container}>
-        {/* Profile Section */}
         <ScreenTitle title="Your week" />
-        {/* Conditional Rendering */}
         {crewIds.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Icon name="group-add" size={64} color="#888" />
@@ -149,7 +152,6 @@ const DashboardScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         ) : (
-          /* Weekly Status List */
           <FlatList
             data={weekDates}
             renderItem={renderDayItem}
@@ -160,13 +162,9 @@ const DashboardScreen: React.FC = () => {
           />
         )}
       </View>
-      {/* Create Crew Modal */}
       <CreateCrewModal
         isVisible={isCreateModalVisible}
-        onClose={() => {
-          console.log('Setting isModalVisible to false');
-          closeCreateCrewModal();
-        }}
+        onClose={closeCreateCrewModal}
         onCrewCreated={handleCrewCreated}
       />
     </>
