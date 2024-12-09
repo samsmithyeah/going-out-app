@@ -117,7 +117,7 @@ const CreateCrewModal: React.FC<CreateCrewModalProps> = ({
         placeholderTextColor="#666"
         value={newCrewName}
         onChangeText={setNewCrewName}
-        autoCapitalize="words"
+        autoCapitalize="sentences"
         hasBorder={true}
       />
     </CustomModal>
