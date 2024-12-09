@@ -285,6 +285,14 @@ const CrewSettingsScreen: React.FC = () => {
                   memberIds: updatedMemberIds,
                 });
 
+                // Remove the crew from local state
+                setCrews((prevCrews) =>
+                  prevCrews.filter((crew) => crew.id !== crewId),
+                );
+
+                // Remove the crew ID from the user's list
+                setCrewIds((prevIds) => prevIds.filter((id) => id !== crewId));
+
                 navigation.navigate('CrewsList');
                 Toast.show({
                   type: 'success',

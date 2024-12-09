@@ -88,6 +88,7 @@ const ContactsScreen: React.FC = () => {
                 onMemberPress={handleContactPress}
                 isLoading={loading}
                 emptyMessage="No registered contacts found."
+                scrollEnabled
               />
             )}
           </>
