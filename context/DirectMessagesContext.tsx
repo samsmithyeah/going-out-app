@@ -597,22 +597,10 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     }
   }, [user?.uid, usersCache, fetchUserDetails]);
 
-  // Listen to real-time updates in direct messages
-  // useEffect(() => {
-  //   fetchDirectMessages();
-
-  //   const unsubscribe = listenToDirectMessages();
-
-  //   return () => {
-  //     if (unsubscribe) unsubscribe();
-  //     console.log('DirectMessagesContext unmounted.');
-  //   };
-  // }, [fetchDirectMessages, listenToDirectMessages]);
-
-  // // Compute total unread messages whenever dms or activeChats change
-  // useEffect(() => {
-  //   computeTotalUnread();
-  // }, [computeTotalUnread]);
+  // Compute total unread messages whenever dms or activeChats change
+  useEffect(() => {
+    computeTotalUnread();
+  }, [computeTotalUnread]);
 
   useEffect(() => {
     fetchDirectMessages();
