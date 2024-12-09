@@ -313,7 +313,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
         imageUrl={otherUser?.photoURL || null}
         onImageUpdate={() => {}}
         editable={false}
-        size={40}
+        size={36}
       />
     );
   }, [otherUser]);
@@ -358,7 +358,10 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
         renderSend={(props: SendProps<IMessage>) => (
           <Send
             {...props}
-            containerStyle={{ justifyContent: 'center', paddingHorizontal: 10 }}
+            containerStyle={{
+              justifyContent: 'center',
+              paddingHorizontal: 10,
+            }}
           >
             <MaterialIcons size={30} color={'#1E90FF'} name={'send'} />
           </Send>

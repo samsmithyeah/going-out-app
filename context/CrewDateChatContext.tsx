@@ -154,7 +154,6 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
         let msgQuery;
         if (lastRead) {
           // Fetch messages created after lastRead
-          console.log('lastRead is not null. Fetching unread messages.');
           msgQuery = query(messagesRef, where('createdAt', '>', lastRead));
         } else {
           // If lastRead is null, all messages are unread

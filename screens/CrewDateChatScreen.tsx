@@ -369,7 +369,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
           imageUrl={messageUser.photoURL || null}
           onImageUpdate={() => {}}
           editable={false}
-          size={40}
+          size={36}
         />
       );
     },
