@@ -1,97 +1,15 @@
-import { UserProvider } from '@/context/UserContext';
-import { CrewsProvider } from '@/context/CrewsContext';
-import { ContactsProvider } from '@/context/ContactsContext';
-import { InvitationsProvider } from '@/context/InvitationsContext';
-import { CrewDateChatProvider } from '@/context/CrewDateChatContext';
-import { DirectMessagesProvider } from '@/context/DirectMessagesContext';
-import { BadgeCountProvider } from '@/context/BadgeCountContext';
-import { registerRootComponent } from 'expo';
-import Toast, {
-  BaseToast,
-  ErrorToast,
-  InfoToast,
-  ToastProps,
-} from 'react-native-toast-message';
-import { LogBox } from 'react-native';
-import App from './App';
+// app/index.tsx
 
-LogBox.ignoreLogs([
-  'Sending `onAnimatedValueUpdate` with no listeners registered.',
-]);
+import React from 'react';
+import { Stack } from 'expo-router';
+import { useUser } from '@/context/UserContext';
 
-const toastConfig = {
-  success: (props: ToastProps) => (
-    <BaseToast
-      {...props}
-      text1Style={{
-        fontSize: 15,
-        fontWeight: '400',
-      }}
-      text2Style={{
-        fontSize: 13,
-      }}
-      style={{
-        borderLeftColor: '#008000',
-      }}
-    />
-  ),
+export default function App() {
+  const { user } = useUser();
 
-  error: (props: ToastProps) => (
-    <ErrorToast
-      {...props}
-      text1Style={{
-        fontSize: 15,
-        fontWeight: '400',
-      }}
-      text2Style={{
-        fontSize: 13,
-      }}
-      style={{
-        borderLeftColor: '#FF0000',
-      }}
-    />
-  ),
-
-  info: (props: ToastProps) => (
-    <InfoToast
-      {...props}
-      text1Style={{
-        fontSize: 15,
-        fontWeight: '400',
-      }}
-      text2Style={{
-        fontSize: 13,
-      }}
-      style={{
-        borderLeftColor: '#FFA500',
-      }}
-    />
-  ),
-};
-
-const Root: React.FC = () => {
   return (
-    <>
-      <UserProvider>
-        <ContactsProvider>
-          <CrewsProvider>
-            <InvitationsProvider>
-              <CrewDateChatProvider>
-                <DirectMessagesProvider>
-                  <BadgeCountProvider>
-                    <App />
-                  </BadgeCountProvider>
-                </DirectMessagesProvider>
-              </CrewDateChatProvider>
-            </InvitationsProvider>
-          </CrewsProvider>
-        </ContactsProvider>
-      </UserProvider>
-      <Toast config={toastConfig} />
-    </>
+    <Stack screenOptions={{ headerShown: false }}>
+      {!user ? <Stack.Screen name="(auth)" /> : <Stack.Screen name="(main)" />}
+    </Stack>
   );
-};
-
-export default Root;
-
-registerRootComponent(App);
+}
