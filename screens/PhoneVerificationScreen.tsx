@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,8 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import { PhoneAuthProvider, ApplicationVerifier } from 'firebase/auth';
+import auth from '@react-native-firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import CustomButton from '@/components/CustomButton';
@@ -22,7 +21,7 @@ import {
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
 import { useRoute } from '@react-navigation/native';
-import { firebaseConfig, auth, db } from '@/firebase';
+import { db } from '@/firebase';
 import { NavParamList } from '@/navigation/AppNavigator';
 import { User } from '@/types/User';
 import { useUser } from '@/context/UserContext';
@@ -38,9 +37,6 @@ const getFlagEmoji = (countryCode: string): string => {
 };
 
 const PhoneVerificationScreen: React.FC = () => {
-  const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
-
-  // Update state to include country code and country ISO code
   const [selectedCountry, setSelectedCountry] = useState<{
     dial_code: string;
     country_code: string;
@@ -53,7 +49,7 @@ const PhoneVerificationScreen: React.FC = () => {
 
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [verificationCode, setVerificationCode] = useState<string>('');
-  const [verificationId, setVerificationId] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>('');
   const [showCountryPicker, setShowCountryPicker] = useState<boolean>(false);
@@ -88,13 +84,8 @@ const PhoneVerificationScreen: React.FC = () => {
       return;
     }
 
-    // Remove leading zeros from phone number
     const sanitizedPhoneNumber = phoneNumber.trim().replace(/^0+/, '');
     const fullPhoneNumberLocal = `${selectedCountry.dial_code}${sanitizedPhoneNumber}`;
-
-    console.log('phoneNumber', phoneNumber);
-    console.log('sanitizedPhoneNumber', sanitizedPhoneNumber);
-    console.log('fullPhoneNumberLocal', fullPhoneNumberLocal);
 
     const phoneRegex = /^\+[1-9]\d{1,14}$/; // E.164 format
     if (!phoneRegex.test(fullPhoneNumberLocal)) {
@@ -104,14 +95,10 @@ const PhoneVerificationScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      const phoneProvider = new PhoneAuthProvider(auth);
-      const verId = await phoneProvider.verifyPhoneNumber(
-        fullPhoneNumberLocal,
-        recaptchaVerifier.current as ApplicationVerifier,
-      );
-      setVerificationId(verId);
+      const confirmation =
+        await auth().signInWithPhoneNumber(fullPhoneNumberLocal);
+      setConfirm(confirmation);
       setFullPhoneNumber(fullPhoneNumberLocal);
-
       Toast.show({
         type: 'success',
         text1: 'Verification code sent',
@@ -127,8 +114,10 @@ const PhoneVerificationScreen: React.FC = () => {
 
   const handleVerifyCode = async () => {
     setFormError('');
-    if (!verificationId) {
-      setFormError('No verification ID found.');
+    if (!confirm) {
+      setFormError(
+        'No verification process found. Please send the code again.',
+      );
       return;
     }
     if (!verificationCode.trim()) {
@@ -138,13 +127,13 @@ const PhoneVerificationScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      // Fetch user data from Firestore
+      await confirm.confirm(verificationCode);
+      // At this point, the user is signed in with the phone number.
+      // Now we can update the Firestore record.
       const userDocRef = doc(db, 'users', uid);
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {
-        // Update Firestore with phone number
-        console.log('Updating phone number:', fullPhoneNumber);
         await updateDoc(userDocRef, {
           phoneNumber: fullPhoneNumber,
           country: selectedCountry.country_code,
@@ -154,9 +143,7 @@ const PhoneVerificationScreen: React.FC = () => {
           text1: 'Success',
           text2: 'Phone number verified',
         });
-
         const userData = userDoc.data() as User;
-
         setUser(userData);
       } else {
         setFormError('User not found.');
@@ -172,60 +159,57 @@ const PhoneVerificationScreen: React.FC = () => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
-        <FirebaseRecaptchaVerifierModal
-          ref={recaptchaVerifier}
-          firebaseConfig={firebaseConfig}
-          attemptInvisibleVerification={true}
-        />
-
         <View style={styles.formContainer}>
           <Text style={styles.title}>Verify your phone number</Text>
           {formError ? <Text style={styles.error}>{formError}</Text> : null}
 
-          <View style={styles.countryPickerContainer}>
-            <TouchableOpacity
-              onPress={() => setShowCountryPicker(true)}
-              style={styles.countryPickerButton}
-            >
-              <Text style={styles.flagText}>
-                {getFlagEmoji(selectedCountry.country_code)}
-              </Text>
-              <Text style={styles.countryCodeText}>
-                {selectedCountry.dial_code}
-              </Text>
-              <Text style={styles.dropdownArrow}>▼</Text>
-            </TouchableOpacity>
-            {/* TODO: Convert this to CustomTextInput */}
-            <TextInput
-              placeholder="Phone number"
-              placeholderTextColor="#666"
-              value={phoneNumber}
-              onChangeText={(text) => setPhoneNumber(text)}
-              style={styles.phoneInput}
-              keyboardType="phone-pad"
-            />
-          </View>
-          <CountryPicker
-            show={showCountryPicker}
-            pickerButtonOnPress={(item: any) => {
-              setSelectedCountry({
-                dial_code: item.dial_code,
-                country_code: item.code,
-                name: item.name,
-              });
-              setShowCountryPicker(false);
-            }}
-            lang="en"
-            style={{ modal: { height: '92%' } }}
-          />
-          {!verificationId ? (
-            <CustomButton
-              title="Send verification code"
-              onPress={handleSendVerification}
-              loading={loading}
-              disabled={!phoneNumber.trim()}
-            />
-          ) : (
+          {!confirm && (
+            <>
+              <View style={styles.countryPickerContainer}>
+                <TouchableOpacity
+                  onPress={() => setShowCountryPicker(true)}
+                  style={styles.countryPickerButton}
+                >
+                  <Text style={styles.flagText}>
+                    {getFlagEmoji(selectedCountry.country_code)}
+                  </Text>
+                  <Text style={styles.countryCodeText}>
+                    {selectedCountry.dial_code}
+                  </Text>
+                  <Text style={styles.dropdownArrow}>▼</Text>
+                </TouchableOpacity>
+                <TextInput
+                  placeholder="Phone number"
+                  placeholderTextColor="#666"
+                  value={phoneNumber}
+                  onChangeText={(text) => setPhoneNumber(text)}
+                  style={styles.phoneInput}
+                  keyboardType="phone-pad"
+                />
+              </View>
+              <CountryPicker
+                show={showCountryPicker}
+                pickerButtonOnPress={(item: any) => {
+                  setSelectedCountry({
+                    dial_code: item.dial_code,
+                    country_code: item.code,
+                    name: item.name,
+                  });
+                  setShowCountryPicker(false);
+                }}
+                lang="en"
+                style={{ modal: { height: '92%' } }}
+              />
+              <CustomButton
+                title="Send verification code"
+                onPress={handleSendVerification}
+                loading={loading}
+                disabled={!phoneNumber.trim()}
+              />
+            </>
+          )}
+
+          {confirm && (
             <>
               <CodeField
                 ref={codeRef}
