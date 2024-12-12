@@ -30,12 +30,14 @@ import CustomTextInput from '@/components/CustomTextInput';
 import CustomModal from '@/components/CustomModal';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
+import useGlobalStyles from '@/styles/globalStyles';
 
 type CrewSettingsScreenRouteProp = RouteProp<NavParamList, 'CrewSettings'>;
 
 const CrewSettingsScreen: React.FC = () => {
   const { user } = useUser();
   const { setCrews, setCrewIds } = useCrews();
+  const globalStyles = useGlobalStyles();
   const route = useRoute<CrewSettingsScreenRouteProp>();
   const { crewId } = route.params;
   const navigation = useNavigation<NavigationProp<NavParamList>>();
@@ -433,7 +435,7 @@ const CrewSettingsScreen: React.FC = () => {
     <>
       {(loading || !crew) && <LoadingOverlay />}
       {isDeleting && <LoadingOverlay text="Deleting..." />}
-      <ScrollView style={styles.container}>
+      <ScrollView style={globalStyles.containerWithHeader}>
         {/* Crew Header */}
         <View style={styles.groupInfo}>
           <ProfilePicturePicker
@@ -521,6 +523,7 @@ const CrewSettingsScreen: React.FC = () => {
             emptyMessage="No members in this crew."
             adminIds={[crew.ownerId]}
             onMemberPress={navigateToUserProfile}
+            scrollEnabled={false}
           />
         </View>
 
@@ -631,10 +634,6 @@ const CrewSettingsScreen: React.FC = () => {
 export default CrewSettingsScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',

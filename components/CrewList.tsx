@@ -10,15 +10,16 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import FastImage from 'react-native-fast-image';
-import { Crew } from '@/types/Crew'; // Assuming you have a Crew type
+import { Crew } from '@/types/Crew';
 import { User } from '@/types/User';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { NavParamList } from '@/navigation/AppNavigator';
+import useGlobalStyles from '@/styles/globalStyles';
 
 type CrewListProps = {
   crews: Crew[];
   usersCache: { [key: string]: User };
-  currentDate?: string; // Add currentDate as a prop
+  currentDate?: string;
 };
 
 const CrewList: React.FC<CrewListProps> = ({
@@ -27,13 +28,14 @@ const CrewList: React.FC<CrewListProps> = ({
   currentDate,
 }) => {
   const navigation = useNavigation<NavigationProp<NavParamList>>();
+  const globalStyles = useGlobalStyles();
 
   useEffect(() => {
     console.log('currentDate in CrewList:', currentDate);
   }, [currentDate]);
 
   return (
-    <View style={styles.container}>
+    <View style={globalStyles.listContainer}>
       <FlatList
         data={crews}
         keyExtractor={(item) => item.id}
@@ -102,10 +104,6 @@ const CrewList: React.FC<CrewListProps> = ({
 export default CrewList;
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 18,
-    height: '100%',
-  },
   crewItem: {
     flexDirection: 'row', // Arrange image and text horizontally
     alignItems: 'center', // Vertically center items

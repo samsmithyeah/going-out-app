@@ -12,7 +12,6 @@ export const useGlobalStyles = () => {
       flex: 1,
       padding: 16,
       backgroundColor: Colors.background,
-      justifyContent: 'flex-start',
       paddingBottom: insets.bottom - tabBarHeight,
       paddingTop: insets.top,
     },
@@ -20,8 +19,11 @@ export const useGlobalStyles = () => {
       flex: 1,
       padding: 16,
       backgroundColor: Colors.background,
-      justifyContent: 'flex-start',
       paddingBottom: insets.bottom - tabBarHeight,
+    },
+    listContainer: {
+      marginTop: 16,
+      paddingBottom: tabBarHeight,
     },
   });
 };
