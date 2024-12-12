@@ -186,23 +186,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.flock,
-    paddingTop: 80,
+    paddingTop: 60,
   },
   logoContainer: {
-    marginTop: 40,
+    marginTop: 10,
     alignItems: 'center',
   },
   logo: {
     width: 200,
     height: 200,
-    marginBottom: 10,
   },
   formContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 15,
     padding: 20,
     marginHorizontal: 20,
-    marginTop: 50,
+    marginTop: 30,
   },
   forgotPasswordContainer: {
     alignItems: 'flex-end',

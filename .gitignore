@@ -22,10 +22,12 @@ expo-env.d.ts
 
 # iOS
 *.ipa
+GoogleService-Info.plist
 
 # Android
 *.aab
 android/sentry.properties
+google-services.json
 
 # Firebase
 functions/*.log
