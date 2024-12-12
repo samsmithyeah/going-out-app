@@ -35,12 +35,17 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useIsFocused } from '@react-navigation/native';
+import {
+  useIsFocused,
+  useNavigation,
+  NavigationProp,
+} from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { User } from '@/types/User';
 import ProfilePicturePicker from '@/components/ProfilePicturePicker';
 import { throttle } from 'lodash';
 import moment from 'moment';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type CrewDateChatScreenProps = NativeStackScreenProps<
   NavParamList,
@@ -55,11 +60,10 @@ type RouteParams = {
 
 const TYPING_TIMEOUT = 1000;
 
-const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
-  route,
-  navigation,
-}) => {
+const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({ route }) => {
   const { crewId, date, id } = route.params as RouteParams;
+  const navigation = useNavigation<NavigationProp<NavParamList>>();
+  const insets = useSafeAreaInsets();
   const { sendMessage, updateLastRead, messages, listenToMessages } =
     useCrewDateChat();
   const { crews } = useCrews();
@@ -158,6 +162,7 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({
     if (crew) {
       navigation.setOptions({
         headerTitle: `${crew.name} - ${moment(date).format('MMM Do')}`,
+        headerStatusBarHeight: insets.top,
       });
     }
   }, [navigation, crew]);

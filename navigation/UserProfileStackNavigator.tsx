@@ -24,9 +24,8 @@ const UserProfileStackNavigator: React.FC = () => {
         name="EditUserProfile"
         component={EditUserProfileModal}
         options={{
-          headerTitle: 'Edit Profile',
+          headerTitle: 'Edit profile',
           headerBackTitleVisible: false,
-          headerStatusBarHeight: 0,
         }}
       />
     </Stack.Navigator>

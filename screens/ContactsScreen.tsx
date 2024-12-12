@@ -9,7 +9,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { NavParamList } from '@/navigation/AppNavigator';
 import { User } from '@/types/User';
 import ScreenTitle from '@/components/ScreenTitle';
-import globalStyles from '@/styles/globalStyles';
+import useglobalStyles from '@/styles/globalStyles';
 import CustomSearchInput from '@/components/CustomSearchInput';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +18,7 @@ type ContactsScreenProp = NativeStackNavigationProp<NavParamList, 'Contacts'>;
 
 const ContactsScreen: React.FC = () => {
   const { allContacts, loading, error, refreshContacts } = useContacts();
+  const globalStyles = useglobalStyles();
   const navigation = useNavigation<ContactsScreenProp>();
 
   const [searchQuery, setSearchQuery] = useState<string>(''); // State for search

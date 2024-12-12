@@ -32,7 +32,6 @@ import moment from 'moment';
 import { useUser } from '@/context/UserContext';
 import ScreenTitle from '@/components/ScreenTitle';
 import CustomSearchInput from '@/components/CustomSearchInput';
-import globalStyles from '@/styles/globalStyles';
 import ProfilePicturePicker from '@/components/ProfilePicturePicker';
 import Toast from 'react-native-toast-message';
 import { storage } from '@/storage';

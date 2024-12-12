@@ -16,6 +16,13 @@ export const useGlobalStyles = () => {
       paddingBottom: insets.bottom - tabBarHeight,
       paddingTop: insets.top,
     },
+    containerWithHeader: {
+      flex: 1,
+      padding: 16,
+      backgroundColor: Colors.background,
+      justifyContent: 'flex-start',
+      paddingBottom: insets.bottom - tabBarHeight,
+    },
   });
 };
 

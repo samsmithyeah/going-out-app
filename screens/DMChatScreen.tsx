@@ -33,11 +33,16 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useIsFocused } from '@react-navigation/native';
+import {
+  useIsFocused,
+  useNavigation,
+  NavigationProp,
+} from '@react-navigation/native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { User } from '@/types/User';
 import ProfilePicturePicker from '@/components/ProfilePicturePicker';
 import { throttle } from 'lodash';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Define Props
 type DMChatScreenProps = NativeStackScreenProps<NavParamList, 'DMChat'>;
@@ -48,8 +53,9 @@ type RouteParams = {
 
 const TYPING_TIMEOUT = 1000;
 
-const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
+const DMChatScreen: React.FC<DMChatScreenProps> = ({ route }) => {
   const { otherUserId } = route.params as RouteParams;
+  const navigation = useNavigation<NavigationProp<NavParamList>>();
   const { sendMessage, updateLastRead, messages, listenToDMMessages } =
     useDirectMessages();
   const { crews, usersCache } = useCrews();
@@ -59,6 +65,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
   const { user, addActiveChat, removeActiveChat } = useUser();
   const [otherUser, setOtherUser] = useState<User | null>(null);
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
+  const insets = useSafeAreaInsets();
 
   // Generate conversationId using both user IDs
   const conversationId = useMemo(() => {
@@ -161,6 +168,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route, navigation }) => {
     if (otherUser) {
       navigation.setOptions({
         title: otherUser.displayName,
+        headerStatusBarHeight: insets.top,
       });
     }
   }, [navigation, otherUser]);

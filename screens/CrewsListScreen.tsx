@@ -16,8 +16,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Ensure you have this installed
-import Colors from '@/styles/colors';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import useGlobalStyles from '@/styles/globalStyles';
 
 type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;

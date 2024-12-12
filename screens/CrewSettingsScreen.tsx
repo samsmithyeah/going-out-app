@@ -79,7 +79,6 @@ const CrewSettingsScreen: React.FC = () => {
           setCrew(crewData);
           setNewCrewName(crewData.name);
           setNewActivity(crewData.activity || 'going out');
-          navigation.setOptions({ title: 'Crew Info' });
         } else {
           if (!isDeleting) {
             console.warn('Crew not found');

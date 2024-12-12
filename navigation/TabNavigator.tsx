@@ -36,7 +36,9 @@ const TabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
       initialRouteName="DashboardStack"
-      screenOptions={{ headerShown: false, headerStatusBarHeight: 0 }}
+      screenOptions={{
+        headerShown: false,
+      }}
     >
       <Tab.Screen
         name="DashboardStack"

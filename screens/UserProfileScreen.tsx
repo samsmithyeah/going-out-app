@@ -101,10 +101,10 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={{ color: '#1e90ff', fontSize: 16 }}>Edit</Text>
         </TouchableOpacity>
       ),
-      headerStatusBarHeight: 0,
+      // headerStatusBarHeight: 0,
       title: user?.displayName || 'Profile',
     });
-  }, [navigation]);
+  }, [navigation, user]);
 
   const handleLogout = async () => {
     try {
@@ -164,7 +164,7 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.buttonContainer}>
         <CustomButton
-          title="Log out"
+          title="Log outs"
           onPress={handleLogout}
           variant="danger"
           icon={{

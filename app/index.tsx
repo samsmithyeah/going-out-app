@@ -14,7 +14,6 @@ import Toast, {
 } from 'react-native-toast-message';
 import { LogBox, View, StyleSheet } from 'react-native';
 import App from './App';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 LogBox.ignoreLogs([
   'Sending `onAnimatedValueUpdate` with no listeners registered.',
@@ -81,9 +80,7 @@ const Root: React.FC = () => {
                 <DirectMessagesProvider>
                   <BadgeCountProvider>
                     <View style={styles.container}>
-                      <SafeAreaProvider>
-                        <App />
-                      </SafeAreaProvider>
+                      <App />
                     </View>
                   </BadgeCountProvider>
                 </DirectMessagesProvider>
