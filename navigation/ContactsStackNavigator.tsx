@@ -22,7 +22,6 @@ const ContactsStackNavigator: React.FC = () => {
         component={OtherUserProfileScreen}
         options={{
           headerBackTitleVisible: false,
-          headerStatusBarHeight: 0,
         }}
       />
       <Stack.Screen
@@ -30,7 +29,6 @@ const ContactsStackNavigator: React.FC = () => {
         component={DMChatScreen}
         options={{
           headerBackTitleVisible: false,
-          headerStatusBarHeight: 0,
         }}
       />
     </Stack.Navigator>
