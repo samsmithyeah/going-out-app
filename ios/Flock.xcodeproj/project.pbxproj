@@ -7,16 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0885CDE944BC43018F2D0B71 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4B6DAE049A084883BEC5AEC7 /* GoogleService-Info.plist */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		17F65A3BEBD35D628EA4061E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 34504A00FF05BDAC93443BBA /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		3F16957D31B56DE5DDB5AEB5 /* Pods_Flock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F21CD60B0F7FFD1C77A8D9C /* Pods_Flock.framework */; };
-		40FF155E75D24FDFAEB213BF /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 242FF39FFFC545F886A080CF /* noop-file.swift */; };
-		42BB977FD267F29E3D2A9619 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8626E7F3FE58355D713CED2B /* PrivacyInfo.xcprivacy */; };
+		75EEF04CE533AD69935B6D40 /* Pods_Flock.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4EB709734A38DFE139065A5 /* Pods_Flock.framework */; };
+		9111EFD360C94432BB35D3C5 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 281BABF8626A42A3B296A478 /* noop-file.swift */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		CC7A63200AE248CA903CE363 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9DBD84172287432BB840ACED /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,15 +26,15 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Flock/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Flock/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = Flock/main.m; sourceTree = "<group>"; };
-		242FF39FFFC545F886A080CF /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "Flock/noop-file.swift"; sourceTree = "<group>"; };
-		42C592DBA0764D37A1F887E5 /* Flock-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "Flock-Bridging-Header.h"; path = "Flock/Flock-Bridging-Header.h"; sourceTree = "<group>"; };
-		5F21CD60B0F7FFD1C77A8D9C /* Pods_Flock.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Flock.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		281BABF8626A42A3B296A478 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "Flock/noop-file.swift"; sourceTree = "<group>"; };
+		34504A00FF05BDAC93443BBA /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Flock/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4B6DAE049A084883BEC5AEC7 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Flock/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		6C2E3173556A471DD304B334 /* Pods-Flock.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Flock.debug.xcconfig"; path = "Target Support Files/Pods-Flock/Pods-Flock.debug.xcconfig"; sourceTree = "<group>"; };
 		7A4D352CD337FB3A3BF06240 /* Pods-Flock.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Flock.release.xcconfig"; path = "Target Support Files/Pods-Flock/Pods-Flock.release.xcconfig"; sourceTree = "<group>"; };
-		8626E7F3FE58355D713CED2B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Flock/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		9DBD84172287432BB840ACED /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Flock/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		862E1F8C6AE848B594FDE25A /* Flock-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "Flock-Bridging-Header.h"; path = "Flock/Flock-Bridging-Header.h"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Flock/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		E4EB709734A38DFE139065A5 /* Pods_Flock.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Flock.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Flock/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -44,7 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3F16957D31B56DE5DDB5AEB5 /* Pods_Flock.framework in Frameworks */,
+				75EEF04CE533AD69935B6D40 /* Pods_Flock.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,10 +61,10 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				9DBD84172287432BB840ACED /* GoogleService-Info.plist */,
-				242FF39FFFC545F886A080CF /* noop-file.swift */,
-				42C592DBA0764D37A1F887E5 /* Flock-Bridging-Header.h */,
-				8626E7F3FE58355D713CED2B /* PrivacyInfo.xcprivacy */,
+				4B6DAE049A084883BEC5AEC7 /* GoogleService-Info.plist */,
+				281BABF8626A42A3B296A478 /* noop-file.swift */,
+				862E1F8C6AE848B594FDE25A /* Flock-Bridging-Header.h */,
+				34504A00FF05BDAC93443BBA /* PrivacyInfo.xcprivacy */,
 			);
 			name = Flock;
 			sourceTree = "<group>";
@@ -73,7 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				5F21CD60B0F7FFD1C77A8D9C /* Pods_Flock.framework */,
+				E4EB709734A38DFE139065A5 /* Pods_Flock.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -150,14 +150,14 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Flock" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				BA43AD4F5ED4947906278FFC /* [Expo] Configure project */,
+				81FB61216A44C3A15ACF9467 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				FD2E5BE1D96642C09C35FF97 /* Upload Debug Symbols to Sentry */,
-				13A38B6305759FE634984150 /* [CP] Embed Pods Frameworks */,
+				737DA6E5C9D54CA49EC25A13 /* Upload Debug Symbols to Sentry */,
+				CFABC0711F47EFDADEB48B8F /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -207,8 +207,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				CC7A63200AE248CA903CE363 /* GoogleService-Info.plist in Resources */,
-				42BB977FD267F29E3D2A9619 /* PrivacyInfo.xcprivacy in Resources */,
+				0885CDE944BC43018F2D0B71 /* GoogleService-Info.plist in Resources */,
+				17F65A3BEBD35D628EA4061E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -252,23 +252,19 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		13A38B6305759FE634984150 /* [CP] Embed Pods Frameworks */ = {
+		737DA6E5C9D54CA49EC25A13 /* Upload Debug Symbols to Sentry */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Flock/Pods-Flock-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
-			name = "[CP] Embed Pods Frameworks";
+			name = "Upload Debug Symbols to Sentry";
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Flock/Pods-Flock-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "/bin/sh `${NODE_BINARY:-node} --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode-debug-files.sh'\"`";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -362,7 +358,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Flock/Pods-Flock-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		BA43AD4F5ED4947906278FFC /* [Expo] Configure project */ = {
+		81FB61216A44C3A15ACF9467 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -381,19 +377,23 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Flock/expo-configure-project.sh\"\n";
 		};
-		FD2E5BE1D96642C09C35FF97 /* Upload Debug Symbols to Sentry */ = {
+		CFABC0711F47EFDADEB48B8F /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Flock/Pods-Flock-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
-			name = "Upload Debug Symbols to Sentry";
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh `${NODE_BINARY:-node} --print \"require('path').dirname(require.resolve('@sentry/react-native/package.json')) + '/scripts/sentry-xcode-debug-files.sh'\"`";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Flock/Pods-Flock-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -405,7 +405,7 @@
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
-				40FF155E75D24FDFAEB213BF /* noop-file.swift in Sources */,
+				9111EFD360C94432BB35D3C5 /* noop-file.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
