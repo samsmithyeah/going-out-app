@@ -8,6 +8,7 @@ import { useUser } from '@/context/UserContext';
 import { NavParamList } from '@/navigation/AppNavigator';
 import * as Sentry from '@sentry/react-native';
 import { captureConsoleIntegration } from '@sentry/core';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 Sentry.init({
   dsn: 'https://ea17b86dea77e3f6b37bd8ad04223206@o4508365591281664.ingest.de.sentry.io/4508365591674960',

@@ -18,12 +18,14 @@ import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Ensure you have this installed
 import Colors from '@/styles/colors';
+import useGlobalStyles from '@/styles/globalStyles';
 
 type CrewsListScreenProps = NativeStackScreenProps<NavParamList, 'CrewsList'>;
 
 const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   const { crews, usersCache, setUsersCache, loadingCrews, loadingStatuses } =
     useCrews();
+  const globalStyles = useGlobalStyles();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>(''); // State for search
   const [filteredCrews, setFilteredCrews] = useState<Crew[]>([]); // State for filtered crews
@@ -135,7 +137,7 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
   return (
     <>
       {(isLoading || isLoadingUsers) && <LoadingOverlay />}
-      <View style={styles.container}>
+      <View style={globalStyles.container}>
         {/* Header Container */}
         <View style={styles.headerContainer}>
           {/* Screen Title */}
@@ -182,13 +184,6 @@ const CrewsListScreen: React.FC<CrewsListScreenProps> = ({ navigation }) => {
 export default CrewsListScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: Colors.background,
-    justifyContent: 'flex-start',
-    paddingBottom: 100,
-  },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
