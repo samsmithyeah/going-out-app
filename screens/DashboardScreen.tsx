@@ -17,7 +17,7 @@ import Toast from 'react-native-toast-message';
 import ScreenTitle from '@/components/ScreenTitle';
 import CreateCrewModal from '@/components/CreateCrewModal';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import globalStyles from '@/styles/globalStyles';
+import useglobalStyles from '@/styles/globalStyles';
 
 const getDotColor = (count: number, total: number): string => {
   if (count === total && total > 0) return '#32CD32';
@@ -40,6 +40,8 @@ const DashboardScreen: React.FC = () => {
     loadingStatuses,
     loadingMatches,
   } = useCrews();
+
+  const globalStyles = useglobalStyles();
 
   const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(false);
   const [isCreateModalVisible, setIsCreateModalVisible] =

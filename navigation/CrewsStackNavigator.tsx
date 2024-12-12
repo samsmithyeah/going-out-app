@@ -26,14 +26,13 @@ const CrewsStackNavigator: React.FC = () => {
         component={CrewScreen}
         options={{
           headerBackTitleVisible: false,
-          headerStatusBarHeight: 0,
           title: 'Crew',
         }}
       />
       <Stack.Screen
         name="CrewSettings"
         component={CrewSettingsScreen}
-        options={{ headerBackTitleVisible: false, headerStatusBarHeight: 0 }}
+        options={{ headerBackTitleVisible: false, title: 'Crew settings' }}
       />
       <Stack.Screen
         name="AddMembers"
@@ -41,20 +40,18 @@ const CrewsStackNavigator: React.FC = () => {
         options={{
           headerBackTitleVisible: false,
           title: 'Add members',
-          headerStatusBarHeight: 0,
         }}
       />
       <Stack.Screen
         name="OtherUserProfile"
         component={OtherUserProfileScreen}
-        options={{ headerStatusBarHeight: 0, headerBackTitleVisible: false }}
+        options={{ headerBackTitleVisible: false }}
       />
       <Stack.Screen
         name="CrewDateChat"
         component={CrewDateChatScreen}
         options={{
           headerBackTitleVisible: false,
-          headerStatusBarHeight: 0,
         }}
       />
       <Stack.Screen
@@ -62,7 +59,6 @@ const CrewsStackNavigator: React.FC = () => {
         component={DMChatScreen}
         options={{
           headerBackTitleVisible: false,
-          headerStatusBarHeight: 0,
         }}
       />
     </Stack.Navigator>

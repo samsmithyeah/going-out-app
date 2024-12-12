@@ -12,7 +12,7 @@ import Toast, {
   InfoToast,
   ToastProps,
 } from 'react-native-toast-message';
-import { LogBox } from 'react-native';
+import { LogBox, View, StyleSheet } from 'react-native';
 import App from './App';
 
 LogBox.ignoreLogs([
@@ -79,7 +79,9 @@ const Root: React.FC = () => {
               <CrewDateChatProvider>
                 <DirectMessagesProvider>
                   <BadgeCountProvider>
-                    <App />
+                    <View style={styles.container}>
+                      <App />
+                    </View>
                   </BadgeCountProvider>
                 </DirectMessagesProvider>
               </CrewDateChatProvider>
@@ -91,6 +93,16 @@ const Root: React.FC = () => {
     </>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+});
 
 export default Root;
 

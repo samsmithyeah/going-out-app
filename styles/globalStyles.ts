@@ -1,14 +1,29 @@
 import { StyleSheet } from 'react-native';
 import Colors from '@/styles/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
-const globalStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: Colors.background,
-    justifyContent: 'flex-start',
-    paddingBottom: 0,
-  },
-});
+export const useGlobalStyles = () => {
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
 
-export default globalStyles;
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 16,
+      backgroundColor: Colors.background,
+      justifyContent: 'flex-start',
+      paddingBottom: insets.bottom - tabBarHeight,
+      paddingTop: insets.top,
+    },
+    containerWithHeader: {
+      flex: 1,
+      padding: 16,
+      backgroundColor: Colors.background,
+      justifyContent: 'flex-start',
+      paddingBottom: insets.bottom - tabBarHeight,
+    },
+  });
+};
+
+export default useGlobalStyles;

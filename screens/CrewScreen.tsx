@@ -37,7 +37,8 @@ import { useCrews } from '@/context/CrewsContext';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 import { useCrewDateChat } from '@/context/CrewDateChatContext';
-import globalStyles from '@/styles/globalStyles';
+import useglobalStyles from '@/styles/globalStyles';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type CrewScreenRouteProp = RouteProp<NavParamList, 'Crew'>;
 
@@ -50,6 +51,8 @@ interface Status {
 const CrewScreen: React.FC = () => {
   const { user } = useUser();
   const { toggleStatusForCrew } = useCrews();
+  const globalStyles = useglobalStyles();
+  const insets = useSafeAreaInsets();
   const route = useRoute<CrewScreenRouteProp>();
   const { crewId, date } = route.params;
   const navigation = useNavigation<NavigationProp<NavParamList>>();
@@ -285,6 +288,7 @@ const CrewScreen: React.FC = () => {
           )
         : 'Crew',
       headerTitleAlign: 'left',
+      headerStatusBarHeight: insets.top,
     });
   }, [navigation, crew, crewId]);
 

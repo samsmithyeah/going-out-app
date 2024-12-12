@@ -26,7 +26,6 @@ const DashboardStackNavigator: React.FC = () => {
         component={MatchesListScreen}
         options={{
           headerBackTitleVisible: false,
-          headerStatusBarHeight: 0,
         }}
       />
     </Stack.Navigator>
