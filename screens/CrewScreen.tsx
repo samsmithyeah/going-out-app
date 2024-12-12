@@ -396,7 +396,7 @@ const CrewScreen: React.FC = () => {
   return (
     <>
       {(loading || !crew) && <LoadingOverlay />}
-      <View style={globalStyles.container}>
+      <View style={globalStyles.containerWithHeader}>
         {/* Date Picker with Arrow Buttons */}
         <View style={styles.datePickerContainer}>
           {/* Left Arrow Button */}

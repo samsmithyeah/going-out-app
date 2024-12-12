@@ -368,8 +368,8 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route }) => {
           name: user?.displayName || 'You',
           avatar: user?.photoURL || undefined,
         }}
-        bottomOffset={tabBarHeight}
         isTyping={false} // Control isTyping via custom logic
+        bottomOffset={tabBarHeight - insets.bottom}
         onInputTextChanged={handleInputTextChanged} // Manage typing state
         renderAvatar={renderAvatar}
         renderBubble={(props) => (
