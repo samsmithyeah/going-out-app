@@ -30,7 +30,6 @@ const LoginStackNavigator: React.FC = () => {
         options={{
           headerTitle: 'Reset password',
           headerBackTitleVisible: false,
-          headerStatusBarHeight: 0,
         }}
       />
       <Stack.Screen

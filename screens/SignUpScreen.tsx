@@ -264,13 +264,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.flock,
+    justifyContent: 'center',
   },
   formContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 15,
     padding: 20,
     marginHorizontal: 20,
-    marginTop: 100,
+    marginTop: 50,
   },
   passwordStrengthContainer: {
     marginBottom: 15,
