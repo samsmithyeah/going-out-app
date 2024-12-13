@@ -3,11 +3,11 @@ import React, { useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
 import AppNavigator from '@/navigation/AppNavigator';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useNavigation } from '@react-navigation/native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { useUser } from '@/context/UserContext';
 import { NavParamList } from '@/navigation/AppNavigator';
 import * as Sentry from '@sentry/react-native';
-import { captureConsoleIntegration } from '@sentry/core';
+import { captureConsoleIntegration } from '@sentry/integrations';
 
 Sentry.init({
   dsn: 'https://ea17b86dea77e3f6b37bd8ad04223206@o4508365591281664.ingest.de.sentry.io/4508365591674960',
@@ -79,7 +79,23 @@ const App: React.FC = () => {
     };
   }, [user]);
 
-  return <AppNavigator />;
+  const linking = {
+    prefixes: [
+      'com.googleusercontent.apps.814136772684-8bgo4g20f9q1p4g532kvqhj7lt497v7e://',
+      'appScheme://',
+    ],
+    config: {
+      screens: {
+        PhoneVerification: 'firebaseauth/link*',
+      },
+    },
+  };
+
+  return (
+    <NavigationContainer independent={true} linking={linking}>
+      <AppNavigator />
+    </NavigationContainer>
+  );
 };
 
 export default Sentry.wrap(App);

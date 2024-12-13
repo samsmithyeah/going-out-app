@@ -40,7 +40,8 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": ["READ_CONTACTS"],
-      "package": "com.samlovesit.GoingOutApp"
+      "package": "com.samlovesit.GoingOutApp",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -80,7 +81,9 @@
             "useFrameworks": "static"
           }
         }
-      ]
+      ],
+      "@react-native-firebase/auth",
+      "@react-native-firebase/app"
     ],
     "experiments": {
       "typedRoutes": true

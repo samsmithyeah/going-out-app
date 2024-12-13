@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import CustomButton from '@/components/CustomButton';
 import Toast from 'react-native-toast-message';
 import Colors from '@/styles/colors';
@@ -20,11 +19,13 @@ import {
   useBlurOnFulfill,
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, RouteProp } from '@react-navigation/native';
 import { NavParamList } from '@/navigation/AppNavigator';
 import { User } from '@/types/User';
 import { useUser } from '@/context/UserContext';
 import { CountryPicker } from 'react-native-country-codes-picker';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/firebase';
 
 const CELL_COUNT = 6;
 
@@ -63,10 +64,7 @@ const PhoneVerificationScreen: React.FC = () => {
     setValue: setVerificationCode,
   });
 
-  const route =
-    useRoute<
-      NativeStackScreenProps<NavParamList, 'PhoneVerification'>['route']
-    >();
+  const route = useRoute<RouteProp<NavParamList, 'PhoneVerification'>>();
   const { uid } = route.params;
 
   useEffect(() => {
@@ -126,13 +124,13 @@ const PhoneVerificationScreen: React.FC = () => {
     setLoading(true);
     try {
       await confirm.confirm(verificationCode);
-      // User is now signed in with the phone number.
-      // Update the Firestore user document.
-      const userDocRef = firestore().collection('users').doc(uid);
-      const userDoc = await userDocRef.get();
+      // At this point, the user is signed in with the phone number.
+      // Now we can update the Firestore record.
+      const userDocRef = doc(db, 'users', uid);
+      const userDoc = await getDoc(userDocRef);
 
-      if (userDoc.exists) {
-        await userDocRef.update({
+      if (userDoc.exists()) {
+        await updateDoc(userDocRef, {
           phoneNumber: fullPhoneNumber,
           country: selectedCountry.country_code,
         });
