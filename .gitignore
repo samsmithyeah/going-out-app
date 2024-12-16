@@ -37,3 +37,7 @@ original.json
 truncated.json
 converter.py
 .env.local
+
+# yarn
+yarn-error.log
+.yarn/*

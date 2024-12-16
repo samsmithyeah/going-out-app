@@ -3,7 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import * as Google from 'expo-auth-session/providers/google';
 import { auth, db } from '@/firebase';
-import { addUserToFirestore } from '@/utils/AddUserToFirestore';
+import {
+  addUserToFirestore,
+  registerForPushNotificationsAsync,
+} from '@/utils/AddUserToFirestore';
 import CustomButton from '@/components/CustomButton';
 import Toast from 'react-native-toast-message';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
@@ -43,6 +46,8 @@ const GoogleLoginButton: React.FC = () => {
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
 
+            await registerForPushNotificationsAsync(userData);
+
             if (!userData.phoneNumber) {
               // Redirect to PhoneVerificationScreen
               navigation.replace('PhoneVerification', {
@@ -65,6 +70,7 @@ const GoogleLoginButton: React.FC = () => {
               // phoneNumber is optional and not set here
             };
             await addUserToFirestore(firestoreUser);
+            await registerForPushNotificationsAsync(firestoreUser);
             Toast.show({
               type: 'success',
               text1: 'Success',
