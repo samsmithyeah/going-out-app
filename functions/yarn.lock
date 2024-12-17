@@ -489,7 +489,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^22.0.1":
+"@types/node@npm:*, @types/node@npm:>=13.7.0, @types/node@npm:^22.0.1, @types/node@npm:^22.10.2":
   version: 22.10.2
   resolution: "@types/node@npm:22.10.2"
   dependencies:
@@ -1986,6 +1986,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "functions@workspace:."
   dependencies:
+    "@types/node": ^22.10.2
     "@typescript-eslint/eslint-plugin": ^5.12.0
     "@typescript-eslint/parser": ^5.12.0
     eslint: ^8.9.0

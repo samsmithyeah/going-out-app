@@ -112,7 +112,6 @@ const GoogleLoginButton: React.FC = () => {
         name: 'logo-google',
         size: 24,
         color: '#fff',
-        library: 'Ionicons',
       }}
       loading={loading} // Show loading indicator when signing in
       disabled={!request || loading}

@@ -130,7 +130,6 @@ const OtherUserProfileScreen: React.FC = () => {
           icon={{
             name: 'chatbubble-ellipses-outline',
             size: 24,
-            library: 'Ionicons',
           }}
           accessibilityLabel="Open Chat"
           accessibilityHint="Navigate to crew date chat"

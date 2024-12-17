@@ -10,9 +10,7 @@ import {
   GestureResponderEvent,
   View,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons'; // Change based on your preferred icon library
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome'; // If needed
+import { Ionicons } from '@expo/vector-icons';
 
 interface IconProps {
   name: string;
@@ -57,38 +55,16 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   const renderIcon = () => {
     if (!icon) return null;
 
-    const { name, size = 20, color, library = 'Ionicons' } = icon;
+    const { name, size = 20, color } = icon;
 
-    switch (library) {
-      case 'MaterialIcons':
-        return (
-          <MaterialIcons
-            name={name}
-            size={size}
-            color={color || getColor()}
-            style={styles.icon}
-          />
-        );
-      case 'FontAwesome':
-        return (
-          <FontAwesome
-            name={name}
-            size={size}
-            color={color || getColor()}
-            style={styles.icon}
-          />
-        );
-      case 'Ionicons':
-      default:
-        return (
-          <Ionicons
-            name={name}
-            size={size}
-            color={color || getColor()}
-            style={styles.icon}
-          />
-        );
-    }
+    return (
+      <Ionicons
+        name={name as any}
+        size={size}
+        color={color || getColor()}
+        style={styles.icon}
+      />
+    );
   };
 
   // Helper function to determine color based on variant
