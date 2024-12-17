@@ -26,8 +26,8 @@ Notifications.setNotificationHandler({
 
 const App: React.FC = () => {
   const { user } = useUser();
-  const notificationListener = useRef<any>();
-  const responseListener = useRef<any>();
+  const notificationListener = useRef<any>(null);
+  const responseListener = useRef<any>(null);
   const navigation = useNavigation<StackNavigationProp<NavParamList>>();
 
   useEffect(() => {
