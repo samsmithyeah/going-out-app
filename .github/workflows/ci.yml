@@ -22,6 +22,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
 
       - name: Set Yarn Berry
         run: corepack enable && corepack prepare yarn@3.6.4 --activate
@@ -29,8 +30,12 @@ jobs:
       - name: Install Dependencies
         run: yarn install --immutable
 
+      - name: Verify tsconfig.json
+        run: |
+          cat tsconfig.json
+
       - name: TypeScript Type Check
-        run: yarn exec tsc --noEmit
+        run: yarn tsc --noEmit --pretty
 
       - name: Lint Code
         run: yarn lint
@@ -67,7 +72,7 @@ jobs:
       - name: Set Yarn Berry
         run: corepack enable && corepack prepare yarn@3.6.4 --activate
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           cd functions
           yarn install --immutable
