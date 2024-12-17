@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useUser } from '@/context/UserContext';
 import { NavParamList } from '@/navigation/AppNavigator';
 import * as Sentry from '@sentry/react-native';
-import { captureConsoleIntegration } from '@sentry/core';
+import { captureConsoleIntegration } from '@sentry/integrations';
 
 Sentry.init({
   dsn: 'https://ea17b86dea77e3f6b37bd8ad04223206@o4508365591281664.ingest.de.sentry.io/4508365591674960',
@@ -26,8 +26,8 @@ Notifications.setNotificationHandler({
 
 const App: React.FC = () => {
   const { user } = useUser();
-  const notificationListener = useRef<any>();
-  const responseListener = useRef<any>();
+  const notificationListener = useRef<any>(null);
+  const responseListener = useRef<any>(null);
   const navigation = useNavigation<StackNavigationProp<NavParamList>>();
 
   useEffect(() => {

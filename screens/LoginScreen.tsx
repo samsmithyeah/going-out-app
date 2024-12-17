@@ -23,6 +23,7 @@ import Colors from '@/styles/colors';
 import { doc, getDoc } from 'firebase/firestore';
 import { User } from '@/types/User';
 import { FirebaseError } from 'firebase/app';
+import { registerForPushNotificationsAsync } from '@/utils/AddUserToFirestore';
 
 type LoginScreenProps = NativeStackScreenProps<NavParamList, 'Login'>;
 
@@ -64,6 +65,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 
       if (userDoc.exists()) {
         const userData = userDoc.data() as User;
+        await registerForPushNotificationsAsync(userData);
 
         if (!userData.phoneNumber) {
           // Redirect to PhoneVerificationScreen

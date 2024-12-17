@@ -98,7 +98,7 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
     const dateDescription = getDateDescription(date);
     console.log(`Date Description: ${dateDescription}`);
 
-    const crewActivity = crewData.activity.toLowerCase() || 'meeting up';
+    const crewActivity = crewData.activity ? crewData.activity.toLowerCase() : 'meeting up';
 
     // Determine notification message based on status change
     let messageBody = '';

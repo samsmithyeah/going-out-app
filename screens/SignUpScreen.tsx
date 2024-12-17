@@ -12,7 +12,10 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { auth } from '@/firebase';
-import { addUserToFirestore } from '@/utils/AddUserToFirestore';
+import {
+  addUserToFirestore,
+  registerForPushNotificationsAsync,
+} from '@/utils/AddUserToFirestore';
 import CustomButton from '@/components/CustomButton';
 import CustomTextInput from '@/components/CustomTextInput';
 import zxcvbn from 'zxcvbn';
@@ -112,8 +115,7 @@ const SignUpScreen: React.FC<SignUpScreenNavigationProps> = ({
       };
 
       await addUserToFirestore(updatedUser);
-
-      //setUser(updatedUser);
+      await registerForPushNotificationsAsync(updatedUser);
 
       // Navigate to PhoneVerificationScreen
       navigation.replace('PhoneVerification', { uid: thisUser.uid });

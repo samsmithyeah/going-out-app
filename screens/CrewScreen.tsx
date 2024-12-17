@@ -488,7 +488,6 @@ const CrewScreen: React.FC = () => {
                 icon={{
                   name: 'chatbubble-ellipses-outline',
                   size: 24,
-                  library: 'Ionicons',
                 }}
                 accessibilityLabel="Open Chat"
                 accessibilityHint="Navigate to crew date chat"
@@ -504,7 +503,6 @@ const CrewScreen: React.FC = () => {
                   icon={{
                     name: 'beer-outline',
                     size: 24,
-                    library: 'Ionicons',
                   }}
                   accessibilityLabel="Poke Crew"
                   accessibilityHint="Send a poke to crew members who are not up for it"
@@ -532,7 +530,6 @@ const CrewScreen: React.FC = () => {
                 ? 'remove-circle-outline'
                 : 'star-outline',
               size: 24,
-              library: 'Ionicons',
             }}
             accessibilityLabel="Toggle Status"
             accessibilityHint={

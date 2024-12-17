@@ -2,12 +2,15 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "esModuleInterop": true,
+    "baseUrl": ".",
     "paths": {
-      "@firebase/auth": ["./node_modules/@firebase/auth/dist/index.rn.d.ts"],
-      "baseUrl": ["."],
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@firebase/auth": ["./node_modules/@firebase/auth/dist/index.rn.d.ts"]
     },
-    "strict": true
+    "strict": true,
+    "jsx": "react-native",
+    "lib": ["ESNext", "DOM"],
+    "skipLibCheck": true
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
   "exclude": ["node_modules", "ios", "android", "functions"]

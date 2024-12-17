@@ -223,8 +223,7 @@ const EditUserProfileModal: React.FC = () => {
             icon={{
               name: 'save-outline',
               size: 24,
-              library: 'Ionicons',
-              color: '#FFFFFF', // Icon color
+              color: '#FFFFFF',
             }}
             disabled={
               saving ||
@@ -244,7 +243,6 @@ const EditUserProfileModal: React.FC = () => {
             icon={{
               name: 'close-outline',
               size: 24,
-              library: 'Ionicons',
             }}
             accessibilityLabel="Cancel Editing"
             accessibilityHint="Discard changes and close the edit screen"

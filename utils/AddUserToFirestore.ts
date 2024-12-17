@@ -7,7 +7,7 @@ import { db } from '@/firebase';
 import { User } from '@/types/User';
 import Toast from 'react-native-toast-message';
 
-const registerForPushNotificationsAsync = async (user: User) => {
+export const registerForPushNotificationsAsync = async (user: User) => {
   let token: string | undefined;
 
   if (isDevice) {
@@ -100,7 +100,6 @@ export const addUserToFirestore = async (user: User, phoneNumber?: string) => {
       badgeCount: 0,
       phoneNumber: phoneNumber || '', // Add this line
     };
-    await registerForPushNotificationsAsync(user);
     const userExists = (await getDoc(userDocRef)).exists();
     if (userExists) {
       console.log('User document already exists in Firestore.');

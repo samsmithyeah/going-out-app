@@ -40,7 +40,8 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": ["READ_CONTACTS"],
-      "package": "com.samlovesit.GoingOutApp"
+      "package": "com.samlovesit.GoingOutApp",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -76,11 +77,14 @@
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "13.4",
+            "deploymentTarget": "15.1",
             "useFrameworks": "static"
           }
         }
-      ]
+      ],
+      "@react-native-firebase/auth",
+      "@react-native-firebase/app",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

@@ -168,7 +168,6 @@ const UserProfileScreen: React.FC<Props> = ({ navigation }) => {
           icon={{
             name: 'exit-outline',
             size: 24,
-            library: 'Ionicons',
           }}
           accessibilityLabel="Log out"
           accessibilityHint="Log out of your account"

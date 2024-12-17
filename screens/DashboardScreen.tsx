@@ -16,7 +16,7 @@ import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 import ScreenTitle from '@/components/ScreenTitle';
 import CreateCrewModal from '@/components/CreateCrewModal';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from '@expo/vector-icons/MaterialIcons';
 import useglobalStyles from '@/styles/globalStyles';
 
 const getDotColor = (count: number, total: number): string => {
