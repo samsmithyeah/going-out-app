@@ -85,7 +85,7 @@ const Root: React.FC = () => {
   };
 
   return (
-    <NavigationContainer linking={linking}>
+    <NavigationContainer linking={linking} independent>
       <UserProvider>
         <ContactsProvider>
           <CrewsProvider>

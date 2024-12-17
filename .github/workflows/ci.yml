@@ -1,3 +1,5 @@
+# .github/workflows/ci.yml
+
 name: CI Pipeline
 
 on:
@@ -15,33 +17,40 @@ jobs:
         node-version: [20.x]
 
     steps:
+      # 1. Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      # 2. Set up Node.js environment
       - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
+          cache: 'npm'
 
-      - name: Set Yarn Berry
-        run: corepack enable && corepack prepare yarn@3.6.4 --activate
-
+      # 3. Install dependencies
       - name: Install Dependencies
-        run: yarn install --immutable
+        run: |
+          npm ci
 
+      # 4. Run TypeScript type checking
       - name: TypeScript Type Check
-        run: yarn exec tsc --noEmit --pretty
+        run: npx tsc --noEmit
+        # Ensure your project has a "tsconfig.json"
 
+      # 5. Run Linting
       - name: Lint Code
-        run: yarn lint
+        run: npm run lint
 
+      # 6. Run format check
       - name: Check Code Formatting
-        run: yarn format:check
+        run: npm run format:check
 
+      # 7. Run Tests
       - name: Run Tests
-        run: yarn test:ci
+        run: npm run test:ci
 
+      # 8. Upload Test Coverage Report (Optional)
       - name: Upload Coverage Report
         if: success()
         uses: actions/upload-artifact@v3
@@ -57,28 +66,31 @@ jobs:
         node-version: [18.x]
 
     steps:
+      # 1. Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      # 2. Set up Node.js environment
       - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
-      - name: Set Yarn Berry
-        run: corepack enable && corepack prepare yarn@3.6.4 --activate
-
-      - name: Install Dependencies
+      # 3. Install functions dependencies
+      - name: Install dependencies
         run: |
           cd functions
-          yarn install --immutable
+          npm ci
 
+      # 4. Lint functions folder
       - name: Lint
         run: |
           cd functions
-          yarn lint
+          npm run lint
 
+      # 5. Build functions
       - name: Build
         run: |
           cd functions
-          yarn build
+          npm run build
