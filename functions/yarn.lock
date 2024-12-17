@@ -133,6 +133,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@firebase/logger@npm:^0.4.4":
+  version: 0.4.4
+  resolution: "@firebase/logger@npm:0.4.4"
+  dependencies:
+    tslib: ^2.1.0
+  checksum: 5ab53233dd7ef772491dcabb6c3fbc3aecb2b49ca6364cab8501cad7b0b005a00d8bd6db7bcb8932225e7f580b51ae6313fe2c456dd70c45c919697ab0e56544
+  languageName: node
+  linkType: hard
+
 "@firebase/util@npm:1.10.0":
   version: 1.10.0
   resolution: "@firebase/util@npm:1.10.0"
@@ -1986,6 +1995,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "functions@workspace:."
   dependencies:
+    "@firebase/logger": ^0.4.4
     "@types/node": ^22.10.2
     "@typescript-eslint/eslint-plugin": ^5.12.0
     "@typescript-eslint/parser": ^5.12.0
@@ -1996,6 +2006,7 @@ __metadata:
     firebase-admin: ^12.6.0
     firebase-functions: ^6.0.1
     firebase-functions-test: ^3.1.0
+    long: ^5.2.3
     moment: ^2.30.1
     typescript: ^4.9.0
   languageName: unknown
@@ -2871,7 +2882,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"long@npm:^5.0.0":
+"long@npm:^5.0.0, long@npm:^5.2.3":
   version: 5.2.3
   resolution: "long@npm:5.2.3"
   checksum: 885ede7c3de4facccbd2cacc6168bae3a02c3e836159ea4252c87b6e34d40af819824b2d4edce330bfb5c4d6e8ce3ec5864bdcf9473fa1f53a4f8225860e5897
