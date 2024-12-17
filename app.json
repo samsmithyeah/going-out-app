@@ -26,9 +26,7 @@
           {
             "CFBundleTypeRole": "Editor",
             "CFBundleURLName": "com.samlovesit.GoingOutApp",
-            "CFBundleURLSchemes": [
-              "goingoutapp"
-            ]
+            "CFBundleURLSchemes": ["goingoutapp"]
           }
         ]
       },
@@ -41,9 +39,7 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "READ_CONTACTS"
-      ],
+      "permissions": ["READ_CONTACTS"],
       "package": "com.samlovesit.GoingOutApp",
       "googleServicesFile": "./google-services.json"
     },
