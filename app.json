@@ -26,7 +26,9 @@
           {
             "CFBundleTypeRole": "Editor",
             "CFBundleURLName": "com.samlovesit.GoingOutApp",
-            "CFBundleURLSchemes": ["goingoutapp"]
+            "CFBundleURLSchemes": [
+              "goingoutapp"
+            ]
           }
         ]
       },
@@ -39,7 +41,9 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": ["READ_CONTACTS"],
+      "permissions": [
+        "READ_CONTACTS"
+      ],
       "package": "com.samlovesit.GoingOutApp",
       "googleServicesFile": "./google-services.json"
     },
@@ -77,13 +81,14 @@
         "expo-build-properties",
         {
           "ios": {
-            "deploymentTarget": "13.4",
+            "deploymentTarget": "15.1",
             "useFrameworks": "static"
           }
         }
       ],
       "@react-native-firebase/auth",
-      "@react-native-firebase/app"
+      "@react-native-firebase/app",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

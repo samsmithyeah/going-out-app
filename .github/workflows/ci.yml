@@ -35,7 +35,7 @@ jobs:
           cat tsconfig.json
 
       - name: TypeScript Type Check
-        run: yarn tsc --noEmit --pretty
+        run: yarn exec tsc --noEmit --pretty
 
       - name: Lint Code
         run: yarn lint
