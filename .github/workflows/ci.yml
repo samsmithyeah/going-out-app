@@ -31,7 +31,7 @@ jobs:
         run: yarn install --immutable
 
       - name: TypeScript Type Check
-        run: npx tsc --noEmit --pretty
+        run: yarn exec tsc --noEmit --pretty
 
       - name: Lint Code
         run: yarn lint
