@@ -30,12 +30,8 @@ jobs:
       - name: Install Dependencies
         run: yarn install --immutable
 
-      - name: Verify tsconfig.json
-        run: |
-          cat tsconfig.json
-
       - name: TypeScript Type Check
-        run: yarn exec tsc --noEmit --pretty
+        run: npx tsc --noEmit --pretty
 
       - name: Lint Code
         run: yarn lint
