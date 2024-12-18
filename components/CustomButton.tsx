@@ -10,13 +10,12 @@ import {
   GestureResponderEvent,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface IconProps {
   name: string;
   size?: number;
   color?: string;
-  library?: 'Ionicons' | 'MaterialIcons' | 'FontAwesome' | 'Entypo'; // Extend as needed
 }
 
 type ButtonVariant =

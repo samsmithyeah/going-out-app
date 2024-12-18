@@ -70,9 +70,7 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route }) => {
   // Generate conversationId using both user IDs
   const conversationId = useMemo(() => {
     if (!user?.uid || !otherUserId) return '';
-    console.log('user.uid:', user.uid, 'otherUserId:', otherUserId);
     const generatedId = generateDMConversationId(user.uid, otherUserId);
-    console.log('Generated conversationId:', generatedId);
     return generatedId;
   }, [user?.uid, otherUserId]);
 
@@ -368,7 +366,6 @@ const DMChatScreen: React.FC<DMChatScreenProps> = ({ route }) => {
           name: user?.displayName || 'You',
           avatar: user?.photoURL || undefined,
         }}
-        isTyping={false} // Control isTyping via custom logic
         bottomOffset={tabBarHeight - insets.bottom}
         onInputTextChanged={handleInputTextChanged} // Manage typing state
         renderAvatar={renderAvatar}
