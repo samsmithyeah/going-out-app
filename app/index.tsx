@@ -6,7 +6,6 @@ import { InvitationsProvider } from '@/context/InvitationsContext';
 import { CrewDateChatProvider } from '@/context/CrewDateChatContext';
 import { DirectMessagesProvider } from '@/context/DirectMessagesContext';
 import { BadgeCountProvider } from '@/context/BadgeCountContext';
-import { NavigationContainer } from '@react-navigation/native';
 import { registerRootComponent } from 'expo';
 import Toast, {
   BaseToast,
@@ -76,6 +75,8 @@ const Root: React.FC = () => {
     prefixes: [
       'com.googleusercontent.apps.814136772684-8bgo4g20f9q1p4g532kvqhj7lt497v7e://',
       'appScheme://',
+      'goingoutapp://',
+      'goingoutapp:///',
     ],
     config: {
       screens: {
@@ -85,7 +86,7 @@ const Root: React.FC = () => {
   };
 
   return (
-    <NavigationContainer linking={linking} independent>
+    <>
       <UserProvider>
         <ContactsProvider>
           <CrewsProvider>
@@ -104,7 +105,7 @@ const Root: React.FC = () => {
         </ContactsProvider>
       </UserProvider>
       <Toast config={toastConfig} />
-    </NavigationContainer>
+    </>
   );
 };
 
