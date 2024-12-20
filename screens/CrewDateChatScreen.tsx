@@ -448,7 +448,6 @@ const CrewDateChatScreen: React.FC<CrewDateChatScreenProps> = ({ route }) => {
           avatar: user?.photoURL || undefined,
         }}
         bottomOffset={tabBarHeight - insets.bottom}
-        isTyping={false} // Only for current user
         onInputTextChanged={handleInputTextChanged}
         renderAvatar={renderAvatar}
         renderBubble={(props) => (

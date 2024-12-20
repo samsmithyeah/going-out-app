@@ -106,23 +106,28 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
           setUsersCache((prev) => ({ ...prev, [uid]: fetchedUser }));
           return fetchedUser;
         } else {
-          // Handle case where user data does not exist
-          return {
+          // Handle case where user data does not exist by caching a placeholder
+          const placeholderUser: User = {
             uid,
             displayName: 'Unknown User',
             email: 'unknown@example.com',
           };
+          setUsersCache((prev) => ({ ...prev, [uid]: placeholderUser }));
+          return placeholderUser;
         }
       } catch (error) {
         console.error(`Error fetching user data for UID ${uid}:`, error);
-        return {
+        // Cache the error state to prevent re-fetching
+        const errorUser: User = {
           uid,
           displayName: 'Error Fetching User',
           email: 'error@example.com',
         };
+        setUsersCache((prev) => ({ ...prev, [uid]: errorUser }));
+        return errorUser;
       }
     },
-    [usersCache, setUsersCache],
+    [setUsersCache], // Removed usersCache from dependencies
   );
 
   // Fetch unread count for a specific chat
@@ -341,7 +346,6 @@ export const CrewDateChatProvider: React.FC<{ children: ReactNode }> = ({
 
     return () => {
       unsubscribe();
-      console.log('Unsubscribed from crew date chat listener.');
     };
   }, [user?.uid, crews, fetchUserDetails]);
 

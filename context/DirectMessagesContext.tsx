@@ -77,6 +77,14 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
   // Ref to keep track of message listeners
   const listenersRef = useRef<{ [dmId: string]: () => void }>({});
 
+  // Ref to hold the latest usersCache
+  const usersCacheRef = useRef<Record<string, User>>({ ...usersCache });
+
+  // Synchronize usersCacheRef with usersCache state
+  useEffect(() => {
+    usersCacheRef.current = { ...usersCache };
+  }, [usersCache]);
+
   // Fetch unread count for a specific DM
   const fetchUnreadCount = useCallback(
     async (dmId: string): Promise<number> => {
@@ -239,12 +247,11 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     [user?.uid, updateLastRead],
   );
 
-  // Helper function to fetch a user's details
+  // Helper function to fetch user details by UID with caching
   const fetchUserDetails = useCallback(
     async (uid: string): Promise<User> => {
-      // Check if user details are already cached
-      if (usersCache[uid]) {
-        return usersCache[uid];
+      if (usersCacheRef.current[uid]) {
+        return usersCacheRef.current[uid];
       }
 
       try {
@@ -257,40 +264,54 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
             email: userData.email || '',
             photoURL: userData.photoURL || '',
           };
-          // Update usersCache
+          // Update usersCacheRef and usersCache
+          usersCacheRef.current[uid] = fetchedUser;
           setUsersCache((prev) => ({ ...prev, [uid]: fetchedUser }));
           return fetchedUser;
         } else {
-          // Handle case where user data does not exist
-          return {
+          // Handle case where user data does not exist by caching a placeholder
+          const placeholderUser: User = {
             uid,
             displayName: 'Unknown User',
             email: 'unknown@example.com',
             photoURL: '',
           };
+          usersCacheRef.current[uid] = placeholderUser;
+          setUsersCache((prev) => ({ ...prev, [uid]: placeholderUser }));
+          return placeholderUser;
         }
       } catch (error) {
         console.error(`Error fetching user data for UID ${uid}:`, error);
-        return {
+        // Cache the error state to prevent re-fetching
+        const errorUser: User = {
           uid,
           displayName: 'Error Fetching User',
           email: 'error@example.com',
           photoURL: '',
         };
+        usersCacheRef.current[uid] = errorUser;
+        setUsersCache((prev) => ({ ...prev, [uid]: errorUser }));
+        return errorUser;
       }
     },
-    [usersCache, setUsersCache],
+    [setUsersCache], // Removed usersCache from dependencies
   );
 
   // Helper function to fetch multiple users' details and cache them
   const fetchUserDetailsBatch = useCallback(
     async (userIds: string[]) => {
+      const usersToFetch = userIds.filter((id) => !usersCacheRef.current[id]);
+
+      if (usersToFetch.length === 0) {
+        return [];
+      }
+
       const usersRef = collection(db, 'users');
 
       // Firestore limits 'in' queries to 10 items
       const batches = [];
-      while (userIds.length) {
-        const batchIds = userIds.splice(0, 10);
+      while (usersToFetch.length) {
+        const batchIds = usersToFetch.splice(0, 10);
         const q = query(usersRef, where('__name__', 'in', batchIds));
         batches.push(getDocs(q));
       }
@@ -309,6 +330,8 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
             photoURL: userData.photoURL || '',
           };
           fetchedUsers.push(fetchedUser);
+          // Update usersCacheRef and usersCache
+          usersCacheRef.current[docSnap.id] = fetchedUser;
         });
       });
 
@@ -354,7 +377,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
       const unsubscribe = onSnapshot(
         msgQuery,
         async (querySnapshot) => {
-          if (!user?.uid) return () => {};
+          if (!user?.uid) return;
           try {
             const fetchedMessages: Message[] = await Promise.all(
               querySnapshot.docs.map(async (docSnap) => {
@@ -364,8 +387,9 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
 
                 if (senderId === user.uid) {
                   senderName = user.displayName || 'You';
-                } else if (usersCache[senderId]) {
-                  senderName = usersCache[senderId].displayName || 'Unknown';
+                } else if (usersCacheRef.current[senderId]) {
+                  senderName =
+                    usersCacheRef.current[senderId].displayName || 'Unknown';
                 } else {
                   const fetchedUser = await fetchUserDetails(senderId);
                   senderName = fetchedUser.displayName || 'Unknown';
@@ -419,7 +443,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         }
       };
     },
-    [user?.uid, user?.displayName, usersCache, fetchUserDetails],
+    [user?.uid, user?.displayName, fetchUserDetails],
   );
 
   // Listen to real-time updates in direct messages
@@ -447,14 +471,14 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
           // Remove duplicates
           const uniqueOtherParticipantIds = [...new Set(otherParticipantIds)];
 
-          // Check usersCache for existing users
+          // Check usersCacheRef for existing users
           const cachedUsers = uniqueOtherParticipantIds
-            .filter((id) => usersCache[id])
-            .map((id) => usersCache[id]);
+            .filter((id) => usersCacheRef.current[id])
+            .map((id) => usersCacheRef.current[id]);
 
           // Identify IDs that need to be fetched from DB
           const idsToFetch = uniqueOtherParticipantIds.filter(
-            (id) => !usersCache[id],
+            (id) => !usersCacheRef.current[id],
           );
 
           // Fetch missing users from DB
@@ -526,7 +550,7 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
     );
 
     return unsubscribe;
-  }, [user?.uid, usersCache, fetchUserDetailsBatch]);
+  }, [user?.uid, fetchUserDetailsBatch]);
 
   // Fetch direct messages involving the current user
   const fetchDirectMessages = useCallback(async () => {
@@ -557,8 +581,8 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         try {
           // Fetch other user's details
           let otherUser: User;
-          if (usersCache[otherParticipantId]) {
-            otherUser = usersCache[otherParticipantId];
+          if (usersCacheRef.current[otherParticipantId]) {
+            otherUser = usersCacheRef.current[otherParticipantId];
           } else {
             const userData = await fetchUserDetails(otherParticipantId);
             otherUser = userData;
@@ -595,17 +619,19 @@ export const DirectMessagesProvider: React.FC<{ children: ReactNode }> = ({
         text2: 'Could not fetch direct messages.',
       });
     }
-  }, [user?.uid, usersCache, fetchUserDetails]);
+  }, [user?.uid, fetchUserDetails]);
 
   // Compute total unread messages whenever dms or activeChats change
   useEffect(() => {
     computeTotalUnread();
   }, [computeTotalUnread]);
 
+  // Fetch direct messages when user.uid changes
   useEffect(() => {
     fetchDirectMessages();
   }, [user?.uid, fetchDirectMessages]);
 
+  // Listen to real-time updates in direct messages
   useEffect(() => {
     if (!user?.uid) return;
     const unsubscribe = listenToDirectMessages();

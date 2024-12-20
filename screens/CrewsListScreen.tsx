@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useCrews } from '@/context/CrewsContext';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { NavParamList } from '@/navigation/AppNavigator';
