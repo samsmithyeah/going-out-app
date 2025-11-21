@@ -139,18 +139,48 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
     return null;
   };
 
+  const pendingRequestsRef = useRef<{ [key: string]: Promise<User> | undefined }>({});
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const fetchUserDetails = useCallback(
     async (uid: string): Promise<User> => {
       if (usersCache[uid]) return usersCache[uid];
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        const userData = { uid: userDoc.id, ...userDoc.data() } as User;
-        setUsersCache((prev) => ({ ...prev, [uid]: userData }));
-        return userData;
+      
+      // Check if there's already a pending request for this user
+      if (pendingRequestsRef.current[uid]) {
+        return pendingRequestsRef.current[uid];
       }
-      return { uid, displayName: 'Unknown User', email: '' };
+
+      const fetchPromise = (async () => {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', uid));
+          if (userDoc.exists()) {
+            const userData = { uid: userDoc.id, ...userDoc.data() } as User;
+            if (isMountedRef.current) {
+              setUsersCache((prev) => ({ ...prev, [uid]: userData }));
+            }
+            return userData;
+          }
+          return { uid, displayName: 'Unknown User', email: '' } as User;
+        } finally {
+          // Cleanup pending request
+          if (isMountedRef.current) {
+             delete pendingRequestsRef.current[uid];
+          }
+        }
+      })();
+
+      pendingRequestsRef.current[uid] = fetchPromise;
+      return fetchPromise;
     },
-    [usersCache], // Removed setUsersCache as it's stable
+    [usersCache], 
   );
 
   const setStatusForCrew = useCallback(

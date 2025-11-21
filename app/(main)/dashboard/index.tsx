@@ -16,6 +16,7 @@ import CreateCrewModal from '@/components/CreateCrewModal';
 import Icon from '@expo/vector-icons/MaterialIcons';
 import useglobalStyles from '@/styles/globalStyles';
 import { router } from 'expo-router';
+import { useIsMounted } from '@/hooks/useIsMounted';
 
 const DashboardScreen: React.FC = () => {
   const {
@@ -36,6 +37,8 @@ const DashboardScreen: React.FC = () => {
     useState<boolean>(false);
   const [weekDates, setWeekDates] = useState<string[]>([]);
 
+  const isMounted = useIsMounted();
+
   useEffect(() => {
     const days: string[] = [];
     for (let i = 0; i < 7; i++) {
@@ -52,13 +55,17 @@ const DashboardScreen: React.FC = () => {
       await setStatusForDateAllCrews(date, toggleTo);
     } catch (error) {
       console.error('Error toggling status:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to update status',
-      });
+      if (isMounted()) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to update status',
+        });
+      }
     } finally {
-      setIsLoadingUsers(false);
+      if (isMounted()) {
+        setIsLoadingUsers(false);
+      }
     }
   };
 

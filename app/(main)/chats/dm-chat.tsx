@@ -65,6 +65,7 @@ import {
   createOptimisticMessage,
   READ_UPDATE_DEBOUNCE,
 } from '@/utils/chatUtils';
+import { useIsMounted } from '@/hooks/useIsMounted';
 
 const DMChatScreen: React.FC = () => {
   const { otherUserId } = useLocalSearchParams<{ otherUserId: string }>();
@@ -124,6 +125,9 @@ const DMChatScreen: React.FC = () => {
     return ensureMessagesArray(messages[conversationId], conversationId);
   }, [conversationId, messages]);
 
+  // Add useIsMounted hook
+  const isMounted = useIsMounted();
+
   // Handle loading earlier messages
   const handleLoadEarlier = useCallback(async () => {
     if (!conversationId || isLoadingEarlier) {
@@ -155,14 +159,18 @@ const DMChatScreen: React.FC = () => {
       console.log('[DMChat] loadEarlierMessages result:', hasMore);
     } catch (error) {
       console.error('[DMChat] Error loading earlier messages:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Could not load earlier messages',
-        position: 'bottom',
-      });
+      if (isMounted()) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Could not load earlier messages',
+          position: 'bottom',
+        });
+      }
     } finally {
-      setIsLoadingEarlier(false);
+      if (isMounted()) {
+        setIsLoadingEarlier(false);
+      }
     }
   }, [conversationId, paginationInfo, loadEarlierMessages, isLoadingEarlier]);
 
@@ -228,7 +236,9 @@ const DMChatScreen: React.FC = () => {
     } else {
       console.log('Fetching user details from DMChatScreen for', otherUserId);
       fetchUserDetails(otherUserId).then((userData) => {
-        setOtherUser(userData);
+        if (isMounted()) {
+          setOtherUser(userData);
+        }
         // Cache the fetched user data
         if (userData) {
           setCachedData(getCacheKey('user', otherUserId), userData);
@@ -324,13 +334,17 @@ const DMChatScreen: React.FC = () => {
       await updateLastRead(conversationId);
     } catch (error) {
       console.error('Error sending image:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to send image',
-      });
+      if (isMounted()) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to send image',
+        });
+      }
     } finally {
-      setIsUploading(false);
+      if (isMounted()) {
+        setIsUploading(false);
+      }
     }
   }, [
     conversationId,
@@ -361,13 +375,17 @@ const DMChatScreen: React.FC = () => {
       await updateLastRead(conversationId);
     } catch (error) {
       console.error('Error sending photo:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Failed to send photo',
-      });
+      if (isMounted()) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to send photo',
+        });
+      }
     } finally {
-      setIsUploading(false);
+      if (isMounted()) {
+        setIsUploading(false);
+      }
     }
   }, [
     conversationId,

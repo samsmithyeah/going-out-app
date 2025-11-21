@@ -129,11 +129,15 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const memoizedActiveChats = useMemo(() => activeChats, [activeChats]);
 
   useEffect(() => {
+    let isMounted = true;
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
           const userDoc = await getDoc(userDocRef);
+          
+          if (!isMounted) return;
+
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
 
@@ -153,43 +157,56 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
               userData.notificationSettings = DEFAULT_NOTIFICATION_SETTINGS;
             }
 
-            if (userData.phoneNumber) setUser(userData);
-            const tokenResult = await getIdTokenResult(firebaseUser);
-            const adminClaim = tokenResult.claims.admin ?? false;
-            setIsAdmin(adminClaim as boolean);
-            const activeChatsFromDB = new Set<string>(
-              userData.activeChats || [],
-            );
-            setActiveChats(activeChatsFromDB);
+            if (isMounted) {
+              if (userData.phoneNumber) setUser(userData);
+              const tokenResult = await getIdTokenResult(firebaseUser);
+              const adminClaim = tokenResult.claims.admin ?? false;
+              setIsAdmin(adminClaim as boolean);
+              const activeChatsFromDB = new Set<string>(
+                userData.activeChats || [],
+              );
+              setActiveChats(activeChatsFromDB);
 
-            // Load user's preferences for location tracking when logging in
-            const foregroundDisabled = loadForegroundLocationPreference();
-            setUserDisabledForegroundLocation(foregroundDisabled);
-            const backgroundDisabled = loadBackgroundTrackingPreference();
-            setUserDisabledBackgroundTracking(backgroundDisabled);
+              // Load user's preferences for location tracking when logging in
+              const foregroundDisabled = loadForegroundLocationPreference();
+              setUserDisabledForegroundLocation(foregroundDisabled);
+              const backgroundDisabled = loadBackgroundTrackingPreference();
+              setUserDisabledBackgroundTracking(backgroundDisabled);
+            }
           } else {
             console.log('User document does not exist in Firestore.');
-            setUser(null);
-            setIsAdmin(false);
-            setActiveChats(new Set());
+            if (isMounted) {
+              setUser(null);
+              setIsAdmin(false);
+              setActiveChats(new Set());
+            }
           }
         } catch (error) {
           console.error('Error fetching user data from Firestore:', error);
-          Toast.show({
-            type: 'error',
-            text1: 'Error',
-            text2: 'Could not fetch user data',
-          });
+          if (isMounted) {
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: 'Could not fetch user data',
+            });
+            setUser(null);
+            setActiveChats(new Set());
+          }
+        }
+      } else {
+        if (isMounted) {
           setUser(null);
           setActiveChats(new Set());
         }
-      } else {
-        setUser(null);
-        setActiveChats(new Set());
       }
-      setIsInitializing(false); // Set to false after auth check is complete
+      if (isMounted) {
+        setIsInitializing(false); // Set to false after auth check is complete
+      }
     });
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   // Listen to app state changes to update online status
