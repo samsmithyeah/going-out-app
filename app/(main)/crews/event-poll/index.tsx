@@ -12,6 +12,7 @@ import { db } from '@/firebase';
 import { useUser } from '@/context/UserContext';
 import { Ionicons } from '@expo/vector-icons';
 import { EventPoll } from '@/types/EventPoll';
+import { User } from '@/types/User';
 import { getFormattedDate } from '@/utils/dateHelpers';
 import { useCrews } from '@/context/CrewsContext';
 import Toast from 'react-native-toast-message';
@@ -24,7 +25,7 @@ import CustomSearchInput from '@/components/CustomSearchInput';
 const EventPollsScreen: React.FC = () => {
   const { crewId } = useLocalSearchParams<{ crewId: string }>();
   const { user } = useUser();
-  const { fetchCrew, fetchUserDetails } = useCrews();
+  const { fetchCrew, fetchUserDetails, fetchUsersBatch } = useCrews();
   const globalStyles = useGlobalStyles();
   const navigation = useNavigation();
 
@@ -140,29 +141,33 @@ const EventPollsScreen: React.FC = () => {
   // Fetch creator names for polls
   useEffect(() => {
     const getCreatorNames = async () => {
-      const names: Record<string, string> = {};
-
-      for (const poll of polls) {
+      const creatorIdsToFetch = new Set<string>();
+      polls.forEach((poll) => {
         if (poll.createdBy && !creatorNames[poll.createdBy]) {
-          try {
-            const creator = await fetchUserDetails(poll.createdBy);
-            if (creator) {
-              names[poll.createdBy] = creator.displayName || 'Unknown user';
-            }
-          } catch (error) {
-            console.error('Error fetching creator details:', error);
-            names[poll.createdBy] = 'Unknown user';
-          }
+          creatorIdsToFetch.add(poll.createdBy);
         }
-      }
+      });
 
-      setCreatorNames((prevNames) => ({ ...prevNames, ...names }));
+      if (creatorIdsToFetch.size === 0) return;
+
+      try {
+        const creators = await fetchUsersBatch(Array.from(creatorIdsToFetch));
+        const names: Record<string, string> = {};
+        
+        creators.forEach((creator: User) => {
+          names[creator.uid] = creator.displayName || 'Unknown user';
+        });
+
+        setCreatorNames((prevNames) => ({ ...prevNames, ...names }));
+      } catch (error) {
+        console.error('Error fetching creator details:', error);
+      }
     };
 
     if (polls.length > 0) {
       getCreatorNames();
     }
-  }, [polls, fetchUserDetails]);
+  }, [polls, fetchUsersBatch, creatorNames]);
 
   const renderPollItem = ({ item }: { item: EventPoll }) => {
     // Find how many dates have been proposed

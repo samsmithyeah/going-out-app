@@ -21,6 +21,8 @@ import {
   Unsubscribe,
   setDoc,
   serverTimestamp,
+  documentId,
+  getDocs,
 } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { useUser } from '@/context/UserContext';
@@ -57,6 +59,7 @@ interface CrewsContextProps {
   loadingEvents: boolean;
   fetchCrew: (crewId: string) => Promise<Crew | null>;
   fetchUserDetails: (uid: string) => Promise<User>;
+  fetchUsersBatch: (uids: string[]) => Promise<User[]>;
   subscribeToUser: (uid: string) => void;
   subscribeToUsers: (uids: string[]) => void;
   defaultActivity: string;
@@ -181,6 +184,104 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
       return fetchPromise;
     },
     [usersCache], 
+  );
+
+  const fetchUsersBatch = useCallback(
+    async (uids: string[]): Promise<User[]> => {
+      const uniqueUids = Array.from(new Set(uids));
+      const uncachedUids = uniqueUids.filter((uid) => !usersCache[uid]);
+
+      if (uncachedUids.length === 0) {
+        return uniqueUids.map((uid) => usersCache[uid]).filter(Boolean);
+      }
+
+      // Check for pending requests to avoid duplicate fetches
+      const uidsToFetch: string[] = [];
+      const pendingPromises: Promise<User>[] = [];
+
+      uncachedUids.forEach(uid => {
+         if (pendingRequestsRef.current[uid]) {
+            pendingPromises.push(pendingRequestsRef.current[uid]!);
+         } else {
+            uidsToFetch.push(uid);
+         }
+      });
+
+      let fetchedUsers: User[] = [];
+      
+      if (uidsToFetch.length > 0) {
+        // Firestore 'in' queries are limited to 10 items
+        const chunks = [];
+        for (let i = 0; i < uidsToFetch.length; i += 10) {
+          chunks.push(uidsToFetch.slice(i, i + 10));
+        }
+
+        const chunkPromises = chunks.map(async (chunk) => {
+           // Mark as pending
+           const chunkResolvers: { [key: string]: (user: User) => void } = {};
+           const chunkPromisesForRef = chunk.map(uid => {
+              return new Promise<User>(resolve => {
+                 chunkResolvers[uid] = resolve;
+              });
+           });
+           
+           chunk.forEach((uid, idx) => {
+              pendingRequestsRef.current[uid] = chunkPromisesForRef[idx];
+           });
+
+           try {
+              const q = query(collection(db, 'users'), where(documentId(), 'in', chunk));
+              const snapshot = await getDocs(q);
+              const users = snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() } as User));
+              
+              // Resolve pending promises
+              users.forEach((user) => {
+                 if (chunkResolvers[user.uid]) chunkResolvers[user.uid](user);
+              });
+              
+              // Handle missing users
+              chunk.forEach((uid) => {
+                 const found = users.find((u) => u.uid === uid);
+                 if (!found) {
+                    const unknownUser = { uid, displayName: 'Unknown User', email: '' } as User;
+                    if (chunkResolvers[uid]) chunkResolvers[uid](unknownUser);
+                    users.push(unknownUser);
+                 }
+              });
+
+              return users;
+           } finally {
+              // Cleanup
+              if (isMountedRef.current) {
+                 chunk.forEach(uid => {
+                    delete pendingRequestsRef.current[uid];
+                 });
+              }
+           }
+        });
+
+        const chunkResults = await Promise.all(chunkPromises);
+        fetchedUsers = chunkResults.flat();
+      }
+
+      const pendingResults = await Promise.all(pendingPromises);
+      const allNewUsers = [...fetchedUsers, ...pendingResults];
+
+      if (isMountedRef.current && allNewUsers.length > 0) {
+        setUsersCache((prev) => {
+          const newCache = { ...prev };
+          allNewUsers.forEach((user) => {
+            newCache[user.uid] = user;
+          });
+          return newCache;
+        });
+      }
+
+      return uniqueUids.map(uid => 
+         usersCache[uid] || allNewUsers.find(u => u.uid === uid) || { uid, displayName: 'Unknown User', email: '' } as User
+      );
+    },
+    [usersCache]
   );
 
   const setStatusForCrew = useCallback(
@@ -317,46 +418,53 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       activeCrewIds.forEach((crewId) => {
-        weekDates.forEach((date) => {
-          const key = `${crewId}_${date}`;
-          if (statusListenersRef.current[key]) return; // Listener already exists
+        // Listen to the statuses collection for the crew, filtered by date range
+        // This replaces listening to individual user statuses
+        const startDate = weekDates[0];
+        const endDate = weekDates[weekDates.length - 1];
+        const key = `${crewId}_statuses`;
 
-          const statusQuery = collection(
-            db,
-            'crews',
-            crewId,
-            'statuses',
-            date,
-            'userStatuses',
-          );
-          const unsubscribe = onSnapshot(
-            statusQuery,
-            (snapshot) => {
-              currentStatusData[date][crewId] = {}; // Reset for this specific crew/date
-              snapshot.forEach((doc) => {
-                const data = doc.data();
-                currentStatusData[date][crewId][doc.id] =
-                  data.upForGoingOutTonight !== undefined
-                    ? data.upForGoingOutTonight
-                    : null;
-              });
-              processStatusData(activeCrewIds); // Pass activeCrewIds
-            },
-            (error) => {
-              if (error.code !== 'permission-denied') {
-                console.error(`Error listening to statuses for ${key}:`, error);
-              }
-            },
-          );
-          statusListenersRef.current[key] = unsubscribe;
-        });
+        if (statusListenersRef.current[key]) return;
+
+        const statusesQuery = query(
+          collection(db, 'crews', crewId, 'statuses'),
+          where(documentId(), '>=', startDate),
+          where(documentId(), '<=', endDate)
+        );
+
+        const unsubscribe = onSnapshot(
+          statusesQuery,
+          (snapshot) => {
+            snapshot.forEach((doc) => {
+              const date = doc.id;
+              const data = doc.data();
+              const counts = data.counts || { available: 0, unavailable: 0 };
+              
+              // Update local state with counts directly
+              // We no longer track individual user statuses in the main context
+              // This is a significant optimization
+              setDateCounts(prev => ({
+                 ...prev,
+                 [date]: {
+                    available: (prev[date]?.available || 0) + (counts.available || 0),
+                    unavailable: (prev[date]?.unavailable || 0) + (counts.unavailable || 0)
+                 }
+              }));
+            });
+            
+            setLoadingStatuses(false);
+            setLoadingMatches(false);
+          },
+          (error) => {
+            if (error.code !== 'permission-denied') {
+              console.error(`Error listening to statuses for ${crewId}:`, error);
+            }
+          }
+        );
+        statusListenersRef.current[key] = unsubscribe;
       });
-      // Initial process with potentially empty data to ensure correct loading state
-      processStatusData(activeCrewIds);
-      setLoadingStatuses(false);
-      setLoadingMatches(false);
     },
-    [weekDates, processStatusData], // processStatusData is stable
+    [weekDates],
   );
 
   const processEventData = useCallback(
@@ -561,6 +669,7 @@ export const CrewsProvider: React.FC<{ children: ReactNode }> = ({
         loadingEvents,
         fetchCrew,
         fetchUserDetails,
+        fetchUsersBatch,
         subscribeToUser,
         subscribeToUsers,
         defaultActivity: 'meeting up',

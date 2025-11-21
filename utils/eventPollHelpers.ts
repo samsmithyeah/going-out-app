@@ -58,7 +58,7 @@ export const createEventPoll = async (
 /**
  * Get all polls for a crew
  */
-export const getCrewPolls = async (crewId: string) => {
+const getCrewPolls = async (crewId: string) => {
   try {
     const pollsRef = collection(db, 'event_polls');
     const q = query(pollsRef, where('crewId', '==', crewId));
@@ -196,7 +196,7 @@ export const removeResponseFromPoll = async (
 /**
  * Calculate the end date based on start date and duration
  */
-export const calculateEndDate = (
+const calculateEndDate = (
   startDate: string,
   duration: number,
 ): string => {

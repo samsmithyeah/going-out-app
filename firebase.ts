@@ -94,5 +94,5 @@ export {
   deleteCrew,
   pokeCrew,
   deleteAccount,
-  firebaseConfig,
+  
 };

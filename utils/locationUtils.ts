@@ -31,7 +31,7 @@ export const calculateDistance = (
  * @param {number} meters - Distance in meters
  * @return {string} Formatted distance string
  */
-export const formatDistance = (meters: number): string => {
+const formatDistance = (meters: number): string => {
   if (meters < 1000) {
     return `${Math.round(meters)}m`;
   }

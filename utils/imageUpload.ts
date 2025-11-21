@@ -92,7 +92,7 @@ export const takePhoto = async (): Promise<string | null> => {
 /**
  * Compress image if it exceeds maximum size
  */
-export const compressImage = async (uri: string): Promise<string> => {
+const compressImage = async (uri: string): Promise<string> => {
   try {
     // Check file size
     const fileInfo = await FileSystem.getInfoAsync(uri);

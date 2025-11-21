@@ -40,29 +40,29 @@ export interface ProcessedMessage {
   poll?: any;
 }
 
-export interface UserFetchResult {
+interface UserFetchResult {
   user: User;
   fromCache: boolean;
 }
 
-export interface BatchUserFetchOptions {
+interface BatchUserFetchOptions {
   maxRetries?: number;
   retryDelay?: number;
   useEfficiencyThreshold?: number;
 }
 
-export interface UnreadCountOptions {
+interface UnreadCountOptions {
   includePermissionErrors?: boolean;
   fallbackValue?: number;
 }
 
-export interface MessageListenerOptions {
+interface MessageListenerOptions {
   messagesPerLoad?: number;
   enableCaching?: boolean;
   cachePrefix?: string;
 }
 
-export interface PaginationLoadOptions {
+interface PaginationLoadOptions {
   messagesPerLoad?: number;
   logPrefix?: string;
 }
@@ -72,9 +72,9 @@ export interface PaginationLoadOptions {
 // ============================================================================
 
 export const DEFAULT_MESSAGES_PER_LOAD = 20;
-export const DEFAULT_MAX_RETRIES = 3;
-export const DEFAULT_RETRY_DELAY = 1000;
-export const EFFICIENCY_THRESHOLD = 10; // Use 'in' query for batches <= 10 users
+const DEFAULT_MAX_RETRIES = 3;
+const DEFAULT_RETRY_DELAY = 1000;
+const EFFICIENCY_THRESHOLD = 10; // Use 'in' query for batches <= 10 users
 
 // ============================================================================
 // BATCH USER FETCHING WITH DEDUPLICATION
@@ -323,7 +323,7 @@ export async function computeTotalUnread<T extends { id: string }>(
 /**
  * Process a Firestore message document into a standardized message format
  */
-export async function processMessage(
+async function processMessage(
   docSnap: QueryDocumentSnapshot<DocumentData>,
   userFetcher: UserBatchFetcher,
 ): Promise<ProcessedMessage> {
@@ -648,7 +648,7 @@ export class MessageListenerManager {
 /**
  * Clean up old cached messages based on age
  */
-export function cleanupOldCache(
+function cleanupOldCache(
   prefix: string,
   maxAgeMs: number = 24 * 60 * 60 * 1000,
 ): void {
@@ -691,14 +691,14 @@ export function cleanupOldCache(
 /**
  * Create a standardized chat ID from participant UIDs
  */
-export function createChatId(participants: string[]): string {
+function createChatId(participants: string[]): string {
   return participants.sort().join('_');
 }
 
 /**
  * Extract other participant UID from a chat ID
  */
-export function getOtherParticipant(
+function getOtherParticipant(
   chatId: string,
   currentUserId: string,
 ): string | null {
@@ -709,7 +709,7 @@ export function getOtherParticipant(
 /**
  * Validate message content
  */
-export function validateMessage(
+function validateMessage(
   text: string,
   imageUrl?: string,
 ): { valid: boolean; error?: string } {
@@ -725,7 +725,7 @@ export function validateMessage(
 /**
  * Format timestamp for display
  */
-export function formatMessageTime(date: Date): string {
+function formatMessageTime(date: Date): string {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const minutes = Math.floor(diff / (1000 * 60));

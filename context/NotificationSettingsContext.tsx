@@ -107,7 +107,7 @@ export const useNotificationSettings = (): NotificationSettingsContextType => {
 };
 
 // Utility function to check if a notification should be sent based on type
-export const shouldSendNotification = (
+const shouldSendNotification = (
   settings: NotificationSettings,
   notificationType: string,
 ): boolean => {

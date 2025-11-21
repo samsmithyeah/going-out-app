@@ -6,7 +6,7 @@
  * Converts various timestamp formats to a Date object
  * Handles Firebase Timestamps, Date objects, and timestamp strings/numbers
  */
-export const normalizeTimestamp = (timestamp: any): Date | null => {
+const normalizeTimestamp = (timestamp: any): Date | null => {
   if (!timestamp) return null;
 
   try {

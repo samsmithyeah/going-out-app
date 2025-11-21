@@ -20,6 +20,44 @@ export const notifyCrewOnStatusChange = onDocumentWritten(
     const afterStatus =
       typeof afterData?.upForGoingOutTonight === 'boolean' ? afterData.upForGoingOutTonight : null;
 
+    // Update the counts on the parent document (crews/{crewId}/statuses/{date})
+    const statusDocRef = admin
+      .firestore()
+      .collection('crews')
+      .doc(crewId)
+      .collection('statuses')
+      .doc(date);
+
+    const updateData: any = {};
+
+    if (beforeStatus !== true && afterStatus === true) {
+      // User became available
+      updateData['counts.available'] = admin.firestore.FieldValue.increment(1);
+    } else if (beforeStatus === true && afterStatus !== true) {
+      // User was available, now is not (either unavailable or null)
+      updateData['counts.available'] = admin.firestore.FieldValue.increment(-1);
+    }
+
+    if (beforeStatus !== false && afterStatus === false) {
+      // User became unavailable
+      updateData['counts.unavailable'] = admin.firestore.FieldValue.increment(1);
+    } else if (beforeStatus === false && afterStatus !== false) {
+      // User was unavailable, now is not (either available or null)
+      updateData['counts.unavailable'] = admin.firestore.FieldValue.increment(-1);
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      try {
+        await statusDocRef.set(updateData, { merge: true });
+        console.log(`Updated counts for ${crewId}/${date}:`, updateData);
+      } catch (error) {
+        console.error(`Error updating counts for ${crewId}/${date}:`, error);
+      }
+    }
+
+    // Only proceed with notifications if the status has changed to something significant
+    // ... existing notification logic ...
+    
     // Only proceed if the status has changed.
     if (beforeStatus === afterStatus) {
       console.log('Status did not change.');

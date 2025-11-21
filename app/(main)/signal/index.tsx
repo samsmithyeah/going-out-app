@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, Text, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, SectionList, Text, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useSignal } from '@/context/SignalContext';
 import { useUser } from '@/context/UserContext';
@@ -279,177 +279,206 @@ const SignalScreen: React.FC = () => {
     }
   };
 
+  const sections = useMemo(() => {
+    const outgoingData =
+      validActiveSignals.length > 0
+        ? validActiveSignals.map((s) => ({ type: 'outgoing', data: s }))
+        : [{ type: 'empty-outgoing', data: null }];
+
+    const incomingData =
+      validReceivedSignals.length > 0 || incomingSharedLocations.length > 0
+        ? [
+            ...validReceivedSignals.map((s) => ({
+              type: 'incoming-signal',
+              data: s,
+            })),
+            ...incomingSharedLocations.map((s) => ({
+              type: 'incoming-location',
+              data: s,
+            })),
+          ]
+        : [{ type: 'empty-incoming', data: null }];
+
+    return [
+      { title: 'Outgoing signals', data: outgoingData },
+      { title: 'Incoming signals', data: incomingData },
+    ];
+  }, [validActiveSignals, validReceivedSignals, incomingSharedLocations]);
+
+  const renderHeader = () => (
+    <View>
+      <View>
+        <Text style={styles.description}>
+          Let nearby friends know you want to meet up right now!
+        </Text>
+      </View>
+
+      {/* Location Permission Warning */}
+      <LocationPermissionWarning
+        locationPermissionGranted={locationPermissionGranted}
+        backgroundLocationPermissionGranted={
+          backgroundLocationPermissionGranted
+        }
+        backgroundLocationTrackingActive={backgroundLocationTrackingActive}
+        userLocationTrackingEnabled={userLocationTrackingEnabled}
+      />
+
+      {/* Show all other UI only if location tracking is enabled */}
+      {userLocationTrackingEnabled && (
+        <View>
+          {!currentLocation && (
+            <View style={styles.locationSection}>
+              <EmptyState
+                icon="location-outline"
+                title="Location required"
+                description="Enable location access to send signals to nearby friends"
+                size="medium"
+              />
+
+              <CustomButton
+                title={
+                  locationLoading ? 'Getting location...' : 'Enable location'
+                }
+                onPress={handleLocationRequest}
+                variant="primary"
+                icon={{
+                  name: 'navigate-circle-outline',
+                  size: 20,
+                  color: '#fff',
+                }}
+                loading={locationLoading}
+                disabled={locationLoading}
+                style={styles.locationButton}
+              />
+
+              {locationError && (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{locationError}</Text>
+                  <CustomButton
+                    title="Retry"
+                    onPress={handleLocationRequest}
+                    variant="danger"
+                    style={styles.retryButton}
+                  />
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Show Send Signal button for scenarios 2 and 4 - when location is available, foreground permission granted, and tracking is enabled (background or foreground-only) */}
+          {currentLocation &&
+            locationPermissionGranted &&
+            userLocationTrackingEnabled && (
+              <View style={styles.locationSection}>
+                <SendSignalButton
+                  onPress={() => router.push('/signal/send')}
+                />
+              </View>
+            )}
+        </View>
+      )}
+    </View>
+  );
+
+  const renderItem = ({ item }: { item: any }) => {
+    if (!userLocationTrackingEnabled) return null;
+
+    switch (item.type) {
+      case 'outgoing':
+        return (
+          <OutgoingSignalCard
+            signal={item.data}
+            signalAddress={signalAddresses[item.data.id]}
+            onCancel={handleCancelSignal}
+            onLocationShare={setSelectedSignalForSharing}
+            formatDistance={formatDistance}
+          />
+        );
+      case 'incoming-signal':
+        return (
+          <SignalCard
+            signal={item.data}
+            onAccept={() => handleRespondToSignal(item.data.id, 'accept')}
+            onIgnore={() => handleRespondToSignal(item.data.id, 'ignore')}
+            onSendMessage={() =>
+              router.push({
+                pathname: '/chats/dm-chat',
+                params: { otherUserId: item.data.senderId },
+              })
+            }
+            isLoading={isLoading}
+          />
+        );
+      case 'incoming-location':
+        return (
+          <SharedLocationCard
+            sharedLocation={item.data}
+            onCancel={handleCancelSharedLocation}
+            onViewLocation={(signalId) => setSelectedSignalForSharing(signalId)}
+            onSendMessage={(otherUserId) =>
+              router.push({
+                pathname: '/chats/dm-chat',
+                params: { otherUserId },
+              })
+            }
+          />
+        );
+      case 'empty-outgoing':
+        return (
+          <EmptyState
+            icon="cellular-outline"
+            title="No Outgoing Signals"
+            description="Send a signal to let nearby friends know you want to meet up!"
+            size="small"
+          />
+        );
+      case 'empty-incoming':
+        return (
+          <EmptyState
+            icon="location-outline"
+            title="No Incoming Signals"
+            description="When friends send signals near your location or you accept signals, they'll appear here"
+            size="small"
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderSectionHeader = ({ section: { title } }: { section: any }) => {
+    if (!userLocationTrackingEnabled) return null;
+    return (
+      <View style={styles.sectionHeaderContainer}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {title === 'Outgoing signals' && validActiveSignals.length > 0 && (
+           <Text style={styles.description}>
+             Signals you've sent to nearby friends
+           </Text>
+        )}
+        {title === 'Incoming signals' && (validReceivedSignals.length > 0 || incomingSharedLocations.length > 0) && (
+           <Text style={styles.description}>
+             Signals from friends and active location sharing sessions
+           </Text>
+        )}
+      </View>
+    );
+  };
+
   return (
     <>
       {isLoading && <LoadingOverlay />}
       <View style={globalStyles.container}>
         <ScreenTitle title="Signal" />
-
-        <ScrollView>
-          {/* Send Signal Section */}
-          <View>
-            <Text style={styles.description}>
-              Let nearby friends know you want to meet up right now!
-            </Text>
-          </View>
-
-          {/* Location Permission Warning */}
-          <LocationPermissionWarning
-            locationPermissionGranted={locationPermissionGranted}
-            backgroundLocationPermissionGranted={
-              backgroundLocationPermissionGranted
-            }
-            backgroundLocationTrackingActive={backgroundLocationTrackingActive}
-            userLocationTrackingEnabled={userLocationTrackingEnabled}
-          />
-
-          {/* Show all other UI only if location tracking is enabled */}
-          {userLocationTrackingEnabled && (
-            <>
-              <View>
-                {!currentLocation && (
-                  <View style={styles.locationSection}>
-                    <EmptyState
-                      icon="location-outline"
-                      title="Location required"
-                      description="Enable location access to send signals to nearby friends"
-                      size="medium"
-                    />
-
-                    <CustomButton
-                      title={
-                        locationLoading
-                          ? 'Getting location...'
-                          : 'Enable location'
-                      }
-                      onPress={handleLocationRequest}
-                      variant="primary"
-                      icon={{
-                        name: 'navigate-circle-outline',
-                        size: 20,
-                        color: '#fff',
-                      }}
-                      loading={locationLoading}
-                      disabled={locationLoading}
-                      style={styles.locationButton}
-                    />
-
-                    {locationError && (
-                      <View style={styles.errorContainer}>
-                        <Text style={styles.errorText}>{locationError}</Text>
-                        <CustomButton
-                          title="Retry"
-                          onPress={handleLocationRequest}
-                          variant="danger"
-                          style={styles.retryButton}
-                        />
-                      </View>
-                    )}
-                  </View>
-                )}
-
-                {/* Show Send Signal button for scenarios 2 and 4 - when location is available, foreground permission granted, and tracking is enabled (background or foreground-only) */}
-                {currentLocation &&
-                  locationPermissionGranted &&
-                  userLocationTrackingEnabled && (
-                    <View style={styles.locationSection}>
-                      <SendSignalButton
-                        onPress={() => router.push('/signal/send')}
-                      />
-                    </View>
-                  )}
-              </View>
-
-              {/* Outgoing Signals */}
-              <View>
-                <Text style={styles.sectionTitle}>Outgoing signals</Text>
-                {validActiveSignals.length > 0 ? (
-                  <>
-                    <Text style={styles.description}>
-                      Signals you've sent to nearby friends
-                    </Text>
-                    {validActiveSignals.map((signal) => (
-                      <OutgoingSignalCard
-                        key={signal.id}
-                        signal={signal}
-                        signalAddress={signalAddresses[signal.id]}
-                        onCancel={handleCancelSignal}
-                        onLocationShare={setSelectedSignalForSharing}
-                        formatDistance={formatDistance}
-                      />
-                    ))}
-                  </>
-                ) : (
-                  <EmptyState
-                    icon="cellular-outline"
-                    title="No Outgoing Signals"
-                    description="Send a signal to let nearby friends know you want to meet up!"
-                    size="small"
-                  />
-                )}
-              </View>
-
-              {/* Incoming Signals */}
-              <View>
-                <Text style={styles.sectionTitle}>Incoming signals</Text>
-                {validReceivedSignals.length > 0 ||
-                incomingSharedLocations.length > 0 ? (
-                  <>
-                    <Text style={styles.description}>
-                      Signals from friends and active location sharing sessions
-                    </Text>
-
-                    {/* Received Signals */}
-                    {validReceivedSignals.map((signal) => (
-                      <SignalCard
-                        key={signal.id}
-                        signal={signal}
-                        onAccept={() =>
-                          handleRespondToSignal(signal.id, 'accept')
-                        }
-                        onIgnore={() =>
-                          handleRespondToSignal(signal.id, 'ignore')
-                        }
-                        onSendMessage={() =>
-                          router.push({
-                            pathname: '/chats/dm-chat',
-                            params: { otherUserId: signal.senderId },
-                          })
-                        }
-                        isLoading={isLoading}
-                      />
-                    ))}
-
-                    {/* Incoming Shared Locations */}
-                    {incomingSharedLocations.map((sharedLocation) => (
-                      <SharedLocationCard
-                        key={sharedLocation.id}
-                        sharedLocation={sharedLocation}
-                        onCancel={handleCancelSharedLocation}
-                        onViewLocation={(signalId) =>
-                          setSelectedSignalForSharing(signalId)
-                        }
-                        onSendMessage={(otherUserId) =>
-                          router.push({
-                            pathname: '/chats/dm-chat',
-                            params: { otherUserId },
-                          })
-                        }
-                      />
-                    ))}
-                  </>
-                ) : (
-                  <EmptyState
-                    icon="location-outline"
-                    title="No Incoming Signals"
-                    description="When friends send signals near your location or you accept signals, they'll appear here"
-                    size="small"
-                  />
-                )}
-              </View>
-            </>
-          )}
-        </ScrollView>
+        <SectionList
+          sections={sections}
+          keyExtractor={(item, index) => item.data?.id || item.type + index}
+          renderItem={renderItem}
+          renderSectionHeader={renderSectionHeader}
+          ListHeaderComponent={renderHeader}
+          stickySectionHeadersEnabled={false}
+          contentContainerStyle={styles.listContent}
+        />
 
         <LocationSharingModal
           visible={selectedSignalForSharing !== null}
@@ -498,6 +527,13 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     marginTop: 0,
+  },
+  listContent: {
+    paddingBottom: 20,
+  },
+  sectionHeaderContainer: {
+    backgroundColor: '#f2f2f2', // Match background color if needed, or transparent
+    paddingTop: 16,
   },
 });
 

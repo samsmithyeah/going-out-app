@@ -350,4 +350,4 @@ export const determineTrackingMode = (
   return hasActiveSharedLocations ? 'active' : 'passive';
 };
 
-export { BACKGROUND_LOCATION_TASK };
+;

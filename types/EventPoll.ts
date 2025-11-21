@@ -2,7 +2,7 @@ import { Timestamp } from 'firebase/firestore';
 
 export type PollOptionResponse = 'yes' | 'no' | 'maybe' | null;
 
-export interface EventPollOption {
+interface EventPollOption {
   date: string; // YYYY-MM-DD format (represents startDate)
   responses: {
     [userId: string]: PollOptionResponse;
@@ -24,7 +24,7 @@ export interface EventPoll {
   selectedEndDate?: string; // The calculated end date if finalized
 }
 
-export interface UserPollResponse {
+interface UserPollResponse {
   userId: string;
   responses: {
     [dateString: string]: PollOptionResponse;

@@ -11,7 +11,7 @@ import { IMessage } from 'react-native-gifted-chat';
 // CONSTANTS
 // ============================================================================
 
-export const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
 export const TYPING_TIMEOUT = 1000;
 export const READ_UPDATE_DEBOUNCE = 1000;
 
@@ -19,7 +19,7 @@ export const READ_UPDATE_DEBOUNCE = 1000;
 // TYPES & INTERFACES
 // ============================================================================
 
-export interface CachedData<T> {
+interface CachedData<T> {
   data: T;
   timestamp: number;
 }
@@ -29,7 +29,7 @@ export interface CachedMemberData {
   timestamp: number;
 }
 
-export interface CachedChatState {
+interface CachedChatState {
   lastReadByUsers: Record<string, Date>;
   otherUsersTyping: Record<string, boolean>;
   timestamp: number;
@@ -44,7 +44,7 @@ export interface ExtendedMessage extends IMessage {
   };
 }
 
-export interface PerformanceMetrics {
+interface PerformanceMetrics {
   cacheHits: number;
   cacheMisses: number;
   loadTime: number;
@@ -105,7 +105,7 @@ export const setCachedData = function <T>(key: string, data: T): void {
 /**
  * Clear specific cache entries
  */
-export const clearCachedData = (key: string): void => {
+const clearCachedData = (key: string): void => {
   try {
     storage.delete(key);
   } catch (error) {
@@ -116,7 +116,7 @@ export const clearCachedData = (key: string): void => {
 /**
  * Clear all cache entries for a specific chat
  */
-export const clearChatCache = (chatId: string): void => {
+const clearChatCache = (chatId: string): void => {
   const types = ['members', 'crew', 'state', 'messages'];
   types.forEach((type) => {
     clearCachedData(getCacheKey(type, chatId));

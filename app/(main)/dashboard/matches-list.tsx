@@ -6,8 +6,6 @@ import { useCrews } from '@/context/CrewsContext';
 import CrewList from '@/components/CrewList';
 import { Crew } from '@/types/Crew';
 import { User } from '@/types/User';
-import { getDoc, doc } from 'firebase/firestore';
-import { db } from '@/firebase';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import Toast from 'react-native-toast-message';
 import useglobalStyles from '@/styles/globalStyles';
@@ -25,7 +23,7 @@ const MatchesListScreen: React.FC = () => {
     loadingCrews,
     loadingMatches,
     usersCache,
-    setUsersCache,
+    fetchUsersBatch,
   } = useCrews();
   const globalStyles = useglobalStyles();
   const [matchingCrews, setMatchingCrews] = useState<Crew[]>([]);
@@ -62,36 +60,7 @@ const MatchesListScreen: React.FC = () => {
       setIsLoadingUsers(true);
       const fetchUsers = async () => {
         try {
-          const userPromises = memberIdsToFetch.map(async (uid) => {
-            const userDoc = await getDoc(doc(db, 'users', uid));
-            if (userDoc.exists()) {
-              return {
-                uid: userDoc.id,
-                ...(userDoc.data() as Omit<User, 'uid'>),
-              } as User;
-            } else {
-              // Handle case where user document doesn't exist
-              return {
-                uid,
-                displayName: 'Unknown User',
-                email: '',
-                firstName: 'Unknown', // Assuming these fields
-                lastName: '',
-                photoURL: '',
-              } as User;
-            }
-          });
-
-          const usersData = await Promise.all(userPromises);
-
-          // Update the users cache
-          setUsersCache((prevCache) => {
-            const newCache = { ...prevCache };
-            usersData.forEach((userData) => {
-              newCache[userData.uid] = userData;
-            });
-            return newCache;
-          });
+          await fetchUsersBatch(memberIdsToFetch);
         } catch (error) {
           console.error('Error fetching user data:', error);
           Toast.show({
@@ -106,7 +75,7 @@ const MatchesListScreen: React.FC = () => {
 
       fetchUsers();
     }
-  }, [date, dateMatchingCrews, crews, usersCache, setUsersCache]);
+  }, [date, dateMatchingCrews, crews, usersCache, fetchUsersBatch]);
 
   // Determine if loading is needed
   const isLoading = loadingCrews || loadingMatches || isLoadingUsers;

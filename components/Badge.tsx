@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export type BadgeVariant =
+type BadgeVariant =
   | 'primary'
   | 'success'
   | 'warning'

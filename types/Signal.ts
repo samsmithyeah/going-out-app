@@ -33,7 +33,7 @@ export interface Signal {
   notificationsSent?: number; // Number of users that were notified about this signal
 }
 
-export interface SignalNotification {
+interface SignalNotification {
   signalId: string;
   senderId: string;
   senderName: string;

@@ -72,7 +72,7 @@ export const BadgeCountProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useBadgeCount = () => {
+const useBadgeCount = () => {
   const context = useContext(BadgeCountContext);
   if (context === null) {
     throw new Error('useBadgeCount must be used within a BadgeCountProvider');
